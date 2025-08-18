@@ -1,7 +1,8 @@
 from dataclasses import dataclass, fields, Field
 from typing import FrozenSet, Union, Set
 
-from Options import Choice, Toggle, DefaultOnToggle, ItemSet, OptionSet, Range, PerGameCommonOptions, DeathLinkMixin
+from Options import Choice, Toggle, DefaultOnToggle, ItemSet, OptionSet, Range, PerGameCommonOptions, DeathLinkMixin, \
+    OptionGroup
 from worlds.AutoWorld import World
 from worlds.poe import Locations
 
@@ -212,6 +213,42 @@ class TTSSpeed(Range):
     range_end = 500
     default = 250
 
+
+
+poe_options_groups = [
+    OptionGroup("Gear Options", [
+        GearUpgrades,
+        UsableStartingGear,
+        GearUpgradesPerAct,
+
+        AddFlaskSlotsToItemPool,
+        FlaskSlotsPerAct,
+
+        AddMaxLinksToItemPool,
+
+        MaxLinksPerAct,
+        SkillGemsPerAct,
+    ]),
+    OptionGroup("Starting Options", [
+        StartingCharacter,
+        AscendanciesAvailablePerClass,
+        AllowUnlockOfOtherCharacters,
+
+        AddPassiveSkillPointsToItemPool,
+        AddLevelingUpToLocationPool,
+
+        GucciHoboMode,
+    ]),
+    OptionGroup("Goal Options", [
+        Goal,
+        NumberOfBosses,
+        BossesAvailable,
+    ]),
+    OptionGroup("Client Options", [
+        EnableTTS,
+        TTSSpeed,
+    ]),
+]
 
 @dataclass
 class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
