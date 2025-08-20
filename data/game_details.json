@@ -1429,34 +1429,6 @@
         ],
         "release_date": 2018
     },
-    "Dungeon Clawler": {
-        "igdb_id": "290897",
-        "world_name": "Dungeon Clawler",
-        "igdb_name": "Dungeon Clawler",
-        "us_rating": [],
-        "player_perspectives": [
-            "Bird view / Isometric",
-            "Side view"
-        ],
-        "genres": [
-            "Role-playing (RPG)",
-            "Simulator",
-            "Strategy",
-            "Turn-based strategy (TBS)",
-            "Indie",
-            "Arcade"
-        ],
-        "themes": [
-            "Action",
-            "Fantasy",
-            "Survival"
-        ],
-        "keywords": [
-            "roguelike",
-            "roguelite"
-        ],
-        "release_date": 2024
-    },
     "Digimon World": {
         "igdb_id": "3878",
         "world_name": "Digimon World",

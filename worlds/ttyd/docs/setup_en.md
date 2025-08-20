@@ -6,9 +6,9 @@
 - MultiworldGG: [Latest releases](https://github.com/MultiworldGG/MultiworldGG/releases)
 - TTYD APWorld: [Latest releases](https://github.com/jamesbrq/ArchipelagoTTYD/releases) (not needed for MultiworldGG)
 - A US copy of Paper Mario The Thousand Year Door. (EU and JP versions are not supported at this time)
-	- This can not be a .ciso or .nkit.iso (or nkit.rvz) file as the data will not be structured properly
+	- This can not be a .ciso or .nkit.iso (or nkit.rvz) file as the data will not be structured properly.
 
-## Installing the APWorld
+## Installing the APWorld (not needed for MultiworldGG)
 
 Note: The steps described here are not needed in MultiworldGG, as MWGG already ships with TTYD and its requirements.
 
