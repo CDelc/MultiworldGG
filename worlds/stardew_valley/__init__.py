@@ -23,7 +23,7 @@ from .logic.combat_logic import valid_weapons
 from .logic.logic import StardewLogic
 from .options import StardewValleyOptions, SeasonRandomization, Goal, BundleRandomization, EnabledFillerBuffs, \
     NumberOfMovementBuffs, BuildingProgression, EntranceRandomization, FarmType, ToolProgression, BackpackProgression, TrapDistribution, BundlePrice, \
-    BundlePlando, BundlePerRoom
+    BundleWhitelist, BundleBlacklist, BundlePerRoom
 from .options.forced_options import force_change_options_if_incompatible, force_change_options_if_banned
 from .options.jojapocalypse_options import JojaAreYouSure
 from .options.option_groups import sv_option_groups
@@ -115,7 +115,7 @@ class StardewValleyWorld(World):
     befriend villagers, and uncover dark secrets.
     """
     game = STARDEW_VALLEY
-    author: str = "Kaito Kid"
+    author: str = "Kaito Kid & Jouramie"
     topology_present = False
 
     item_name_to_id = {name: data.code for name, data in item_table.items()}
@@ -479,7 +479,7 @@ class StardewValleyWorld(World):
                     bundles[room.name][bundle.name][i] = f"{item.get_item()}|{item.amount}|{item.quality}"
 
         excluded_options = [BundleRandomization, BundlePrice, BundlePerRoom, NumberOfMovementBuffs,
-                            EnabledFillerBuffs, TrapDistribution, BundlePlando, JojaAreYouSure]
+                            EnabledFillerBuffs, TrapDistribution, BundleWhitelist, BundleBlacklist, JojaAreYouSure]
         excluded_option_names = [option.internal_name for option in excluded_options]
         generic_option_names = [option_name for option_name in PerGameCommonOptions.type_hints]
         excluded_option_names.extend(generic_option_names)

@@ -31,9 +31,12 @@ class FrogmonsterWebWorld(WebWorld):
     tutorials = [setup_en]
 
 class FrogmonsterWorld(World):
-    """Frogmonster."""
+    """
+    Frogmonster is a metroidvania FPS Adventure where you explore a lively world filled with creatures, bugs, and beasts.
+    """
 
     game = "Frogmonster"
+    author: str = "RoobyRoo"
     options: FrogmonsterOptions
     options_dataclass = FrogmonsterOptions
     location_name_to_id = location_id_table

@@ -1734,6 +1734,36 @@
         ],
         "release_date": 2003
     },
+    "Frogmonster": {
+        "igdb_id": "187372",
+        "world_name": "Frogmonster",
+        "igdb_name": "Frogmonster",
+        "us_rating": [
+        ],
+        "player_perspectives": [
+            "First person"
+        ],
+        "genres": [
+            "Shooter",
+            "Adventure",
+            "Indie"
+        ],
+        "themes": [
+            "Fantasy",
+            "Action",
+            "Open world"
+        ],
+        "keywords": [
+            "3d", 
+            "metroidvania", 
+            "voxel", 
+            "nature", 
+            "arena shooter", 
+            "atmospheric", 
+            "non-linear"
+        ],
+        "release_date": 2024
+    },
     "Yu-Gi-Oh! Forbidden Memories": {
         "igdb_id": "4108",
         "world_name": "Yu-Gi-Oh! Forbidden Memories",
@@ -1759,21 +1789,6 @@
             "summoning support"
         ],
         "release_date": 1999
-    },
-    "Archipelago": {
-        "igdb_id": "303100",
-        "world_name": "Archipelago",
-        "igdb_name": "Archipelago",
-        "us_rating": [],
-        "player_perspectives": [],
-        "genres": [
-            "Indie"
-        ],
-        "themes": [
-            "Action"
-        ],
-        "keywords": [],
-        "release_date": 2024
     },
     "Getting Over It": {
         "igdb_id": "13144",
@@ -2155,6 +2170,24 @@
         ],
         "keywords": [],
         "release_date": 2022
+    },
+    "Kindergarten 2": {
+        "igdb_id": "118637",
+        "world_name": "Kindergarten 2",
+        "igdb_name": "Kindergarten 2",
+        "us_rating": [
+        ],
+        "player_perspectives": [
+        ],
+        "genres": [
+            "Adventure",
+            "Indie"
+        ],
+        "themes": [
+        ],
+        "keywords": [
+        ],
+        "release_date": 2019
     },
     "Kirby 64 - The Crystal Shards": {
         "igdb_id": "2713",

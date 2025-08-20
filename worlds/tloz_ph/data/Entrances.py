@@ -1,6 +1,8 @@
 from enum import IntEnum
 
 class EntranceGroups(IntEnum):
+    NONE = 0
+    # Directions
     LEFT = 1
     RIGHT = 2
     UP = 3
@@ -26,7 +28,8 @@ OPPOSITE_ENTRANCE_GROUPS = {
     EntranceGroups.LEFT: EntranceGroups.RIGHT,
     EntranceGroups.UP: EntranceGroups.DOWN,
     EntranceGroups.DOWN: EntranceGroups.UP,
-    0: 0
+    0: 0,
+    EntranceGroups.NONE: EntranceGroups.NONE
 }
 
 ENTRANCE_DATA = {
@@ -136,6 +139,17 @@ ENTRANCE_DATA = {
         "entrance_region": "mercay se",
         "exit_region": "mercay shop",
         "type": EntranceGroups.HOUSE,
+        "direction": EntranceGroups.UP,
+    },
+
+    # =========== TotOK ==============
+    "Mercay NW TotOK": {
+        "return_name": "TotOK Lobby Entrance",
+        "entrance": (0xB, 0x1, 0x2),
+        "exit": (0x26, 0x00, 0x1),
+        "entrance_region": "mercay island",
+        "exit_region": "totok",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
         "direction": EntranceGroups.UP,
     },
 
@@ -265,6 +279,185 @@ ENTRANCE_DATA = {
         "direction": EntranceGroups.RIGHT,
     },
 
+    # ========== Temple of Fire ============
+    "Ember Enter Temple": {
+        "return_name": "ToF Entrance",
+        "entrance": (0xD, 0x1, 0x0),
+        "exit": (0x1C, 0x0, 0x0),
+        "entrance_region": "ember outside tof",
+        "exit_region": "tof 1f",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
+        "direction": EntranceGroups.UP,
+        },
+    "ToF Blaaz Warp": {
+        "entrance": (0x2B, 0x0, 0x0),
+        "exit": (0xD, 0x1, 0x0),
+        "entrance_region": "tof blaaz",
+        "exit_region": "ember outside tof",
+        "type": EntranceGroups.WARP_PORTAL,
+        "direction": EntranceGroups.NONE,
+        "two_way": False
+    },
+    # ========== Gust ============
+    "Ocean NW Isle of Gust": {
+        "return_name": "Gust Disembark",
+        "entrance": (0x0, 0x1, 0x0),
+        "exit": (0xE, 0x0, 0x0),
+        "entrance_region": "nw ocean",
+        "exit_region": "gust",
+        "type": EntranceGroups.ISLAND,
+        "direction": EntranceGroups.NONE,
+    },
+
+
+
+        # ========== Temple of Wind ============
+    "Gust Enter Temple": {
+        "return_name": "ToW Entrance",
+        "entrance": (0xE, 0x1, 0x0),
+        "exit": (0x1D, 0x0, 0x0),
+        "entrance_region": "gust dig",
+        "exit_region": "tow",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
+        "direction": EntranceGroups.UP,
+        },
+    "ToW Cyclok Warp": {
+        "entrance": (0x2A, 0x0, 0x0),
+        "exit": (0xE, 0x1, 0x0),
+        "entrance_region": "tow cyclok",
+        "exit_region": "gust dig",
+        "type": EntranceGroups.WARP_PORTAL,
+        "direction": EntranceGroups.NONE,
+        "two_way": False
+    },
+    # ========== Molida ============
+    "Molida Port House": {
+        "return_name": "Molida Inside Port House",
+        "entrance": (0xC, 0x0, 0x4),
+        "exit": (0xC, 0xC, 0x1),
+        "entrance_region": "molida island",
+        "exit_region": "molida port house",
+        "type": EntranceGroups.HOUSE,
+        "direction": EntranceGroups.UP,
+    },
+
+        # ========== Temple of Courage ============
+    "Molida Enter Temple": {
+        "return_name": "ToC Entrance",
+        "entrance": (0xC, 0x1, 0x3),
+        "exit": (0x1E, 0x0, 0x0),
+        "entrance_region": "toc gates",
+        "exit_region": "toc",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
+        "direction": EntranceGroups.UP,
+    },
+    "ToC Crayk Warp": {
+        "entrance": (0x2C, 0x0, 0x0),
+        "exit": (0xC, 0x1, 0x3),
+        "entrance_region": "toc crayk",
+        "exit_region": "toc gates",
+        "type": EntranceGroups.WARP_PORTAL,
+        "direction": EntranceGroups.NONE,
+        "two_way": False
+    },
+
+    # ========== Goron ============
+    "Goron Port House": {
+        "return_name": "Goron Inside Port House",
+        "entrance": (0x10, 0x2, 0x1),
+        "exit": (0x10, 0xB, 0x0),
+        "entrance_region": "goron",
+        "exit_region": "goron port house",
+        "type": EntranceGroups.HOUSE,
+        "direction": EntranceGroups.UP,
+    },
+
+    # ========== Goron Temple ============
+    "Goron Enter Temple": {
+        "return_name": "GT Entrance",
+        "entrance": (0x10, 0x0, 0x0),
+        "exit": (0x20, 0x0, 0x0),
+        "entrance_region": "goron outside temple",
+        "exit_region": "gt",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
+        "direction": EntranceGroups.UP,
+    },
+    "GT Dongo Warp": {
+        "entrance": (0x20, 0xA, 0x0),
+        "exit": (0x10, 0x0, 0x0),
+        "entrance_region": "gt dongo",
+        "exit_region": "goron outside temple",
+        "type": EntranceGroups.WARP_PORTAL,
+        "direction": EntranceGroups.NONE,
+        "two_way": False
+    },
+    # ========== Frost ============
+    "Frost Smart House": {
+        "return_name": "Frost Inside Smart House",
+        "entrance": (0xF, 0x0, 0x2),
+        "exit": (0xF, 0xB, 0x0),
+        "entrance_region": "iof",
+        "exit_region": "iof smart house",
+        "type": EntranceGroups.HOUSE,
+        "direction": EntranceGroups.UP,
+    },
+
+
+    # ========== Temple of Ice ============
+    "Frost Enter Temple": {
+        "return_name": "ToI Entrance",
+        "entrance": (0xF, 0x1, 0x0),
+        "exit": (0x1F, 0x0, 0x0),
+        "entrance_region": "iof yook",
+        "exit_region": "toi",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
+        "direction": EntranceGroups.UP,
+    },
+    "ToI Gleeok Warp": {
+        "entrance": (0x1f, 0x6, 0x0),
+        "exit": (0xF, 0x1, 0x0),
+        "entrance_region": "toi gleeok",
+        "exit_region": "iof yook",
+        "type": EntranceGroups.WARP_PORTAL,
+        "direction": EntranceGroups.NONE,
+        "two_way": False
+    },
+    # ========== Ruins ============
+    "Ruins Port Cave": {
+        "return_name": "Ruins Geozard Cave East Exit",
+        "entrance": (0x12, 0x0, 0x2),
+        "exit": (0x12, 0xA, 0x1),
+        "entrance_region": "ruins port",
+        "exit_region": "ruins cave",
+        "type": EntranceGroups.CAVE,
+        "direction": EntranceGroups.UP,
+    },
+
+
+    # ========== Mutoh's Temple ============
+    "Ruins Enter Temple": {
+        "return_name": "MT Entrance",
+        "entrance": (0x12, 0x2, 0x2),
+        "exit": (0x21, 0x0, 0x0),
+        "entrance_region": "ruins water",
+        "exit_region": "mutoh",
+        "type": EntranceGroups.DUNGEON_ENTRANCE,
+        "direction": EntranceGroups.UP,
+    },
+    "MT Eox Warp": {
+        "entrance": (0x21, 0x6, 0x0),
+        "exit": (0x12, 0x2, 0x2),
+        "entrance_region": "mutoh eox",
+        "exit_region": "ruins water",
+        "type": EntranceGroups.WARP_PORTAL,
+        "direction": EntranceGroups.NONE,
+        "two_way": False
+    },
+
+
+
+
+
     # "Mercay SE -> Mercay NE": {
     #     "entrance": (0xB, 0x3, 0x7),
     #     "exit": (0xB, 0x11, 0x1),
@@ -329,6 +522,10 @@ for name, data in ENTRANCE_DATA.items():
         point = reverse_data["entrance_region"] + "<=>" + reverse_data["exit_region"]
         counter.setdefault(point, 0)
         counter[point] += 1
+
+
+# print({key: value for key, value in counter.items() if value != 1})
+
 
 
 if __name__ == "__main__":
