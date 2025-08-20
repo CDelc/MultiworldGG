@@ -1,4 +1,4 @@
-# Frogmonster Setup Guode
+# Frogmonster Setup Guide
 
 ## Choose your Settings
 Download `Frogmonster.yaml` from this repository and name it something unique. Open it up in a text editor of your choice. Give yourself a player name, and choose options according to your liking. (Settings which give you multiple options are written as weighted choices (50 or 0) by default. Set all options you do not like to 0, and all options you do like to any positive number. Writing them out in the unweighted style, like `game_difficulty: normal`, is perfectly OK too.) Consider running your YAML through a YAML linter to make sure that you didn't break YAML formatting accidentally. Alternatively, generate a yaml using the webhost.
