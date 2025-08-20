@@ -55,7 +55,7 @@ class Sims4World(World):
     """
 
     game = "The Sims 4"
-    author: str = "bennydreamly"
+    author: str = "bennydreamly & itsmisscactus & mrsummer360"
     topology_present = False
     web = Sims4Web()
 
