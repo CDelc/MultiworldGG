@@ -18,7 +18,7 @@ from .poeClient import gggAPI
 from .poeClient import textUpdate
 
 
-CLIENT_VERSION="1.0.2"
+CLIENT_VERSION="1.0.4"
 
 class PathOfExileCommandProcessor(ClientCommandProcessor):
     if TYPE_CHECKING:
