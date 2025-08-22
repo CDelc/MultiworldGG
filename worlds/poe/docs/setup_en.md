@@ -7,24 +7,25 @@
 - Path of Exile installed and playable.
 - Python 3.12 installed. (Python 3.13 will not work)
 - Archipelago (latest release).
-- The Path of Exile `.apworld` file from the Path of Exile APWorld release page. (https://github.com/stubobis1/Archipelago/releases)
+- The Path of Exile `.apworld` file from the Path of Exile APWorld release page. 
+  - [github.com/stubobis1/Archipelago/releases](https://github.com/stubobis1/Archipelago/releases)
 
 ---
 
 ## 2) Download & Install Archipelago
 
 1. Download the latest Archipelago release:
-   - https://github.com/ArchipelagoMW/Archipelago/releases
+   - [github.com/ArchipelagoMW/Archipelago/releases](https://github.com/ArchipelagoMW/Archipelago/releases)
 2. Install Python if needed:
-   - https://www.python.org/downloads/release/python-31210/
+   - [python.org/downloads/release/python-31210/](https://www.python.org/downloads/release/python-31210/)
 3. Extract the Archipelago release to a folder of your choice (e.g., `C:\Games\Archipelago` or `~/Archipelago`).
 
 ---
 
-## 3) Add the Path of Exile `.apworld`
+## 3) Add the Path of Exile .apworld
 
 1. Download the `.apworld`:
-   - https://github.com/stubobis1/Archipelago/releases
+   - [github.com/stubobis1/Archipelago/releases](https://github.com/stubobis1/Archipelago/releases)
 2. Place the `.apworld` file into the `Archipelago/custom_worlds/` folder.
 
 ---
@@ -50,9 +51,9 @@
 
 ## 5) Setup Poptracker (Optional but Highly Recommended)
 
-1. Download Poptracker from: https://github.com/black-sliver/PopTracker/releases
+1. Download Poptracker from: [github.com/black-sliver/PopTracker/releases](https://github.com/black-sliver/PopTracker/releases)
 2. Extract / Setup Poptracker to a folder of your choice.
-3. Download the PoE Archipelago Poptracker pack from: https://github.com/stubobis1/PathOfExilePoptracker/releases
+3. Download the PoE Archipelago Poptracker pack from: [github.com/stubobis1/PathOfExilePoptracker/releases](https://github.com/stubobis1/PathOfExilePoptracker/releases)
 4. Place the zip file into the `poptracker/packs` directory.
 5. Launch `PopTracker.exe`.
 6. Click on the `AP` button at the top.

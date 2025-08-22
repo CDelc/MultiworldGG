@@ -53,6 +53,7 @@ class PathOfExileWebWorld(WebWorld):
     tutorials = [setup_en]
 
     option_groups = Options.poe_options_groups
+    options_presets = Options.poe_presets
 
 # ----- PathOfExile World ----- #
 

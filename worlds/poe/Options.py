@@ -250,6 +250,108 @@ poe_options_groups = [
     ]),
 ]
 
+all_characters = {
+    "Ascendant" : 1,
+    "Berserker" : 1,
+    "Chieftain" : 1,
+    "Juggernaut" : 1,
+    "Champion" : 1,
+    "Gladiator" : 1,
+    "Slayer" : 1,
+    "Deadeye" : 1,
+    "Pathfinder" : 1,
+    "Warden" : 1,
+    "Assassin" : 1,
+    "Saboteur" : 1,
+    "Trickster" : 1,
+    "Elementalist" : 1,
+    "Necromancer" : 1,
+    "Occultist" : 1,
+    "Guardian" : 1,
+    "Hierophant" : 1,
+    "Inquisitor" : 1,
+    "Scion": 1,
+    "Marauder": 1,
+    "Duelist": 1,
+    "Ranger": 1,
+    "Shadow": 1,
+    "Witch": 1,
+    "Templar": 1,
+}
+
+guardian_bosses = [
+            key for key in Locations.bosses.keys()
+            if Locations.bosses[key].get('difficulty', 'Guardian') not in {'Uber', 'Pinnacle'}
+]
+pinnacle_bosses = [
+            key for key in Locations.bosses.keys()
+            if Locations.bosses[key].get('difficulty', 'Pinnacle') not in {'Uber', 'Guardian'}
+]
+uber_bosses = [
+            key for key in Locations.bosses.keys()
+            if Locations.bosses[key].get('difficulty', 'Uber') not in {'Pinnacle', 'Guardian'}
+]
+
+poe_presets = {
+    "Existing Character - Guardian Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": guardian_bosses,
+        "add_passive_skill_points_to_item_pool": True,
+        "add_leveling_up_to_location_pool": False,
+        "start_inventory": all_characters
+    },
+    "Existing Character - Pinnacle Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": pinnacle_bosses,
+        "add_passive_skill_points_to_item_pool": True,
+        "add_leveling_up_to_location_pool": False,
+        "start_inventory": all_characters
+    },
+    "Existing Character - Uber Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": uber_bosses,
+        "add_passive_skill_points_to_item_pool": True,
+        "add_leveling_up_to_location_pool": False,
+        "start_inventory": all_characters
+    },
+    "Guardian Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": guardian_bosses
+    },
+    "Pinnacle Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": pinnacle_bosses
+    },
+    "Uber Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": uber_bosses
+    },
+
+    "Quick Sync": {
+        "goal": Goal.option_complete_act_1,
+    },
+    "Impossible": {
+        "number_of_bosses": 6,
+        "bosses_available": ["uber_uber_elder", "uber_sirus", "uber_maven", "uber_exarch", "uber_eater", "uber_cortex"],
+        "gear_upgrades": GearUpgrades.option_no_gear_unlocked,
+        "usable_starting_gear":UsableStartingGear.option_no_starting_gear,
+        "add_passive_skill_points_to_item_pool": True,
+        "add_leveling_up_to_location_pool": True,
+        "add_flask_slots_to_item_pool": True,
+        "add_max_links_to_item_pool": True,
+        "ascendancies_available_per_class": 0,
+        "allow_unlock_of_other_characters": False,
+        "gucci_hobo_mode": GucciHoboMode.option_no_non_unique_items,
+        "death_link": True,
+    }
+}
+
 @dataclass
 class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
     """
