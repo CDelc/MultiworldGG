@@ -22,6 +22,8 @@ client_txt_last_modified_time = None
 callbacks_on_file_change: list[callable] = []
 logger = logging.getLogger("poeClient")
 
+from Utils import local_path
+vendor_dir = Path(local_path("lib")) / "poe_client_vendor"
 
 def _ensure_stdlib_shims():
     """Provide minimal shims for stdlib modules missing in the frozen runtime."""
@@ -49,11 +51,19 @@ def load_vendor_modules():
         return
     sys._vendor_modules_loaded = True
 
+    
+
+
+    if vendor_dir in sys.path:
+        return
+    
     _ensure_stdlib_shims()
+    zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
+    if vendor_dir.exists():
+        shutil.rmtree(vendor_dir)
 
-    from Utils import local_path
-    vendor_dir = local_path("lib")
-
+    # Ensure vendor directory exists
+    os.makedirs(vendor_dir, exist_ok=True)
     try:
         vendor_zip_data = pkgutil.get_data("worlds.poe.poeClient", "vendor/vendor_modules.zip")
 
@@ -64,25 +74,19 @@ def load_vendor_modules():
             if not os.path.isfile(vendor_zip_path):
                 logger.warning("[vendor] vendor_modules.zip not found in package or current directory")
                 return
-
-            # Ensure vendor directory exists
-            os.makedirs(vendor_dir, exist_ok=True)
-            zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
             shutil.copy2(vendor_zip_path, zip_dest)
         else:
-            # Ensure vendor directory exists
-            os.makedirs(vendor_dir, exist_ok=True)
-            zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
             with open(zip_dest, "wb") as f:
                 f.write(vendor_zip_data)
 
         with zipfile.ZipFile(zip_dest, 'r') as vendor_zip:
             vendor_zip.extractall(vendor_dir)
 
+        # Clean up the copied zip file after extraction
         os.remove(zip_dest)
 
-        if vendor_dir not in sys.path:
-            sys.path.insert(0, vendor_dir)
+
+        sys.path.insert(0, str(vendor_dir))
 
     except Exception as e:
         logger.error(f"[vendor] Failed to load vendor modules: {e}")
