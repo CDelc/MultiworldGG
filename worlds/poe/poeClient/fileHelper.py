@@ -65,9 +65,13 @@ def load_vendor_modules():
                 logger.warning("[vendor] vendor_modules.zip not found in package or current directory")
                 return
 
+            # Ensure vendor directory exists
+            os.makedirs(vendor_dir, exist_ok=True)
             zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
             shutil.copy2(vendor_zip_path, zip_dest)
         else:
+            # Ensure vendor directory exists
+            os.makedirs(vendor_dir, exist_ok=True)
             zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
             with open(zip_dest, "wb") as f:
                 f.write(vendor_zip_data)
