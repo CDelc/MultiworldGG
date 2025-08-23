@@ -113,24 +113,25 @@ I want to use my own end-game character, and go from nothing to mapping to a bos
 - Path of Exile installed and playable.
 - Python 3.12 installed. (Python 3.13 will not work)
 - Archipelago (latest release).
-- The Path of Exile `.apworld` file from the Path of Exile APWorld release page. (https://github.com/stubobis1/Archipelago/releases)
+- The Path of Exile `.apworld` file from the Path of Exile APWorld release page. 
+  - [github.com/stubobis1/Archipelago/releases](https://github.com/stubobis1/Archipelago/releases)
 
 ---
 
 ## 2) Download & Install Archipelago
 
 1. Download the latest Archipelago release:
-   - https://github.com/ArchipelagoMW/Archipelago/releases
+   - [github.com/ArchipelagoMW/Archipelago/releases](https://github.com/ArchipelagoMW/Archipelago/releases)
 2. Install Python if needed:
-   - https://www.python.org/downloads/release/python-31210/
+   - [python.org/downloads/release/python-31210/](https://www.python.org/downloads/release/python-31210/)
 3. Extract the Archipelago release to a folder of your choice (e.g., `C:\Games\Archipelago` or `~/Archipelago`).
 
 ---
 
-## 3) Add the Path of Exile `.apworld`
+## 3) Add the Path of Exile .apworld
 
 1. Download the `.apworld`:
-   - https://github.com/stubobis1/Archipelago/releases
+   - [github.com/stubobis1/Archipelago/releases](https://github.com/stubobis1/Archipelago/releases)
 2. Place the `.apworld` file into the `Archipelago/custom_worlds/` folder.
 
 ---
@@ -156,9 +157,9 @@ I want to use my own end-game character, and go from nothing to mapping to a bos
 
 ## 5) Setup Poptracker (Optional but Highly Recommended)
 
-1. Download Poptracker from: https://github.com/black-sliver/PopTracker/releases
+1. Download Poptracker from: [github.com/black-sliver/PopTracker/releases](https://github.com/black-sliver/PopTracker/releases)
 2. Extract / Setup Poptracker to a folder of your choice.
-3. Download the PoE Archipelago Poptracker pack from: https://github.com/stubobis1/PathOfExilePoptracker/releases
+3. Download the PoE Archipelago Poptracker pack from: [github.com/stubobis1/PathOfExilePoptracker/releases](https://github.com/stubobis1/PathOfExilePoptracker/releases)
 4. Place the zip file into the `poptracker/packs` directory.
 5. Launch `PopTracker.exe`.
 6. Click on the `AP` button at the top.
@@ -183,7 +184,11 @@ I want to use my own end-game character, and go from nothing to mapping to a bos
     - this should be a local filter, and exist at something like `C:\Users\<USERNAME>\Documents\My Games\Path of Exile`
 9. (Optional) Enable or Disable DeathLink with `/deathlink` if you want to share deaths with other players.
 10. If you haven't already, Launch Path of Exile and **LOGIN**. 
-11. Run `/start` in the client console and enjoy!
+11. Run `/start` in the client.
+12. Start playing Path of Exile!
+    - Enter a zone to trigger an initial check.
+    - Pick up items to unlock things.
+    - Change zones to send checks for newly found items/conditions.
 
 
 ---
@@ -225,12 +230,16 @@ Note: Commands must be whispered to **yourself** (not global chat) using `@YourC
 
 ## 8) Tips & Troubleshooting
 
+- If you get problems when you are trying to write the filter, it could be Windows OneDrive interfering. Try disabling OneDrive.
 - Keep the Archipelago client running while you play PoE.
 - If you pick up an item and no check is sent, **enter a new zone** to trigger a check.
 - Make sure your PoE logs are being read (client should detect zone changes and chat whispers).
-- If the item filter isn’t changing, run `/filter` in the client console.
-- DeathLink: When enabled, your deaths (and others’) can be shared as events across players.
+- If your normal item filter isn't working, load it with `/filter` in the client console.
 - OAuth/API: Ensure your PoE account is properly authenticated if the client needs character data from the API.
+- DeathLink: When enabled, your deaths (and others’) can be shared as events across players.
+- F11 will restart the client if you run into issues.
+- F12 will force the client to do a check. 
+  - The API still only updates when changing zones, but this is helpful if something gets messed up. (AP can't read the client.txt file)
 
 ---
 

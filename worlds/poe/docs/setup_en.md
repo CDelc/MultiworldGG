@@ -128,7 +128,7 @@ Note: Commands must be whispered to **yourself** (not global chat) using `@YourC
 - Keep the Archipelago client running while you play PoE.
 - If you pick up an item and no check is sent, **enter a new zone** to trigger a check.
 - Make sure your PoE logs are being read (client should detect zone changes and chat whispers).
-- If your normal item filter working, load it with `/filter` in the client console.
+- If your normal item filter isn't working, load it with `/filter` in the client console.
 - OAuth/API: Ensure your PoE account is properly authenticated if the client needs character data from the API.
 - DeathLink: When enabled, your deaths (and others’) can be shared as events across players.
 - F11 will restart the client if you run into issues.
