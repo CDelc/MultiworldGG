@@ -195,11 +195,3 @@ _speedups.html
 .LSOverride
 Thumbs.db
 [Dd]esktop.ini
-
-# POE stuff
-/worlds/poe/poeClient/access_token.txt
-/worlds/poe/poeClient/found_items.txt
-/worlds/poe/poeClient/vendor/comtypes/gen/
-/access_token.txt
-/found_items.txt
-/worlds/poe/poeClient/vendor/pyttsx3/comtypes/gen/

@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
 
 _debug = True
 lock = asyncio.Lock()  # Lock to ensure thread-safe access to settings file
-settings_file_path = Path("poe_settings")
+settings_file_path = Path("poe_settings.pkl")
 client_txt_last_modified_time = None
 callbacks_on_file_change: list[callable] = []
 logger = logging.getLogger("poeClient")
