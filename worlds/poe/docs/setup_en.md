@@ -78,7 +78,11 @@
     - this should be a local filter, and exist at something like `C:\Users\<USERNAME>\Documents\My Games\Path of Exile`
 9. (Optional) Enable or Disable DeathLink with `/deathlink` if you want to share deaths with other players.
 10. If you haven't already, Launch Path of Exile and **LOGIN**. 
-11. Run `/start` in the client console and enjoy!
+11. Run `/start` in the client.
+12. Start playing Path of Exile!
+    - Enter a zone to trigger an initial check.
+    - Pick up items to unlock things.
+    - Change zones to send checks for newly found items/conditions.
 
 
 ---
@@ -120,12 +124,16 @@ Note: Commands must be whispered to **yourself** (not global chat) using `@YourC
 
 ## 8) Tips & Troubleshooting
 
+- If you get problems when you are trying to write the filter, it could be Windows OneDrive interfering. Try disabling OneDrive.
 - Keep the Archipelago client running while you play PoE.
 - If you pick up an item and no check is sent, **enter a new zone** to trigger a check.
 - Make sure your PoE logs are being read (client should detect zone changes and chat whispers).
-- If the item filter isn’t changing, run `/filter` in the client console.
-- DeathLink: When enabled, your deaths (and others’) can be shared as events across players.
+- If your normal item filter working, load it with `/filter` in the client console.
 - OAuth/API: Ensure your PoE account is properly authenticated if the client needs character data from the API.
+- DeathLink: When enabled, your deaths (and others’) can be shared as events across players.
+- F11 will restart the client if you run into issues.
+- F12 will force the client to do a check. 
+  - The API still only updates when changing zones, but this is helpful if something gets messed up. (AP can't read the client.txt file)
 
 ---
 
