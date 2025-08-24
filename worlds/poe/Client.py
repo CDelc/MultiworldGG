@@ -316,6 +316,9 @@ class PathOfExileContext(CommonContext):
                         logger.debug(f"[DEBUG] Loaded settings: {settings}")
                 except Exception as e:
                     logger.info(f"[ERROR] Failed to load settings: {e}")
+
+                msg = f"Starting Character: {self.game_options.get('starting_character', 'no starting character found')}"
+                self.command_processor.output(self=self.command_processor, text=msg)
             def load_client_settings(task=None):
                 if not self.seed_name:
                     self.logger.info("ERROR: No seed name found in RoomInfo!!!!! STILL IDK WHY.")
@@ -332,9 +335,9 @@ class PathOfExileContext(CommonContext):
                     self.logger.info(f"[DEBUG] RoomInfo received with seed name: {self.seed_name}")
                 load_client_settings()
 
-            msg = f"Starting Character: {self.game_options.get('starting_character', 'no starting character found')}"
+
             # self.command_processor.output(self=self, text=f"[color=green]{msg}[/color]") #TODO: color in GUI
-            self.command_processor.output(self=self, text=msg)
+
 
     def update_settings(self):
         """Update a setting and save it to the settings file."""
