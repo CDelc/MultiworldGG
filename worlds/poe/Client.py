@@ -25,8 +25,12 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         ctx: "PathOfExileContext"
     logger = logging.getLogger("poeClient.PathOfExileCommandProcessor")
 
-    def _cmd_enable_tts(self, enable: bool | str = True) -> bool:
+    def _cmd_enable_tts(self, enable: bool | str | None = None) -> bool:
         """Enable or disable TTS generation."""
+        if enable is None:
+            tts_enabled_implied = not self.ctx.tts_options.enable
+            self.output(f"Turning TTS {'on' if tts_enabled_implied else 'off'}")
+            enable = tts_enabled_implied
         if isinstance(enable, str):
             lowered = enable.lower()
             if lowered in {"true", "1", "yes", "y", "on"}:
