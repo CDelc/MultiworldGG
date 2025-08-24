@@ -364,7 +364,7 @@ class PathOfExileContext(CommonContext):
         super().run_gui()
 
 async def main():
-    Utils.init_logging("PathOfExileContext", exception_logger="Client")
+    Utils.init_logging("PathOfExileClient", exception_logger="Client")
 
     ctx = PathOfExileContext(None, None)
 

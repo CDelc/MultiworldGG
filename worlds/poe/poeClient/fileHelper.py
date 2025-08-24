@@ -159,22 +159,22 @@ async def callback_on_file_line_change(filepath: Path, async_callback: callable)
         raise
     except FileNotFoundError:
         logger.error(f"File not found: {filepath}")
-        logger.error(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         raise
     except PermissionError:
         logger.error(f"Permission denied reading file: {filepath}")
-        logger.error(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         raise
     except OSError as e:
         logger.error(f"OS error monitoring file {filepath}: {e}")
-        logger.error(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         raise
     except IOError as e:
         logger.error(f"I/O error monitoring file {filepath}: {e}")
-        logger.error(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         raise
     except Exception as e:
-        logger.error(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         logger.error(f"Unexpected error monitoring {filepath} ({type(e).__name__}): {e}")
         raise
     finally:
