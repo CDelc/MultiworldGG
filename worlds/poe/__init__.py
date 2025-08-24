@@ -66,6 +66,7 @@ class PathOfExileWorld(World):
     """
     _debug = True
     game = "Path of Exile"
+    author: str = "StuBob"
     web = PathOfExileWebWorld()
     options_dataclass = PathOfExileOptions
     origin_region_name = "Menu"
