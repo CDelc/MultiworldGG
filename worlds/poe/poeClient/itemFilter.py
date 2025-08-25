@@ -15,9 +15,12 @@ from pathlib import Path
 from worlds.poe.Locations import base_item_locations_by_base_item_name
 from worlds.poe import Locations
 
+AP_FILTER_NAME = "__ap"
+INVALID_FILTER_NAME = "__invalid"
+
 filter_file_dir = Path.home() / "Documents" / "My Games" / "Path of Exile"
-filter_file_path = Path.home() / "Documents" / "My Games" / "Path of Exile" / "__ap.filter"
-invalid_filter_file_path = Path.home() / "Documents" / "My Games" / "Path of Exile" / "__invalid.filter"
+filter_file_path = Path.home() / "Documents" / "My Games" / "Path of Exile" / f"{AP_FILTER_NAME}.filter"
+invalid_filter_file_path = Path.home() / "Documents" / "My Games" / "Path of Exile" / f"{INVALID_FILTER_NAME}.filter"
 filter_sounds_dir_name = "apsound"
 filter_sounds_path = filter_file_dir / filter_sounds_dir_name
 start_item_filter_block = "# <Base Item Hunt item>"
@@ -83,7 +86,7 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
             continue
         relative_wav_path = base_item_id_to_relative_wav_path.get(base_item_location_id, None)
         if relative_wav_path is None:
-            print(f"[ERROR] No wav path found for base item location ID {base_item_location_id}.")
+            logger.error(f"[ERROR] No wav path found for base item location ID {base_item_location_id}.")
             continue
         flags = ctx.locations_info[base_item_location_id].flags
         progression = 0
@@ -115,10 +118,10 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
 
 def generate_item_filter_block(base_type_name, alert_sound, style_string=default_style_string) -> str:
     if base_type_name not in base_item_locations_by_base_item_name:
-        print(f"[ERROR] Base type '{base_type_name}' not found in item table.")
+        logger.error(f"[ERROR] Base type '{base_type_name}' not found in item table.")
         return ""
     if not Path.exists(filter_file_dir / alert_sound):
-        print(f"[ERROR] Alert sound '{alert_sound}' does not exist in {filter_sounds_path}.")
+        logger.error(f"[ERROR] Alert sound '{alert_sound}' does not exist in {filter_sounds_path}.")
         return generate_item_filter_block_without_sound(base_type_name=base_type_name, style_string=style_string)
     return f"""
 {start_item_filter_block}
@@ -139,7 +142,7 @@ BaseType == "{base_type_name}"
 
 def generate_invalid_item_filter_block(alert_sound) -> str:
     if not Path.exists(filter_file_dir / alert_sound):
-        print(f"[ERROR] Alert sound '{alert_sound}' does not exist in {filter_sounds_path}.")
+        logger.error(f"[ERROR] Alert sound '{alert_sound}' does not exist in {filter_sounds_path}.")
         return generate_invalid_item_filter_block_without_sound()
     return f"""
 Show 
@@ -154,6 +157,9 @@ def generate_invalid_item_filter_block_without_sound() -> str:
     """
 
 def write_item_filter(item_filter:str, item_filter_import:str|None=None, file_path: Path = filter_file_path) -> None:
+    if item_filter_import == INVALID_FILTER_NAME or item_filter_import == AP_FILTER_NAME:
+        logger.error(f"\n\n-------- THIS SHOULD NEVER HAPPEN -----------\n Not writing base item filter because import path '{item_filter_import}' is reserved.")
+        item_filter_import = None
     write_filter = False
     if item_filter_import is None:
         item_filter_import = ""
@@ -166,8 +172,8 @@ def write_item_filter(item_filter:str, item_filter_import:str|None=None, file_pa
         _valid_base_item_filter_paths.add(item_filter_import)
         write_filter = True
 
-    if _debug and not write_filter:
-            print(f"[DEBUG] Not writing base item filter because import path '{item_filter_import}' is not valid or does not exist (this is fine, there just isn't a backup item filter).")
+    if not write_filter:
+            logger.debug(f"Not writing base item filter because import path '{item_filter_import}' is not valid or does not exist (this is fine, there just isn't a backup item filter).")
 
     if write_filter:
         item_filter = f"""{item_filter}
@@ -176,5 +182,4 @@ def write_item_filter(item_filter:str, item_filter_import:str|None=None, file_pa
 
     with open(str(file_path), "w", encoding="utf-8") as f:
         f.write(item_filter)
-    if _debug:
-        print(f"[DEBUG] Item filter written to {file_path} with base filter {item_filter_import}")
+    logger.debug(f"Item filter written to {file_path} with base filter {item_filter_import}")

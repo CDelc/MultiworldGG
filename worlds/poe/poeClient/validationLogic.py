@@ -48,7 +48,7 @@ async def when_enter_new_zone(ctx: "PathOfExileContext", line: str):
     found_items_list: list[Locations.LocationDict] = []
     if ctx.character_name is None or ctx.character_name == "":
         logger.info("Character name is not set, cannot validate.")
-        await asyncio.wait_for(send_multiple_poe_text(["/itemfilter __invalid", "Character name is not set, cannot validate."]), TIMEOUT)
+        await asyncio.wait_for(send_multiple_poe_text([f"/itemfilter {itemFilter.INVALID_FILTER_NAME}", "Character name is not set, cannot validate."]), TIMEOUT)
         return
     try:
         char = (await asyncio.wait_for(gggAPI.get_character(ctx.character_name),TIMEOUT)).character
@@ -69,11 +69,11 @@ async def when_enter_new_zone(ctx: "PathOfExileContext", line: str):
 
     if not is_char_in_logic:
         error_msg = ", and ".join(logic_errors) if logic_errors else "unknown errors"
-        await asyncio.wait_for(send_multiple_poe_text(["/itemfilter __invalid", f"@{ctx.character_name} you are out of logic: {error_msg}"]), TIMEOUT)
+        await asyncio.wait_for(send_multiple_poe_text([f"/itemfilter {itemFilter.INVALID_FILTER_NAME}", f"@{ctx.character_name} you are out of logic: {error_msg}"]), TIMEOUT)
     elif victory_task:
         pass # callback handles victory and chat sending
     else:
-        await asyncio.wait_for(inputHelper.important_send_poe_text("/itemfilter __ap", retry_times=40, retry_delay=0.5), TIMEOUT)
+        await asyncio.wait_for(inputHelper.important_send_poe_text(f"/itemfilter {itemFilter.AP_FILTER_NAME}", retry_times=40, retry_delay=0.5), TIMEOUT)
 
 def check_for_victory(ctx: "PathOfExileContext", zone: str, char: gggAPI.Character) -> asyncio.Task | None:
     goal = ctx.game_options.get("goal", -1)

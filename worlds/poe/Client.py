@@ -16,6 +16,7 @@ from .poeClient.fileHelper import load_settings, save_settings, find_possible_cl
 from .poeClient import main as poe_main
 from .poeClient import gggAPI
 from .poeClient import textUpdate
+from .poeClient import itemFilter
 from .Version import POE_VERSION
 
 class PathOfExileCommandProcessor(ClientCommandProcessor):
@@ -145,6 +146,11 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         if not filter_name.endswith(".filter"):
             filter_name += ".filter"
             self.output(f"adding .filter extension to the filter name: {filter_name}")
+
+        if filter_name == f"{itemFilter.AP_FILTER_NAME}.filter" or filter_name == f"{itemFilter.INVALID_FILTER_NAME}.filter":
+            self.output(f"ERROR: The filter name '{filter_name}' is reserved, please choose a different name.")
+            return False
+
         self.ctx.base_item_filter = filter_name
         self.ctx.update_settings()  # Save the settings
         self.output(f"Base item filter set to: {filter_name}")

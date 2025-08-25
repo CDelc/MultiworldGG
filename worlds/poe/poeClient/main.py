@@ -82,7 +82,7 @@ async def async_load(ctx: "PathOfExileContext" = None):
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
 
-    await inputHelper.important_send_poe_text("/itemfilter __ap")
+    await inputHelper.important_send_poe_text(f"/itemfilter {itemFilter.AP_FILTER_NAME}")
 
 
 
