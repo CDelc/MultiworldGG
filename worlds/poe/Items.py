@@ -1,4 +1,5 @@
 import typing
+from collections import defaultdict
 
 if typing.TYPE_CHECKING:
     from worlds.poe import PathOfExileWorld
@@ -177,76 +178,51 @@ def cull_items_to_place(world: "PathOfExileWorld", items: Dict[int, ItemDict], l
 
 
 def get_item_name_groups() -> Dict[str, Set[str]]:
-        categories: Dict[str, Set[str]] = {}
-        for item in item_table.values():
-            category = item.get("category", [])
-            main_category = category[0]
-            if main_category:
-                if main_category not in categories:
-                    categories[main_category] = set()
-                categories[main_category].add(item["name"])
-
-        return categories
+    categories: Dict[str, Set[str]] = defaultdict(set)
+    for item in item_table.values():
+        main_category = item.get("category", [None])[0]
+        if main_category:
+            categories[main_category].add(item["name"])
+    return categories
 
 def get_flask_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Flask" in memoize_cache:
-        return memoize_cache["Flask"]
-    result = [item for item in table.values() if "Flask" in item["category"]]
-    if table is item_table: memoize_cache["Flask"] = result
-    return result
+    return get_by_category("Flask", table)
 
 def get_character_class_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Character Class" in memoize_cache:
-        return memoize_cache["Character Class"]
-    result = [item for item in table.values() if "Character Class" in item["category"]]
-    if table is item_table: memoize_cache["Character Class"] = result
-    return result
+    return get_by_category("Character Class", table)
 
 def get_base_class_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Base Class" in memoize_cache:
-        return memoize_cache["Base Class"]
-    result = [item for item in table.values() if "Base Class" in item["category"]]
-    if table is item_table: memoize_cache["Base Class"] = result
-    return result
+    return get_by_category("Base Class", table)
 
 def get_ascendancy_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Ascendancy" in memoize_cache:
-        return memoize_cache["Ascendancy"]
-    result = [item for item in table.values() if "Ascendancy" in item["category"]]
-    if table is item_table: memoize_cache["Ascendancy"] = result
-    return result
+    return get_by_category("Ascendancy", table)
 
 def get_ascendancy_class_items(class_name: str, table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and f"{class_name} Ascendancy Class" in memoize_cache:
-        return memoize_cache[f"{class_name} Ascendancy Class"]
-    result = [item for item in table.values() if "Ascendancy" in item["category"] and f"{class_name} Class" in item["category"]]
-    if table is item_table: memoize_cache[f"{class_name} Ascendancy Class"] = result
-    return result
+    return get_by_has_every_category({"Ascendancy", f"{class_name} Class"}, table)
 
 def get_main_skill_gem_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "MainSkillGem" in memoize_cache:
-        return memoize_cache["MainSkillGem"]
-    result = [item for item in table.values() if "MainSkillGem" in item["category"]]
-    if table is item_table: memoize_cache["MainSkillGem"] = result
-    return result
+    return get_by_category("MainSkillGem", table)
 
 def get_main_skill_gem_items_table(table: Dict[int, ItemDict] = item_table) -> dict[int, ItemDict]:
-    result = {item["id"]: item for item in table.values() if "MainSkillGem" in item["category"]}
-    return result
+    return {item["id"]: item for item in get_main_skill_gem_items(table)}
 
 def get_support_gem_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "SupportGem" in memoize_cache:
-        return memoize_cache["SupportGem"]
-    result = [item for item in table.values() if "SupportGem" in item["category"]]
-    if table is item_table: memoize_cache["SupportGem"] = result
-    return result
+    return get_by_category("SupportGem", table)
 
 def get_utility_skill_gem_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "UtilSkillGem" in memoize_cache:
-        return memoize_cache["UtilSkillGem"]
-    result = [item for item in table.values() if "UtilSkillGem" in item["category"]]
-    if table is item_table: memoize_cache["UtilSkillGem"] = result
-    return result
+    return get_by_category("UtilSkillGem", table)
+
+def get_gear_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
+    return get_by_category("Gear", table)
+
+def get_armor_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
+    return get_by_category("Armor", table)
+
+def get_weapon_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
+    return get_by_category("Weapon", table)
+
+def get_max_links_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
+    return get_by_category("max links", table)
 
 def get_all_gems(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
     if table is item_table and "AllGems" in memoize_cache:
@@ -287,34 +263,6 @@ def get_all_gems_by_required_level(level_minimum:int=0, level_maximum:int=100, t
     return get_main_skill_gems_by_required_level(level_minimum, level_maximum, table) + \
            get_support_gems_by_required_level(level_minimum, level_maximum, table) + \
            get_utility_skill_gems_by_required_level(level_minimum, level_maximum, table)
-
-def get_gear_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Gear" in memoize_cache:
-        return memoize_cache["Gear"]
-    result = [item for item in table.values() if "Gear" in item["category"]]
-    if table is item_table: memoize_cache["Gear"] = result
-    return result
-
-def get_armor_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Armor" in memoize_cache:
-        return memoize_cache["Armor"]
-    result = [item for item in table.values() if "Armor" in item["category"]]
-    if table is item_table: memoize_cache["Armor"] = result
-    return result
-
-def get_weapon_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "Weapon" in memoize_cache:
-        return memoize_cache["Weapon"]
-    result = [item for item in table.values() if "Weapon" in item["category"]]
-    if table is item_table: memoize_cache["Weapon"] = result
-    return result
-
-def get_max_links_items(table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
-    if table is item_table and "max links" in memoize_cache:
-        return memoize_cache["max links"]
-    result = [item for item in table.values() if "max links" in item["category"]]
-    if table is item_table: memoize_cache["max links"] = result
-    return result
 
 def get_by_category(category: str, table: Dict[int, ItemDict] = item_table) -> list[ItemDict]:
     key = f"category_{category}"
