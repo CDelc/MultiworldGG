@@ -15,6 +15,7 @@ from . import Items
 from . import Locations
 from . import Regions as poeRegions
 from . import Rules as poeRules
+from .Version import POE_VERSION
 
 logger = logging.getLogger("poe")
 logger.setLevel(logging.DEBUG)
@@ -245,6 +246,7 @@ class PathOfExileWorld(World):
             "game_options": game_options,
             "client_options": client_options,
             "poe-uuid": base64.urlsafe_b64encode(self.random.randbytes(8)).strip(b'=').decode('utf-8'), # used for generation id
+            "generated_version": POE_VERSION,
         }
 
         
@@ -324,6 +326,18 @@ def setup_early_items(world, options):
     if options.add_max_links_to_item_pool.value == False:
         support_gem_slots = Items.get_max_links_items(table=world.items_to_place)
         for item in support_gem_slots:
+            item_obj = world.remove_and_create_item_by_itemdict(item)
+            world.precollect(item_obj)
+
+    if options.add_skill_gems_to_item_pool == False:
+        skill_gems = Items.get_by_has_any_category({"MainSkillGem", "UtilSkillGem"}, table=world.items_to_place)
+        for item in skill_gems:
+            item_obj = world.remove_and_create_item_by_itemdict(item)
+            world.precollect(item_obj)
+
+    if options.add_support_gems_to_item_pool == False:
+        support_gems = Items.get_by_category("SupportGem", table=world.items_to_place)
+        for item in support_gems:
             item_obj = world.remove_and_create_item_by_itemdict(item)
             world.precollect(item_obj)
 

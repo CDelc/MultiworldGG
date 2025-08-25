@@ -15,7 +15,8 @@ MAX_GUCCI_GEAR_UPGRADES = 20
 MAX_GEAR_UPGRADES       = 50
 MAX_FLASK_SLOTS         = 10
 MAX_LINK_UPGRADES       = 22
-MAX_SKILL_GEMS          = 30 # you will get more, but this is the max required for "logic"
+MAX_SKILL_GEMS          = 50 # you will get more, but this is the max required for "logic"
+MAX_SUPPORT_GEMS        = 50 # you will get more, but this is the max required for "logic"
 
 ACT_0_USABLE_GEMS = 4
 ACT_0_FLASK_SLOTS = 3
@@ -27,23 +28,9 @@ _very_debug = False
 
 
 req_to_use_weapon_types = ["Axe","Bow","Claw","Dagger","Mace","Sceptre","Staff","Sword","Wand",
-                            #"Fishing Rod", # yeahhhh no
+                            #"Fishing Rod", # yeahhhh no, not required for logic
                             #"Unarmed" # every character can use unarmed, so no need to check this
                             ]
-
-#passives_gained_in_each_act = {
-#    1: 16,
-#    2: 16,
-#    3: 12,
-#    4: 10,
-#    5: 10,
-#    6: 10,
-#    7: 10,
-#    8: 10,
-#    9: 9,
-#    10: 9,
-#    11: 16,
-#}
 
 passives_required_for_act = {
     1: 6,
@@ -72,6 +59,7 @@ def get_gear_amount_for_act(act, opt): return min(opt.gear_upgrades_per_act.valu
 def get_flask_amount_for_act(act, opt): return 0 if not opt.add_flask_slots_to_item_pool else min(opt.flask_slots_per_act.value * (act - 1), MAX_FLASK_SLOTS)
 def get_gem_amount_for_act(act, opt): return 0 if not opt.add_max_links_to_item_pool else min(opt.max_links_per_act.value * (act - 1), MAX_LINK_UPGRADES)
 def get_skill_gem_amount_for_act(act, opt): return min(opt.skill_gems_per_act.value * (act - 1), MAX_SKILL_GEMS)
+def get_support_gem_amount_for_act(act, opt): return min(opt.support_gems_per_act.value * (act - 1), MAX_SUPPORT_GEMS)
 def get_passives_amount_for_act(act, opt): return passives_required_for_act.get(act, 0) if opt.add_passive_skill_points_to_item_pool.value else 0
 
 def completion_condition(world: "PathOfExileWorld",  state: CollectionState) -> bool:
@@ -99,6 +87,7 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
     flask_amount = get_flask_amount_for_act(act, opt)
     gem_slot_amount = get_gem_amount_for_act(act, opt)
     skill_gem_amount = get_skill_gem_amount_for_act(act, opt)
+    support_gem_amount = get_support_gem_amount_for_act(act, opt)
     passive_amount = get_passives_amount_for_act(act,opt)
 
     # make a list of valid weapon types, based on the state
@@ -112,6 +101,7 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
     ascedancy_count = state.count_from_list([item['name'] for item in Items.get_ascendancy_class_items(opt.starting_character.current_option_name)], world.player)
     gear_count = state.count_from_list([item['name'] for item in Items.get_gear_items()], world.player)
     flask_count = state.count_from_list([item['name'] for item in Items.get_flask_items() if 'Unique' not in item['category']], world.player) # unique flasks are not logically required
+    support_gem_count = state.count_from_list([item['name'] for item in Items.get_support_gem_items()], world.player)
     gem_slot_count = state.count_from_list([item['name'] for item in Items.get_max_links_items()], world.player)
     passive_count = state.count("Progressive passive point", world.player)
 
@@ -131,11 +121,12 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
 
 
     reachable &= ascedancy_count >= ascedancy_amount and \
-           gear_count >= gear_amount and \
-           flask_count >= flask_amount and \
-           gem_slot_count >= gem_slot_amount and \
-           usable_skill_gem_count >= skill_gem_amount and \
-           passive_count >= passive_amount
+            gear_count >= gear_amount and \
+            flask_count >= flask_amount and \
+            gem_slot_count >= gem_slot_amount and \
+            support_gem_count >= support_gem_amount and \
+            usable_skill_gem_count >= skill_gem_amount and \
+            passive_count >= passive_amount
 
     if not reachable:
         if _debug:
@@ -146,6 +137,8 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
                 log += f" flask: {flask_count}/{flask_amount},"
             if gem_slot_count < gem_slot_amount:
                 log += f" gem slots: {gem_slot_count}/{gem_slot_amount},"
+            if support_gem_count < support_gem_amount:
+                log += f" support gems: {support_gem_count}/{support_gem_amount},"
             if usable_skill_gem_count < skill_gem_amount:
                 log += f" skill gems: {usable_skill_gem_count}/{skill_gem_amount},"
             if ascedancy_count < ascedancy_amount:

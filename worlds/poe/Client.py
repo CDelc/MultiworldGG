@@ -17,7 +17,7 @@ from .poeClient import main as poe_main
 from .poeClient import gggAPI
 from .poeClient import textUpdate
 from .poeClient import itemFilter
-from .Version import POE_VERSION
+from .Version import POE_VERSION, BACKWARDS_COMPATIBLE_VERSIONS
 
 class PathOfExileCommandProcessor(ClientCommandProcessor):
     if TYPE_CHECKING:
@@ -263,6 +263,7 @@ class PathOfExileContext(CommonContext):
     character_name: str = ""
     client_text_path: Path = ""
     base_item_filter: str = ""
+    generated_version: str = ""
     slot_data = {}
     game_options = {}
     client_options = {}
@@ -300,6 +301,17 @@ class PathOfExileContext(CommonContext):
             self.slot_data = args.get('slot_data', {})
             self.game_options = self.slot_data.get('game_options', {})
             self.client_options = self.slot_data.get('client_options', {})
+            self.generated_version = self.slot_data.get('version', 'unknown')
+
+            if self.generated_version != POE_VERSION:
+                if self.generated_version in BACKWARDS_COMPATIBLE_VERSIONS:
+                    log = f"Connected to server with different version: {self.generated_version}, but it is marked as backwards compatible."
+                    self.logger.info(log)
+                    self.command_processor.output(self=self, text=log)
+                else:
+                    log = f"Connected to server generated with different version: {self.generated_version}, this may cause issues."
+                    self.logger.warning(log)
+                    self.command_processor.output(self=self, text=log)
 
             if self.game_options.get("deathlink", False):
                 asyncio.create_task(self.update_death_link(True)).add_done_callback(
@@ -336,7 +348,7 @@ class PathOfExileContext(CommonContext):
             if not self.seed_name:
 
                 self.logger.info("ERROR: No seed name found in RoomInfo. IDK WHY.")
-                asyncio.create_task(asyncio.sleep(1)).add_done_callback(load_client_settings)
+                asyncio.create_task(asyncio.sleep(0.2)).add_done_callback(load_client_settings)
 
             else:
                 if self._debug:
