@@ -2731,7 +2731,7 @@ LOCATIONS_DATA = {
     # ========== Mutoh's Temple ============
 
     "Mutoh's Temple 2F Like-Like Maze Chest": {
-        "region_id": "mutoh",
+        "region_id": "mutoh landing",
         "vanilla_item": "Treasure",
         "stage_id": 0x21,
         "floor_id": 0x1,
@@ -2739,7 +2739,7 @@ LOCATIONS_DATA = {
         "id": 259,
     },
     "Mutoh's Temple 3F Hammer Chest": {
-        "region_id": "mutoh",
+        "region_id": "mutoh landing",
         "vanilla_item": "Hammer",
         "stage_id": 0x21,
         "floor_id": 0x2,

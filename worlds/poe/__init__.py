@@ -52,6 +52,9 @@ class PathOfExileWebWorld(WebWorld):
     )
     tutorials = [setup_en]
 
+    option_groups = Options.poe_options_groups
+    options_presets = Options.poe_presets
+
 # ----- PathOfExile World ----- #
 
 
@@ -157,7 +160,6 @@ class PathOfExileWorld(World):
             self.total_items_to_place_count = sum(item.get("count", 1) for item in self.items_to_place.values())
             logger.debug(
                 f"[DEBUG]: total items to place before culling: {self.total_items_to_place_count} / {table_total_item_count} possible")
-
             self.items_to_place = Items.cull_items_to_place(self, self.items_to_place, self.locations_to_place)
             self.total_items_to_place_count = sum(item.get("count", 1) for item in self.items_to_place.values())
             logger.debug(
@@ -278,11 +280,11 @@ def setup_early_items(world, options):
     # remove passive skill points from item pool
     # we are using the slot_data to tell the client to chill out when it comes to passive skill points
     if options.add_passive_skill_points_to_item_pool.value == False:
-        item = Items.get_by_name("Progressive passive point")
+        item = Items.get_by_name("Progressive passive point", world.items_to_place)
         if item:
             world.items_to_place.pop(item["id"], None)
     else:
-        item = Items.get_by_name("Progressive passive point")
+        item = Items.get_by_name("Progressive passive point", world.items_to_place)
         if item:
             item["count"] = poeRules.passives_required_for_act[world.goal_act + 1]
     items_to_remove = {}

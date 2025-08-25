@@ -162,7 +162,7 @@ async def chat_commands_callback(ctx: "PathOfExileContext", line: str):
         if link_counts:
             link_message = ', '.join(f"{name}: {count}" for name, count in link_counts.items())
         else:
-            link_message = "No link items found"
+            link_message = "No links"
         
         await split_send_message(ctx, link_message)
 
@@ -181,7 +181,7 @@ async def chat_commands_callback(ctx: "PathOfExileContext", line: str):
         if flask_counts:
             flask_message = ', '.join(f"{name}: {count}" for name, count in flask_counts.items())
         else:
-            flask_message = "No flask items found"
+            flask_message = "No flasks"
 
         await split_send_message(ctx, flask_message)
 

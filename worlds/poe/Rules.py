@@ -47,17 +47,17 @@ req_to_use_weapon_types = ["Axe","Bow","Claw","Dagger","Mace","Sceptre","Staff",
 
 passives_required_for_act = {
     1: 6,
-    2: 16,
-    3: 32,
-    4: 44,
-    5: 54,
-    6: 64,
-    7: 74,
-    8: 84,
-    9: 94,
-    10: 103,
-    11: 112,
-    12: 128,  # max ammount of passives in the game
+    2: 18,
+    3: 34,
+    4: 46,
+    5: 56,
+    6: 68,
+    7: 80,
+    8: 90,
+    9: 100,
+    10: 109,
+    11: 120,
+    12: 136,  # max ammount of passives in the game (including ascendancy points)
 }
 
 def get_ascendancy_amount_for_act(act, opt):

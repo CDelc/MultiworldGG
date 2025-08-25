@@ -16,17 +16,19 @@ from .poeClient.fileHelper import load_settings, save_settings, find_possible_cl
 from .poeClient import main as poe_main
 from .poeClient import gggAPI
 from .poeClient import textUpdate
-
-
-CLIENT_VERSION="1.0.2"
+from .Version import POE_VERSION
 
 class PathOfExileCommandProcessor(ClientCommandProcessor):
     if TYPE_CHECKING:
         ctx: "PathOfExileContext"
     logger = logging.getLogger("poeClient.PathOfExileCommandProcessor")
 
-    def _cmd_enable_tts(self, enable: bool | str = True) -> bool:
+    def _cmd_enable_tts(self, enable: bool | str | None = None) -> bool:
         """Enable or disable TTS generation."""
+        if enable is None:
+            tts_enabled_implied = not self.ctx.tts_options.enable
+            self.output(f"Turning TTS {'on' if tts_enabled_implied else 'off'}")
+            enable = tts_enabled_implied
         if isinstance(enable, str):
             lowered = enable.lower()
             if lowered in {"true", "1", "yes", "y", "on"}:
@@ -151,8 +153,8 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
     def _cmd_start_poe(self) -> bool:
         """Start the Path of Exile client."""
         #required
-        self.logger.info(f"Path of Exile apworld version: {CLIENT_VERSION}")
-        self.output(f"Path of Exile apworld version: {CLIENT_VERSION}")
+        self.logger.info(f"Path of Exile apworld version: {POE_VERSION}")
+        self.output(f"Path of Exile apworld version: {POE_VERSION}")
         if not self.ctx.client_text_path:
             possible_path = find_possible_client_txt_path()
             if possible_path:
@@ -316,6 +318,9 @@ class PathOfExileContext(CommonContext):
                         logger.debug(f"[DEBUG] Loaded settings: {settings}")
                 except Exception as e:
                     logger.info(f"[ERROR] Failed to load settings: {e}")
+
+                msg = f"Starting Character: {self.game_options.get('starting_character', 'no starting character found')}"
+                self.command_processor.output(self=self.command_processor, text=msg)
             def load_client_settings(task=None):
                 if not self.seed_name:
                     self.logger.info("ERROR: No seed name found in RoomInfo!!!!! STILL IDK WHY.")
@@ -332,9 +337,9 @@ class PathOfExileContext(CommonContext):
                     self.logger.info(f"[DEBUG] RoomInfo received with seed name: {self.seed_name}")
                 load_client_settings()
 
-            msg = f"Starting Character: {self.game_options.get('starting_character', 'no starting character found')}"
+
             # self.command_processor.output(self=self, text=f"[color=green]{msg}[/color]") #TODO: color in GUI
-            self.command_processor.output(self=self, text=msg)
+
 
     def update_settings(self):
         """Update a setting and save it to the settings file."""
@@ -357,7 +362,7 @@ class PathOfExileContext(CommonContext):
         super().run_gui()
 
 async def main():
-    Utils.init_logging("PathOfExileContext", exception_logger="Client")
+    Utils.init_logging("PathOfExileClient", exception_logger="Client")
 
     ctx = PathOfExileContext(None, None)
 

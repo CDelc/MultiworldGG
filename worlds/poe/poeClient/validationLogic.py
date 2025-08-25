@@ -31,6 +31,7 @@ logger = logging.getLogger("poeClient.validationLogic")
 logger.setLevel(logging.DEBUG)
 
 PASSIVE_POINT_ITEM_ID = Items.get_by_name("Progressive passive point")["id"]
+TIMEOUT_FOR_TTS_GENERATION_ON_NEW_ZONE = 1.5
 
 last_zone = None
 # Timeouts (seconds)
@@ -359,7 +360,7 @@ def rarity_check(total_recieved_items, rarity: str, equipmentId: str) -> str | N
 #    return True
 
 async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bool = True, tts_speed: int = 250) -> None:
-
+    invalid_item_filter_string = ""
     if enable_tts:
         if len(errors) > 1:
             error_text = " and ... ".join(errors)
@@ -367,16 +368,24 @@ async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bo
             error_text = errors[0]
         filename = f"{fileHelper.short_hash(error_text)}_{tts.WPM}.wav" # this could be a long text, so we use a hash
         full_error_text = f"YOU ARE OUT OF LOGIC: {error_text}"
-        await tts.safe_tts_async(
-            text=full_error_text,
-            filename=itemFilter.filter_sounds_path / f"{filename}",
-            rate=tts_speed
-        )
-        invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block(f"{itemFilter.filter_sounds_dir_name}/{filename}")
-        itemFilter.write_item_filter(item_filter=invalid_item_filter_string, item_filter_import=None, file_path=itemFilter.invalid_filter_file_path)
+
+        try:
+            await asyncio.wait_for(await tts.safe_tts_async(
+                text=full_error_text,
+                filename=itemFilter.filter_sounds_path / f"{filename}",
+                rate=tts_speed
+            ), TIMEOUT_FOR_TTS_GENERATION_ON_NEW_ZONE)
+        except Exception as e:
+            logger.error(f"Error generating TTS for invalid character: {full_error_text}")
+            logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+            filename = None
+        if filename:
+            invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block(f"{itemFilter.filter_sounds_dir_name}/{filename}")
+        else:
+            invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block_without_sound()
     else:
         invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block_without_sound()
-        itemFilter.write_item_filter(item_filter=invalid_item_filter_string, item_filter_import=None, file_path=itemFilter.invalid_filter_file_path)
+    itemFilter.write_item_filter(item_filter=invalid_item_filter_string, item_filter_import=None, file_path=itemFilter.invalid_filter_file_path)
 
 def get_held_item_names_ilvls_from_char(char: gggAPI.Character) -> list[tuple[str, int]]:
     """

@@ -31,7 +31,7 @@ STARTING_FLAGS = [
     [0x1B5594, 0x47],
     [0x1B5595, 0x00],
     [0x1B5596, 0xF8],
-    [0x1B5597, 0xFF],
+    [0x1B5597, 0xDF],
     [0x1B5598, 0x35],
     [0x1B5599, 0xE0],
     [0x1B559A, 0x10],
@@ -1242,17 +1242,6 @@ DUNGEON_KEY_DATA = {
         "filter": 0x0C,
         "value": 4,
         "size": 2,
-        'entrances': {
-            0xB01: {
-                "max_z": 0x12800,
-                # "max_z": 0xFFFF7000
-            },
-            0xB03: {
-                "max_z": 0xB200,
-                "min_z": 0x5000
-            }
-
-        }
     },
     37: {
         "name": "Temple of the Ocean King",
@@ -1260,12 +1249,6 @@ DUNGEON_KEY_DATA = {
         "filter": 0xE0,
         "value": 0x20,
         "size": 3,
-        'entrances': {
-            0x2600: {
-                "max_z": 0x11800,
-                "min_z": 0x0
-            }
-        }
     },
     372: {
         "name": "Temple of the Ocean King",
@@ -1273,11 +1256,6 @@ DUNGEON_KEY_DATA = {
         "filter": 0xC0,
         "value": 0x40,
         "size": 2,
-        'entrances': {
-            0x2600: {
-                "max_z": 0x11800,
-                "min_z": 0x0}
-        }
     },
     0x1C: {
         "name": "Temple of Fire",
@@ -1285,14 +1263,6 @@ DUNGEON_KEY_DATA = {
         "value": 1,
         "size": 2,
         "filter": 0x03,
-        "entrances": {
-            0xD01: {
-                "max_z": 0x10800,
-                "min_z": 0x8000},
-            0x2B00: {
-                "min_z": 0x800,
-                "max_z": 0xF000}
-        }
     },
     0x1E: {
         "name": "Temple of Courage",

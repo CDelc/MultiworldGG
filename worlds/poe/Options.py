@@ -1,7 +1,8 @@
 from dataclasses import dataclass, fields, Field
 from typing import FrozenSet, Union, Set
 
-from Options import Choice, Toggle, DefaultOnToggle, ItemSet, OptionSet, Range, PerGameCommonOptions, DeathLinkMixin
+from Options import Choice, Toggle, DefaultOnToggle, ItemSet, OptionSet, Range, PerGameCommonOptions, DeathLinkMixin, \
+    OptionGroup
 from worlds.AutoWorld import World
 from worlds.poe import Locations
 
@@ -99,7 +100,7 @@ class GearUpgradesPerAct(Range):
     Specifies a minimum number of rarity of gear upgrades available per act. (there are 38 total)
     This will be ignored if the "Gear Upgrades" option is turned off.
     """
-    display_name = "Gear Upgrades Per Act"
+    display_name = "Minimum Available Gear Upgrades Per Act"
     range_start = 0
     range_end = 38
     default = 5
@@ -110,14 +111,14 @@ class AddFlaskSlotsToItemPool(Toggle):
     You may equip up to 5 flasks of a given rarity, and can unlock more flasks of a rarity through items.
     """
     display_name = "Flask Slot Upgrades"
-    default = False
+    default = True
 
 class FlaskSlotsPerAct(Range):
     """
     Specifies a minimum number of available flask slots per act. (there are 5 total)
     This will be ignored if the "Flask Slots" option is turned off.
     """
-    display_name = "Flask Slots Per Act"
+    display_name = "Minimum Available Flask Slots Per Act"
     range_start = 0
     range_end = 5
     default = 1
@@ -134,7 +135,7 @@ class MaxLinksPerAct(Range):
     Specifies a minimum number of available linked support gem slots per act. (there are 22 total)
     This will be ignored if the "Support Gem Slot Upgrades" option is turned off.
     """
-    display_name = "Support Gem Slots Per Act"
+    display_name = "Minimum Available Support Gem Slots Per Act"
     range_start = 0
     range_end = 22
     default = 2
@@ -145,7 +146,7 @@ class SkillGemsPerAct(Range):
     Specifies the minimum number of usable skill gems placed by the generator per act.
     Higher values will place more relevant skill gems early on
     """
-    display_name = "Skill Gem Slots Per Act"
+    display_name = "Minimum Available Skill Gem Slots Per Act"
     range_start = 0
     range_end = 20
     default = 2
@@ -212,6 +213,142 @@ class TTSSpeed(Range):
     range_end = 500
     default = 250
 
+
+
+poe_options_groups = [
+    OptionGroup("Goal Options", [
+        Goal,
+        NumberOfBosses,
+        BossesAvailable,
+    ]),
+    OptionGroup("Character Options", [
+        StartingCharacter,
+        AscendanciesAvailablePerClass,
+        AllowUnlockOfOtherCharacters,
+    ]),
+    OptionGroup("Starting Options", [
+        GearUpgrades,
+        UsableStartingGear,
+        GucciHoboMode,
+    ]),
+    OptionGroup("Generation Options", [
+        AddFlaskSlotsToItemPool,
+        FlaskSlotsPerAct,
+
+        AddMaxLinksToItemPool,
+        MaxLinksPerAct,
+
+        AddPassiveSkillPointsToItemPool,
+        AddLevelingUpToLocationPool,
+
+        GearUpgradesPerAct,
+        SkillGemsPerAct,
+    ]),
+    OptionGroup("Client Options", [
+        EnableTTS,
+        TTSSpeed,
+    ]),
+]
+
+all_characters = {
+    "Ascendant" : 1,
+    "Berserker" : 1,
+    "Chieftain" : 1,
+    "Juggernaut" : 1,
+    "Champion" : 1,
+    "Gladiator" : 1,
+    "Slayer" : 1,
+    "Deadeye" : 1,
+    "Pathfinder" : 1,
+    "Warden" : 1,
+    "Assassin" : 1,
+    "Saboteur" : 1,
+    "Trickster" : 1,
+    "Elementalist" : 1,
+    "Necromancer" : 1,
+    "Occultist" : 1,
+    "Guardian" : 1,
+    "Hierophant" : 1,
+    "Inquisitor" : 1,
+    "Scion": 1,
+    "Marauder": 1,
+    "Duelist": 1,
+    "Ranger": 1,
+    "Shadow": 1,
+    "Witch": 1,
+    "Templar": 1,
+}
+
+guardian_bosses = [
+            key for key in Locations.bosses.keys()
+            if Locations.bosses[key].get('difficulty', 'Guardian') not in {'Uber', 'Pinnacle'}
+]
+pinnacle_bosses = [
+            key for key in Locations.bosses.keys()
+            if Locations.bosses[key].get('difficulty', 'Pinnacle') not in {'Uber', 'Guardian'}
+]
+uber_bosses = [
+            key for key in Locations.bosses.keys()
+            if Locations.bosses[key].get('difficulty', 'Uber') not in {'Pinnacle', 'Guardian'}
+]
+
+existing_char_preset_option = {
+    "add_passive_skill_points_to_item_pool": True,
+    "add_leveling_up_to_location_pool": False,
+    "start_inventory": all_characters,
+    "gear_upgrades": GearUpgrades.option_no_gear_unlocked,
+}
+
+poe_presets = {
+    "Existing Character - Guardian Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": guardian_bosses,
+    } | existing_char_preset_option,
+    "Existing Character - Pinnacle Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": pinnacle_bosses,
+    } | existing_char_preset_option,
+    "Existing Character - Uber Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": uber_bosses,
+    } | existing_char_preset_option,
+    "Guardian Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": guardian_bosses
+    },
+    "Pinnacle Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": pinnacle_bosses
+    },
+    "Uber Boss Rush": {
+        "goal": Goal.option_defeat_bosses,
+        "number_of_bosses": 3,
+        "bosses_available": uber_bosses
+    },
+
+    "Quick Sync": {
+        "goal": Goal.option_complete_act_1,
+    },
+    "Impossible": {
+        "number_of_bosses": 6,
+        "bosses_available": ["uber_uber_elder", "uber_sirus", "uber_maven", "uber_exarch", "uber_eater", "uber_cortex"],
+        "gear_upgrades": GearUpgrades.option_no_gear_unlocked,
+        "usable_starting_gear":UsableStartingGear.option_no_starting_gear,
+        "add_passive_skill_points_to_item_pool": True,
+        "add_leveling_up_to_location_pool": True,
+        "add_flask_slots_to_item_pool": True,
+        "add_max_links_to_item_pool": True,
+        "ascendancies_available_per_class": 0,
+        "allow_unlock_of_other_characters": False,
+        "gucci_hobo_mode": GucciHoboMode.option_no_non_unique_items,
+        "death_link": True,
+    }
+}
 
 @dataclass
 class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):

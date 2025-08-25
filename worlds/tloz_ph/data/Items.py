@@ -10,7 +10,7 @@ try:
     DEPRIORITIZED_FALLBACK = ItemClassification.progression_deprioritized
 except AttributeError as e:
     DEPRIORITIZED_SKIP_BALANCING_FALLBACK = ItemClassification.progression_skip_balancing
-    DEPRIORITIZED_FALLBACK = ItemClassification.progression_deprioritized
+    DEPRIORITIZED_FALLBACK = ItemClassification.progression
 
 ITEMS_DATA = {
     #   "Item Name": {
@@ -448,6 +448,7 @@ ITEMS_DATA = {
         "address": 0x1ba661,
         "value": 0x1,
         "id": 57,
+        "max": 0x7
     },
     "Refill: Health": {
         "classification": ItemClassification.filler,

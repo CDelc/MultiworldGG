@@ -106,7 +106,11 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
             style_string = default_style_string
         elif progression == ItemClassification.trap:
             style_string = trap_style_string
-        item_filter_str += generate_item_filter_block(base_type_name, alert_sound=relative_wav_path, style_string=style_string) + "\n\n"
+
+        if ctx.tts_options.enable:
+            item_filter_str += generate_item_filter_block(base_type_name, alert_sound=relative_wav_path, style_string=style_string) + "\n\n"
+        else:
+            item_filter_str += generate_item_filter_block_without_sound(base_type_name, style_string=style_string) + "\n\n"
     write_item_filter(item_filter_str, item_filter_import=ctx.base_item_filter)
 
 def generate_item_filter_block(base_type_name, alert_sound, style_string=default_style_string) -> str:

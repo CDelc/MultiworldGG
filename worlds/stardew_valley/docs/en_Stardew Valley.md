@@ -110,7 +110,7 @@ There are a few extra vanilla items, which are added to the pool for convenience
 - [Return Scepter](https://stardewvalleywiki.com/Return_Scepter)
 - [Qi Walnut Room QoL items](https://stardewvalleywiki.com/Qi%27s_Walnut_Room#Stock)
 
-And lastly, some MultiworldGG-exclusive items exist in the pool, which are designed around game balance and QoL. These include:
+And lastly, some AP/MWGG-exclusive items exist in the pool, which are designed around game balance and QoL. These include:
 
 - Arcade Machine buffs (Only if the arcade machines are randomized)
     - Journey of the Prairie King has drop rate increases, extra lives, and equipment
