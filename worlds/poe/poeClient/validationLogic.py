@@ -159,7 +159,7 @@ async def validate_and_update(ctx: "PathOfExileContext", char, found_items_list:
         logger.info("Character name is not set, cannot validate.")
         validate_errors.append("Character name is not set, cannot validate.")
         return validate_errors
-    # defenseive programming end.
+    # defensive programming end.
 
     total_received_items = [
         item for network_item in ctx.items_received
@@ -195,7 +195,7 @@ async def validate_and_update(ctx: "PathOfExileContext", char, found_items_list:
     validate_errors.extend(validate_passive_points(char, ctx, total_received_items, passives))
     is_char_in_logic = True if len(validate_errors) == 0 else False
 
-    if len(location_ids_to_check) > 0:
+    if len(location_ids_to_check) > 0 and is_char_in_logic:
         logger.debug(f"[DEBUG] Locations to check: {location_ids_to_check}")
         location_ids_to_check = await ctx.check_locations(location_ids_to_check)
     else:
