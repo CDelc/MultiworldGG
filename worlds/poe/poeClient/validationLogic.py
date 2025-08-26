@@ -312,13 +312,13 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
     unique_flask_usable = len([i for i in total_received_items_names if i == 'Progressive Unique Flask'])
     
     total_progressive_flasks_usable = len([i for i in total_received_items_names if i == 'Progressive Flask Unlock'])
-    normal_flasks_usable += max(total_progressive_flasks_usable, (5 - normal_flasks_usable))
+    normal_flasks_usable += min(total_progressive_flasks_usable, (5 - normal_flasks_usable))
     total_progressive_flasks_usable -= normal_flasks_usable
 
-    magic_flasks_usable += max(total_progressive_flasks_usable, (5 - magic_flasks_usable))
+    magic_flasks_usable += min(total_progressive_flasks_usable, (5 - magic_flasks_usable))
     total_progressive_flasks_usable -= magic_flasks_usable
 
-    unique_flask_usable += max(total_progressive_flasks_usable, (5 - unique_flask_usable))
+    unique_flask_usable += min(total_progressive_flasks_usable, (5 - unique_flask_usable))
 
 
 

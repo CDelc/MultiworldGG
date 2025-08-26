@@ -190,9 +190,9 @@ class TestValidationLogic(PoeTestBase):
 
     def test_validate_char_equipment_flask_validation(self):
         """Test flask validation logic"""
-        # Test with 6 normal flasks to exceed the default 5 allowed
+        # Test with flasks to exceed the amount allowed
         mock_flasks = []
-        for i in range(6):  # Create 6 normal flasks
+        for i in range(5):  # Create 5 normal flasks
             mock_flask = Mock()
             mock_flask.rarity = "Normal"
             mock_flask.baseType = f"Life Flask {i}"
@@ -209,8 +209,7 @@ class TestValidationLogic(PoeTestBase):
         errors = validationLogic.validate_char_equipment(
             self.mock_character, self.mock_ctx, total_received_items
         )
-        
-        # Should have flask-related errors due to having 6 normal flasks vs 5 allowed
+
         non_none_errors = [e for e in errors if e is not None]
         flask_errors = [e for e in non_none_errors if "flask" in str(e).lower()]
         self.assertGreater(len(flask_errors), 0, f"Expected flask errors, got: {non_none_errors}")
