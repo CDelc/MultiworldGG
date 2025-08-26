@@ -1,13 +1,5 @@
-
-
 from . import PoeTestBase
 from .. import Items, Locations
-
-
-class TestEmpty(PoeTestBase):
-
-    def test_empty(self) -> None:
-        self.assertEqual(0, 0)
 
 
 class TestPoeGem(PoeTestBase):
