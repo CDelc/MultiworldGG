@@ -16,6 +16,7 @@ if poe_client_vendor_dir not in sys.path:
 
 try:
     from . import PoeTestBase
+    from .. import Options
     from ..poeClient import validationLogic
 except ImportError:
     import sys
@@ -30,6 +31,7 @@ except ImportError:
     sys.path.insert(0, worlds_dir)
     
     from test.bases import WorldTestBase
+    from poe import Options
     from poe.poeClient import validationLogic
     
     class PoeTestBase(WorldTestBase):
@@ -39,267 +41,113 @@ except ImportError:
 class TestBossValidation(PoeTestBase):
     """Comprehensive tests for boss completion validation logic"""
 
-    def create_mock_context(self, boss_status=None, locations=None):
-        """Create a mock context with specified boss status and locations"""
+    def create_mock_context(self, game_options=None):
+        """Create a mock context with specified game options"""
         context = Mock()
-        context.ctx = Mock()
-        context.ctx.boss_status = boss_status or {}
-        context.ctx.locations = locations or {}
+        context.character_name = "TestCharacter"
+        context.game_options = game_options or {
+            "goal": Options.Goal.option_defeat_bosses,
+            "bosses_for_goal": ["shaper", "elder"]
+        }
+        # Mock items_received as an empty list
+        context.items_received = []
         return context
 
-    def test_check_for_victory_all_bosses_defeated(self):
-        """Test victory check when all bosses are defeated"""
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": True,
-            "Malachai": True,
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": True
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertTrue(result, "Should return True when all bosses are defeated")
+    def create_mock_character(self, inventory_items=None):
+        """Create a mock character with specified inventory"""
+        character = Mock()
+        character.inventory = inventory_items or []
+        return character
 
-    def test_check_for_victory_no_bosses_defeated(self):
-        """Test victory check when no bosses are defeated"""
-        boss_status = {}
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertFalse(result, "Should return False when no bosses are defeated")
-
-    def test_check_for_victory_partial_bosses_defeated(self):
-        """Test victory check when only some bosses are defeated"""
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": False,
-            "Malachai": True,
-            # Missing other bosses
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertFalse(result, "Should return False when not all bosses are defeated")
-
-    def test_check_for_victory_missing_boss_entries(self):
-        """Test victory check when some boss entries are missing from status"""
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": True,
-            # Missing Malachai, Innocence, Kitava, Elder, Shaper, Sirus
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertFalse(result, "Should return False when boss entries are missing")
-
-    def test_check_for_victory_false_values(self):
-        """Test victory check with explicitly False boss status values"""
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": True,
-            "Malachai": True,
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": False  # This one is not defeated
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertFalse(result, "Should return False when any boss is explicitly False")
-
-    def test_check_for_victory_none_values(self):
-        """Test victory check with None boss status values"""
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": True,
-            "Malachai": True,
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": None  # This should be treated as not defeated
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertFalse(result, "Should return False when any boss status is None")
-
-    def test_check_for_victory_extra_boss_entries(self):
-        """Test victory check with extra boss entries that shouldn't affect result"""
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": True,
-            "Malachai": True,
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": True,
-            "SomeOtherBoss": False,  # Extra entry shouldn't matter
-            "UnknownBoss": None     # Extra entry shouldn't matter
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertTrue(result, "Should return True when all required bosses defeated despite extra entries")
-
-    def test_check_for_victory_case_sensitivity(self):
-        """Test victory check with different case boss names"""
-        boss_status = {
-            "merveil": True,  # lowercase
-            "THE VAAL OVERSOUL": True,  # uppercase
-            "Dominus": True,
-            "Malachai": True,
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": True
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertFalse(result, "Should be case sensitive for boss names")
-
-    def test_check_for_victory_empty_context(self):
-        """Test victory check with empty or None context"""
-        context = Mock()
-        context.ctx = None
-        
-        with self.assertRaises(AttributeError):
-            validationLogic.check_for_victory(context)
-
-    def test_check_for_victory_no_boss_status_attribute(self):
-        """Test victory check when boss_status attribute doesn't exist"""
-        context = Mock()
-        context.ctx = Mock()
-        # Don't set boss_status attribute
-        
-        with self.assertRaises(AttributeError):
-            validationLogic.check_for_victory(context)
-
-    def test_check_for_victory_individual_boss_requirements(self):
-        """Test that each individual boss is required for victory"""
-        required_bosses = [
-            "Merveil",
-            "The Vaal Oversoul", 
-            "Dominus",
-            "Malachai",
-            "Innocence",
-            "Kitava",
-            "Elder",
-            "Shaper",
-            "Sirus"
+    def test_check_for_victory_act_completion_goals(self):
+        """Test victory check for act completion goals"""
+        test_cases = [
+            (Options.Goal.option_complete_act_1, "The Southern Forest"),
+            (Options.Goal.option_complete_act_2, "The City of Sarn"),
+            (Options.Goal.option_complete_act_3, "The Aqueduct"),
+            (Options.Goal.option_complete_act_4, "The Slave Pens"),
         ]
         
-        # Test missing each boss individually
-        for missing_boss in required_bosses:
-            with self.subTest(missing_boss=missing_boss):
-                boss_status = {boss: True for boss in required_bosses if boss != missing_boss}
-                context = self.create_mock_context(boss_status)
-                result = validationLogic.check_for_victory(context)
-                self.assertFalse(result, f"Should return False when {missing_boss} is missing")
-
-    def test_check_for_victory_truthy_values(self):
-        """Test victory check with various truthy values"""
-        boss_status = {
-            "Merveil": 1,  # truthy number
-            "The Vaal Oversoul": "yes",  # truthy string
-            "Dominus": [1],  # truthy list
-            "Malachai": {"defeated": True},  # truthy dict
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": True
-        }
-        
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertTrue(result, "Should accept various truthy values as defeated")
-
-    def test_check_for_victory_falsy_values(self):
-        """Test victory check with various falsy values"""
-        falsy_values = [False, 0, "", [], {}, None]
-        
-        for falsy_value in falsy_values:
-            with self.subTest(falsy_value=repr(falsy_value)):
-                boss_status = {
-                    "Merveil": True,
-                    "The Vaal Oversoul": True,
-                    "Dominus": True,
-                    "Malachai": True,
-                    "Innocence": True,
-                    "Kitava": True,
-                    "Elder": True,
-                    "Shaper": True,
-                    "Sirus": falsy_value  # Test with falsy value
-                }
+        for goal, zone in test_cases:
+            with self.subTest(goal=goal, zone=zone):
+                context = self.create_mock_context({"goal": goal})
+                character = self.create_mock_character()
                 
-                context = self.create_mock_context(boss_status)
-                result = validationLogic.check_for_victory(context)
-                self.assertFalse(result, f"Should return False for falsy value: {repr(falsy_value)}")
+                # Mock async task creation to avoid event loop issues
+                with patch('asyncio.create_task') as mock_create_task:
+                    mock_task = Mock()
+                    mock_create_task.return_value = mock_task
+                    
+                    result = validationLogic.check_for_victory(context, zone, character)
+                    # Should return a task for victory
+                    self.assertIsNotNone(result)
 
-    def test_check_for_victory_performance(self):
-        """Test victory check performance with large boss status dict"""
-        # Create a large boss status dict with many extra entries
-        boss_status = {}
+    def test_check_for_victory_wrong_zone(self):
+        """Test victory check in wrong zone"""
+        context = self.create_mock_context({"goal": Options.Goal.option_complete_act_1})
+        character = self.create_mock_character()
         
-        # Add required bosses
-        required_bosses = [
-            "Merveil", "The Vaal Oversoul", "Dominus", "Malachai",
-            "Innocence", "Kitava", "Elder", "Shaper", "Sirus"
-        ]
-        for boss in required_bosses:
-            boss_status[boss] = True
-            
-        # Add many extra bosses
-        for i in range(1000):
-            boss_status[f"ExtraBoss{i}"] = True
-            
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertTrue(result, "Should handle large boss status dict efficiently")
+        result = validationLogic.check_for_victory(context, "Wrong Zone", character)
+        # Should not trigger victory
+        self.assertIsNone(result)
 
-    def test_check_for_victory_return_type(self):
-        """Test that check_for_victory returns boolean type"""
-        # Test True case
-        boss_status = {
-            "Merveil": True,
-            "The Vaal Oversoul": True,
-            "Dominus": True,
-            "Malachai": True,
-            "Innocence": True,
-            "Kitava": True,
-            "Elder": True,
-            "Shaper": True,
-            "Sirus": True
+    def test_check_for_victory_boss_goal_setup(self):
+        """Test that boss goal setup doesn't crash"""
+        context = self.create_mock_context({
+            "goal": Options.Goal.option_defeat_bosses,
+            "bosses_for_goal": ["shaper", "elder"]
+        })
+        character = self.create_mock_character()
+        
+        # Mock the Locations.bosses to avoid KeyError and bosses_by_id
+        with patch('worlds.poe.poeClient.validationLogic.Locations.bosses', {"shaper": {"id": 1}, "elder": {"id": 2}}), \
+             patch('worlds.poe.poeClient.validationLogic.Locations.bosses_by_id', {1: {"name": "Shaper"}, 2: {"name": "Elder"}}):
+            
+            result = validationLogic.check_for_victory(context, "any_zone", character)
+            # Should return None when bosses haven't been defeated (correct behavior)
+            self.assertIsNone(result)
+
+    def test_check_for_victory_bosses_defeated(self):
+        """Test victory when all required bosses are defeated"""
+        # Mock network items representing defeated bosses
+        mock_item1 = Mock()
+        mock_item1.item = 1  # Shaper ID
+        mock_item2 = Mock()
+        mock_item2.item = 2  # Elder ID
+        
+        context = self.create_mock_context({
+            "goal": Options.Goal.option_defeat_bosses,
+            "bosses_for_goal": ["shaper", "elder"]
+        })
+        context.items_received = [mock_item1, mock_item2]
+        character = self.create_mock_character()
+        
+        # Mock the Locations to provide boss data - the key is that received_item_names
+        # gets populated from bosses_by_id[item_id]["name"] for items received
+        # Boss names need "defeat " prefix to match required format
+        bosses_by_id = {
+            1: {"name": "defeat shaper"},
+            2: {"name": "defeat elder"}
         }
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertIsInstance(result, bool, "Should return boolean type")
-        self.assertTrue(result)
-        
-        # Test False case
-        boss_status = {}
-        context = self.create_mock_context(boss_status)
-        result = validationLogic.check_for_victory(context)
-        self.assertIsInstance(result, bool, "Should return boolean type")
-        self.assertFalse(result)
 
+        with patch('worlds.poe.poeClient.validationLogic.Locations.bosses', {"shaper": {"id": 1}, "elder": {"id": 2}}), \
+             patch('worlds.poe.poeClient.validationLogic.Locations.bosses_by_id', bosses_by_id), \
+             patch('asyncio.create_task') as mock_create_task:
+            
+            mock_task = Mock()
+            mock_create_task.return_value = mock_task
+            
+            result = validationLogic.check_for_victory(context, "any_zone", character)
+            # Should return a task when all bosses are defeated
+            self.assertIsNotNone(result, "Expected victory task when all required bosses are defeated")
+
+    def test_check_for_victory_no_goal_set(self):
+        """Test victory check when no goal is set"""
+        context = self.create_mock_context({"goal": -1})
+        character = self.create_mock_character()
+        
+        with self.assertRaises(ValueError):
+            validationLogic.check_for_victory(context, "any_zone", character)
 
 if __name__ == '__main__':
     unittest.main()
