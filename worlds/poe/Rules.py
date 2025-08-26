@@ -20,14 +20,15 @@ MAX_SUPPORT_GEMS        = 50 # you will get more, but this is the max required f
 
 ACT_0_USABLE_GEMS = 4
 ACT_0_FLASK_SLOTS = 3
-ACT_0_NORMAL_WEAPONS = 2
-ACT_0_NORMAL_ARMOUR = 2
+ACT_0_WEAPON_TYPES = 2
+ACT_0_ARMOUR_TYPES = 2
 ACT_0_ADDITIONAL_LOCATIONS = 8
 _debug = False
 _very_debug = False
 
 
-req_to_use_weapon_types = ["Axe","Bow","Claw","Dagger","Mace","Sceptre","Staff","Sword","Wand",
+armor_categories = ["BodyArmour", "Boots", "Gloves", "Helmet", "Amulet", "Belt", "Ring (left)", "Ring (right)", "Quiver", "Shield"]
+weapon_categories = ["Axe","Bow","Claw","Dagger","Mace","Sceptre","Staff","Sword","Wand",
                             #"Fishing Rod", # yeahhhh no, not required for logic
                             #"Unarmed" # every character can use unarmed, so no need to check this
                             ]
@@ -44,7 +45,7 @@ passives_required_for_act = {
     9: 100,
     10: 109,
     11: 120,
-    12: 136,  # max ammount of passives in the game (including ascendancy points)
+    12: 136,  # max amount of passives in the game (including ascendancy points)
 }
 
 def get_ascendancy_amount_for_act(act, opt):
@@ -78,6 +79,9 @@ def completion_condition(world: "PathOfExileWorld",  state: CollectionState) -> 
 def can_reach(act: int, world , state: CollectionState) -> bool:
     opt : PathOfExileOptions = world.options
 
+    if opt.disable_generation_logic.value:
+        return True
+
     reachable = True
     if act < 1:
         return True
@@ -93,10 +97,10 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
     # make a list of valid weapon types, based on the state
 
     valid_weapon_types = {
-        item for item in req_to_use_weapon_types
+        item for item in weapon_categories
         if state.has_from_list([i["name"] for i in Items.get_by_category(item)], world.player, 1)
     }
-    valid_weapon_types.add("Unarmed")  # every character can use unarmed, so we always add it
+    valid_weapon_types.add("Unarmed")  # every character can use unarmed, so we add it as a valid type, for gems
     
     ascedancy_count = state.count_from_list([item['name'] for item in Items.get_ascendancy_class_items(opt.starting_character.current_option_name)], world.player)
     gear_count = state.count_from_list([item['name'] for item in Items.get_gear_items()], world.player)
@@ -110,13 +114,20 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
     usable_skill_gem_count = (state.count_from_list(gems_for_our_weapons, world.player))
 
 
-    
+    valid_weapon_types.remove("Unarmed") # we don't care about this for the rest of the logic
     if act == 1:
-        normal_weapons = state.count_from_list([item['name'] for item in Items.get_by_has_every_category({"Weapon","Normal"})], world.player)
-        normal_armour = state.count_from_list([item['name'] for item in Items.get_by_has_every_category({"Armour", "Normal"})], world.player)
+            # Check distinct armor categories
+
+        distinct_armor_count = 0
+
+        for category in armor_categories:
+            category_items = [item['name'] for item in Items.get_by_category(category)]
+            if category_items and state.has_from_list(category_items, world.player, 1):
+                distinct_armor_count += 1
+
         reachable &= usable_skill_gem_count >= ACT_0_USABLE_GEMS
-        reachable &= normal_weapons >= ACT_0_NORMAL_WEAPONS
-        reachable &= normal_armour >= ACT_0_NORMAL_ARMOUR
+        reachable &= len(valid_weapon_types) >= ACT_0_WEAPON_TYPES
+        reachable &= distinct_armor_count >= ACT_0_ARMOUR_TYPES
         reachable &= flask_count >= ACT_0_FLASK_SLOTS
 
 
@@ -193,15 +204,15 @@ def SelectLocationsToAdd (world: "PathOfExileWorld", target_amount):
     def total_needed_by_act(act: int, opt: PathOfExileOptions) -> int:
         if act < 1:
             return 0
-        needed_locations_for_act = 0
-        needed_locations_for_act += ACT_0_USABLE_GEMS + ACT_0_NORMAL_WEAPONS + ACT_0_NORMAL_ARMOUR + ACT_0_FLASK_SLOTS + ACT_0_ADDITIONAL_LOCATIONS
-        needed_locations_for_act += get_ascendancy_amount_for_act(act, opt)
-        needed_locations_for_act += get_gear_amount_for_act(act, opt)
-        needed_locations_for_act += get_flask_amount_for_act(act, opt)
-        needed_locations_for_act += get_gem_amount_for_act(act, opt)
-        needed_locations_for_act += get_skill_gem_amount_for_act(act, opt)
-        needed_locations_for_act += get_passives_amount_for_act(act, opt)
-        return needed_locations_for_act
+        needed_locations = 0
+        needed_locations += ACT_0_USABLE_GEMS + ACT_0_WEAPON_TYPES + ACT_0_ARMOUR_TYPES + ACT_0_FLASK_SLOTS + ACT_0_ADDITIONAL_LOCATIONS
+        needed_locations += get_ascendancy_amount_for_act(act, opt)
+        needed_locations += get_gear_amount_for_act(act, opt)
+        needed_locations += get_flask_amount_for_act(act, opt)
+        needed_locations += get_gem_amount_for_act(act, opt)
+        needed_locations += get_skill_gem_amount_for_act(act, opt)
+        needed_locations += get_passives_amount_for_act(act, opt)
+        return needed_locations
 
 
     for act in range(1, goal_act + 1):
@@ -218,8 +229,7 @@ def SelectLocationsToAdd (world: "PathOfExileWorld", target_amount):
         for loc in selected_locations:
             total_available_locations.remove(loc)
         selected_locations_result.extend(selected_locations)
-    
-    
+
     world.random.shuffle(total_available_locations)
     selected_locations_result.extend(total_available_locations)
     return selected_locations_result[:target_amount]

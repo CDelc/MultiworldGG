@@ -46,6 +46,7 @@ class PathOfExileItem(Item):
 
 
 item_table: Dict[int, ItemDict] = ItemTable.item_table
+alternate_gems: Dict[str, Dict] = ItemTable.alternate_gems
 if _verbose_debug:
     logger.debug(f"Loaded {len(item_table)} items from ItemTable.")
 memoize_cache: Dict[str, list[ItemDict]] = {}

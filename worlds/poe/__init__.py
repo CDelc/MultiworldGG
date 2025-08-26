@@ -233,6 +233,7 @@ class PathOfExileWorld(World):
             "gucciHobo": options.gucci_hobo_mode.value,
             "passivePointsAsItems": options.add_passive_skill_points_to_item_pool.value,
             "LevelingUpAsLocations": options.add_leveling_up_to_location_pool.value,
+            "ProgressiveGear": options.progressive_gear.value,
             "goal": options.goal.value,
             "starting_character": Options.option_starting_character_to_class_name(options.starting_character.value),
             "bosses_for_goal": self.bosses_for_goal,
@@ -260,9 +261,17 @@ class PathOfExileWorld(World):
 
 
 # ---------
-def setup_early_items(world, options):
+def setup_early_items(world: PathOfExileWorld, options: PathOfExileOptions):
     setup_character_items(world, options)
     max_level = Locations.acts[world.goal_act]["maxMonsterLevel"]
+    
+    if options.progressive_gear.value:
+        for item in Items.get_by_category(category="Random Gear", table=world.items_to_place):
+            world.items_to_place.pop(world.item_name_to_id[item["name"]], None)
+    else:
+        for item in Items.get_by_category(category="Progressive Gear", table=world.items_to_place):
+            world.items_to_place.pop(world.item_name_to_id[item["name"]], None)
+    
     if options.gucci_hobo_mode.value != options.gucci_hobo_mode.option_disabled:
         uniques = [item for item in Items.item_table.values() if "Unique" in item["category"]]
         for unique in uniques:

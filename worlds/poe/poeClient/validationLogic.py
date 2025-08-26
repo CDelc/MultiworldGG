@@ -235,7 +235,7 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
     if not total_received_items:
         logger.error("No valid items found in total_received_items. Are you sure the item table is correct?")
         return ["No items received from the server... are you sure you are connected?"]
-
+    total_received_items_names = [i["name"] for i in total_received_items]
     simple_equipment_slots = ["BodyArmour","Amulet","Belt","Boots","Gloves","Helmet"]
 
     normal_flask_count = 0
@@ -244,7 +244,7 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
 
     # --------- VALIDATION LOGIC STARTS HERE ---------
 
-    if character.class_ not in [i["name"] for i in total_received_items]:
+    if character.class_ not in total_received_items_names:
         errors.append(f"Class {character.class_}")
 
     gucci_rarity_check = {}
@@ -255,36 +255,46 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
         # simple checks.
         for slot in simple_equipment_slots:
             if equipped_item.inventoryId == slot:
-                errors.append(rarity_check(total_received_items, rarity, slot))
+                errors.append(rarity_check(ctx, total_received_items_names, rarity, slot))
                 
         if equipped_item.inventoryId == "Ring":
-            errors.append(rarity_check(total_received_items, rarity, "Ring (left)"))
+            errors.append(rarity_check(ctx, total_received_items_names, rarity, "Ring (left)"))
         if equipped_item.inventoryId == "Ring2":
-            errors.append(rarity_check(total_received_items, rarity, "Ring (right)"))
+            errors.append(rarity_check(ctx, total_received_items_names, rarity, "Ring (right)"))
  #       if equipped_item.inventoryId == "Offhand":
  #           if equipped_item.baseType in Items.quiver_base_types:
- #               errors.append(rarity_check(total_received_items, rarity, "Quiver"))
+ #               errors.append(rarity_check(ctx, total_received_items, rarity, "Quiver"))
  #           else:
- #               errors.append(rarity_check(total_received_items, rarity, "Shield"))
+ #               errors.append(rarity_check(ctx, total_received_items, rarity, "Shield"))
         if equipped_item.inventoryId == "Weapon" or equipped_item.inventoryId == "Offhand":
             for prop in equipped_item.properties:
                 prop_name = prop.name
                 for weapon_base_type in Items.held_equipment_types:
                     if prop_name.lower().endswith(weapon_base_type.lower()):
-                        errors.append(rarity_check(total_received_items, rarity, weapon_base_type))
+                        errors.append(rarity_check(ctx, total_received_items_names, rarity, weapon_base_type))
 
         equipped_sockets = 0
         if equipped_item.socketedItems is not None:
             for socketed_item in equipped_item.socketedItems:
                 if socketed_item.support:
                     equipped_sockets += 1
-                if (socketed_item.baseType not in [i["name"] for i in total_received_items] and
-                        "eye jewel" not in socketed_item.baseType.lower()): # eye jewels are not tracked right now.
+                if socketed_item.baseType not in total_received_items_names:
+                    if "eye jewel" in socketed_item.baseType.lower():
+                        continue # eye jewels are not tracked right now.
+                    # Check for alternate gems
+                    if socketed_item.baseType.startswith("Vaal "):
+                        if not "Vaal Gems" in total_received_items_names:
+                            errors.append(f"Socketed Vaal Gem {socketed_item.baseType} in {equipped_item.inventoryId} ")
+                            continue
+                    if socketed_item.baseType in Items.alternate_gems:
+                        if not Items.alternate_gems[socketed_item.baseType].get("baseGem") in total_received_items_names:
+                            errors.append(f"Socketed Alternate Gem {socketed_item.baseType} in {equipped_item.inventoryId} ")
+                            continue
                     errors.append(f"Socketed {socketed_item.baseType} in {equipped_item.inventoryId}")
 
         links = [i["name"] for i in total_received_items if i["name"] == f"Progressive max links - {equipped_item.inventoryId}"]
         if len(links) < equipped_sockets:
-            errors.append(f"Too many links for {equipped_item.baseType}")
+            errors.append(f"Too many supports linked in {equipped_item.baseType}")
 
         if equipped_item.inventoryId == "Flask":
             flask_rarity = equipped_item.rarity
@@ -322,22 +332,37 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
         logger.info("YOU ARE OUT OF LOGIC: " + ", ".join(errors))
         logger.info("YOU ARE OUT OF LOGIC: " + ", ".join(errors))
         logger.info("YOU ARE OUT OF LOGIC: " + ", ".join(errors))
+        logger.error("YOU ARE OUT OF LOGIC: " + ", ".join(errors))
     return errors
     
 
-def rarity_check(total_recieved_items, rarity: str, equipmentId: str) -> str | None:
+def rarity_check(ctx: "PathOfExileContext", total_received_items_names, rarity: str, equipment_id: str) -> str | None:
+    """
+    Checks if the character has the correct rarity of the given equipment.
+    Returns the item if the rarity is incorrect, otherwise returns None.
+    """
     valid = True
     if rarity == "Unique":
-        valid = True if f"Unique {equipmentId}" in [i["name"] for i in total_recieved_items] else False
-    elif rarity == "Rare":
-        valid = True if f"Rare {equipmentId}" in [i["name"] for i in total_recieved_items] else False
-    elif rarity == "Magic":
-        valid = True if f"Magic {equipmentId}" in [i["name"] for i in total_recieved_items] else False
+        valid = True if f"Unique {equipment_id}" in total_received_items_names else False
+
+    if ctx.game_options.get("ProgressiveGear") is False:
+        if rarity == "Rare":
+            valid = True if f"Rare {equipment_id}" in total_received_items_names else False
+        elif rarity == "Magic":
+            valid = True if f"Magic {equipment_id}" in total_received_items_names else False
+        else:
+            valid = True if f"Normal {equipment_id}" in total_received_items_names else False
     else:
-        valid = True if f"Normal {equipmentId}" in [i["name"] for i in total_recieved_items] else False
-    
+        prog = len([i for i in total_received_items_names if i == f'Progressive {equipment_id}'])
+        if rarity == "Rare":
+            valid = True if prog >= 3 else False
+        elif rarity == "Magic":
+            valid = True if prog >= 2 else False
+        elif rarity == "Normal":
+            valid = True if prog >= 1 else False
+        
     if not valid:
-        return equipmentId
+        return equipment_id
     else: 
         return None
 

@@ -17,8 +17,7 @@ for i, item in enumerate(level_location_array,
     item["id"] = i
     level_location_table[i] = item
 
-data = pkgutil.get_data("worlds.poe.data", "Bosses.json")
-bosses = json.loads(data.decode("utf-8"))
+bosses = json.loads(pkgutil.get_data("worlds.poe.data", "Bosses.json").decode("utf-8"))
 
 
 if __name__ == "__main__":

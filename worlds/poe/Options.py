@@ -88,8 +88,6 @@ class AllowUnlockOfOtherCharacters(Toggle):
     display_name = "Allow Unlock of Other Characters"
     default = True
 
-#--- Starting Options ---
-
 class UsableStartingGear(Choice):
     """
     Specifies if you should start with the gear that you find in the tutorial, for your starting character.
@@ -117,6 +115,24 @@ class GucciHoboMode(Choice):
     default = 4
 
 #--- Generation Options ---
+
+class DisableGenerationLogic(Toggle):
+    """
+    Disables all generation logic, ignoring any placement rules, and placing items completely randomly. This ignores all other "Minimum Available" Options.
+    This will likely make your run very difficult, and is not recommended.
+    """
+    display_name = "Disable Generation Logic"
+    default = False
+
+class ProgressiveGear(Toggle):
+    """
+    Controls whether gear rarity follows a progressive unlock system. Progressive gear is recommended for better game balance and pacing.
+    When enabled, you'll receive gear upgrades that will increase in rarity.
+    When disabled, you can receive gear of any rarity (you might find rare items before normal ones).
+    """
+    display_name = "Progressive Gear"
+    default = True
+
 class GearUpgrades(Choice):
     """
     Specifies if gear rarity should be restricted to a certain rarity, unlockable through items found in the multiworld.
@@ -255,12 +271,14 @@ poe_options_groups = [
         StartingCharacter,
         AscendanciesAvailablePerClass,
         AllowUnlockOfOtherCharacters,
-    ]),
-    OptionGroup("Starting Options", [
+
         UsableStartingGear,
         GucciHoboMode,
     ]),
     OptionGroup("Generation Options", [
+        ProgressiveGear,
+        DisableGenerationLogic,
+        
         GearUpgrades,
         GearUpgradesPerAct,
 
@@ -397,10 +415,12 @@ class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
     starting_character: StartingCharacter
     ascendancies_available_per_class: AscendanciesAvailablePerClass
     allow_unlock_of_other_characters: AllowUnlockOfOtherCharacters
-
     usable_starting_gear: UsableStartingGear
     gucci_hobo_mode: GucciHoboMode
 
+    progressive_gear: ProgressiveGear
+    disable_generation_logic: DisableGenerationLogic
+    
     gear_upgrades: GearUpgrades
     gear_upgrades_per_act: GearUpgradesPerAct
 
