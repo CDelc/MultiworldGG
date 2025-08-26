@@ -255,12 +255,12 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
         # simple checks.
         for slot in simple_equipment_slots:
             if equipped_item.inventoryId == slot:
-                errors.append(rarity_check(ctx, total_received_items_names, rarity, slot))
+                errors.append(rarity_check(total_received_items_names, rarity, slot))
                 
         if equipped_item.inventoryId == "Ring":
-            errors.append(rarity_check(ctx, total_received_items_names, rarity, "Ring (left)"))
+            errors.append(rarity_check(total_received_items_names, rarity, "Ring (left)"))
         if equipped_item.inventoryId == "Ring2":
-            errors.append(rarity_check(ctx, total_received_items_names, rarity, "Ring (right)"))
+            errors.append(rarity_check(total_received_items_names, rarity, "Ring (right)"))
  #       if equipped_item.inventoryId == "Offhand":
  #           if equipped_item.baseType in Items.quiver_base_types:
  #               errors.append(rarity_check(ctx, total_received_items, rarity, "Quiver"))
@@ -271,7 +271,7 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
                 prop_name = prop.name
                 for weapon_base_type in Items.held_equipment_types:
                     if prop_name.lower().endswith(weapon_base_type.lower()):
-                        errors.append(rarity_check(ctx, total_received_items_names, rarity, weapon_base_type))
+                        errors.append(rarity_check(total_received_items_names, rarity, weapon_base_type))
 
         equipped_sockets = 0
         if equipped_item.socketedItems is not None:
@@ -306,11 +306,27 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
                 unique_flask_count += 1
                 
     # get count of items.name that match the progressive unlocks
-    if normal_flask_count > len([i["name"] for i in total_received_items if i["name"] == 'Progressive Normal Flask Unlock']):
+
+    normal_flasks_usable = len([i for i in total_received_items_names if i == 'Progressive Normal Flask'])
+    magic_flasks_usable = len([i for i in total_received_items_names if i == 'Progressive Magic Flask'])
+    unique_flask_usable = len([i for i in total_received_items_names if i == 'Progressive Unique Flask'])
+    
+    total_progressive_flasks_usable = len([i for i in total_received_items_names if i == 'Progressive Flask Unlock'])
+    normal_flasks_usable += max(total_progressive_flasks_usable, (5 - normal_flasks_usable))
+    total_progressive_flasks_usable -= normal_flasks_usable
+
+    magic_flasks_usable += max(total_progressive_flasks_usable, (5 - magic_flasks_usable))
+    total_progressive_flasks_usable -= magic_flasks_usable
+
+    unique_flask_usable += max(total_progressive_flasks_usable, (5 - unique_flask_usable))
+
+
+
+    if normal_flask_count > normal_flasks_usable:
         errors.append("Normal Flasks")
-    if magic_flask_count > len([i["name"] for i in total_received_items if i["name"] == 'Progressive Magic Flask Unlock']):
+    if magic_flask_count > magic_flasks_usable:
         errors.append("Magic Flasks")
-    if unique_flask_count > len([i["name"] for i in total_received_items if i["name"] == 'Progressive Unique Flask Unlock']):
+    if unique_flask_count > unique_flask_usable:
         errors.append("Unique Flasks")
 
     gucci_hobo_mode = ctx.game_options.get("gucciHobo", False)
@@ -336,30 +352,30 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
     return errors
     
 
-def rarity_check(ctx: "PathOfExileContext", total_received_items_names, rarity: str, equipment_id: str) -> str | None:
+def rarity_check(total_received_items_names, rarity: str, equipment_id: str) -> str | None:
     """
     Checks if the character has the correct rarity of the given equipment.
     Returns the item if the rarity is incorrect, otherwise returns None.
     """
     valid = True
+    unlocked_rarity = set()
+    
+    prog = len([i for i in total_received_items_names if i == f'Progressive {equipment_id}'])
+    unlocked_rarity.add("Unique") if prog >= 4 else None
+    unlocked_rarity.add("Rare") if prog >= 3 else None
+    unlocked_rarity.add("Magic") if prog >= 2 else None
+    unlocked_rarity.add("Normal") if prog >= 1 else None
+        
     if rarity == "Unique":
-        valid = True if f"Unique {equipment_id}" in total_received_items_names else False
-
-    if ctx.game_options.get("ProgressiveGear") is False:
-        if rarity == "Rare":
-            valid = True if f"Rare {equipment_id}" in total_received_items_names else False
-        elif rarity == "Magic":
-            valid = True if f"Magic {equipment_id}" in total_received_items_names else False
-        else:
-            valid = True if f"Normal {equipment_id}" in total_received_items_names else False
+        valid = True if f"Unique {equipment_id}" in total_received_items_names or "Unique" in unlocked_rarity else False
+    if rarity == "Rare":
+        valid = True if f"Rare {equipment_id}" in total_received_items_names or "Rare" in unlocked_rarity else False
+    elif rarity == "Magic":
+        valid = True if f"Magic {equipment_id}" in total_received_items_names or "Magic" in unlocked_rarity else False
     else:
-        prog = len([i for i in total_received_items_names if i == f'Progressive {equipment_id}'])
-        if rarity == "Rare":
-            valid = True if prog >= 3 else False
-        elif rarity == "Magic":
-            valid = True if prog >= 2 else False
-        elif rarity == "Normal":
-            valid = True if prog >= 1 else False
+        valid = True if f"Normal {equipment_id}" in total_received_items_names or "Normal" in unlocked_rarity else False
+
+       
         
     if not valid:
         return equipment_id
