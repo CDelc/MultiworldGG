@@ -367,13 +367,13 @@ def rarity_check(total_received_items_names, rarity: str, equipment_id: str) -> 
     unlocked_rarity.add("Normal") if prog >= 1 else None
         
     if rarity == "Unique":
-        valid = True if f"Unique {equipment_id}" in total_received_items_names or "Unique" in unlocked_rarity else False
-    if rarity == "Rare":
-        valid = True if f"Rare {equipment_id}" in total_received_items_names or "Rare" in unlocked_rarity else False
+        valid = f"Unique {equipment_id}" in total_received_items_names or "Unique" in unlocked_rarity
+    elif rarity == "Rare":
+        valid = f"Rare {equipment_id}" in total_received_items_names or "Rare" in unlocked_rarity
     elif rarity == "Magic":
-        valid = True if f"Magic {equipment_id}" in total_received_items_names or "Magic" in unlocked_rarity else False
+        valid = f"Magic {equipment_id}" in total_received_items_names or "Magic" in unlocked_rarity
     else:
-        valid = True if f"Normal {equipment_id}" in total_received_items_names or "Normal" in unlocked_rarity else False
+        valid = f"Normal {equipment_id}" in total_received_items_names or "Normal" in unlocked_rarity
 
        
         

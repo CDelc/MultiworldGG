@@ -48,6 +48,11 @@ class TestValidationLogic(PoeTestBase):
         self.mock_character.inventory = []
         self.mock_character.equipment = []
         
+        # Mock passives attribute for character
+        self.mock_passives = Mock()
+        self.mock_passives.hashes = []  # Empty list for no passive points used
+        self.mock_character.passives = self.mock_passives
+        
         # Mock context
         self.mock_ctx = Mock()
         self.mock_ctx.character_name = "TestCharacter"
