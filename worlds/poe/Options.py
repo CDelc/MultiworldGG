@@ -124,14 +124,17 @@ class DisableGenerationLogic(Toggle):
     display_name = "Disable Generation Logic"
     default = False
 
-class ProgressiveGear(Toggle):
+class ProgressiveGear(Choice):
     """
     Controls whether gear rarity follows a progressive unlock system. Progressive gear is recommended for better game balance and pacing.
     When enabled, you'll receive gear upgrades that will increase in rarity.
     When disabled, you can receive gear of any rarity (you might find rare items before normal ones).
     """
     display_name = "Progressive Gear"
-    default = True
+    option_enabled = 1
+    option_disabled = 0
+    option_progressive_except_for_unique = 2
+    default = 1
 
 class GearUpgrades(Choice):
     """

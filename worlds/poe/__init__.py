@@ -259,18 +259,26 @@ class PathOfExileWorld(World):
                             regions_to_highlight=self.multiworld.get_all_state(self.player).reachable_regions[
                                 self.player])
 
-
 # ---------
 def setup_early_items(world: PathOfExileWorld, options: PathOfExileOptions):
     setup_character_items(world, options)
     max_level = Locations.acts[world.goal_act]["maxMonsterLevel"]
     
-    if options.progressive_gear.value:
+    if options.progressive_gear.value == options.progressive_gear.option_enabled:
         for item in Items.get_by_category(category="Random Gear", table=world.items_to_place):
             world.items_to_place.pop(world.item_name_to_id[item["name"]], None)
-    else:
+    elif options.progressive_gear.value == options.progressive_gear.option_disabled:
         for item in Items.get_by_category(category="Progressive Gear", table=world.items_to_place):
             world.items_to_place.pop(world.item_name_to_id[item["name"]], None)
+    elif options.progressive_gear.value == options.progressive_gear.option_progressive_except_for_unique:
+        for item in Items.get_by_category(category="Progressive Gear", table=world.items_to_place):
+            if "Flask" not in item["category"]:
+                item["count"] -= 1
+            elif "Flask" in item["category"]:
+                item["count"] -= 5
+        for item in Items.get_by_category(category="Random Gear", table=world.items_to_place):
+            if "Unique" not in item["category"]:
+                world.items_to_place.pop(world.item_name_to_id[item["name"]], None)
     
     if options.gucci_hobo_mode.value != options.gucci_hobo_mode.option_disabled:
         uniques = [item for item in Items.item_table.values() if "Unique" in item["category"]]
