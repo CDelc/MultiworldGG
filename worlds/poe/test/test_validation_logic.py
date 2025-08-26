@@ -214,6 +214,40 @@ class TestValidationLogic(PoeTestBase):
         flask_errors = [e for e in non_none_errors if "flask" in str(e).lower()]
         self.assertGreater(len(flask_errors), 0, f"Expected flask errors, got: {non_none_errors}")
 
+    def test_validate_char_equipment_magic_flask_validation(self):
+        """Test flask validation logic"""
+        # Test with flasks to exceed the amount allowed
+        mock_flasks = []
+        for i in range(2):  # Create 2 Magic flasks
+            mock_flask = Mock()
+            mock_flask.rarity = "Magic"
+            mock_flask.baseType = f"Life Flask {i}"
+            mock_flask.inventoryId = "Flask"
+            mock_flask.socketedItems = []
+            mock_flask.properties = []
+            mock_flasks.append(mock_flask)
+
+        self.mock_character.equipment = mock_flasks
+
+        # With no flask unlocks (no Progressive Normal Flask items)
+        total_received_items = [{"name": "Marauder"},
+                                {"name": "Progressive Flask Unlock"},
+                                {"name": "Progressive Flask Unlock"},
+                                {"name": "Progressive Flask Unlock"},
+                                {"name": "Progressive Flask Unlock"},
+                                {"name": "Progressive Flask Unlock"},
+                                {"name": "Progressive Flask Unlock"},
+                                {"name": "Progressive Flask Unlock"},
+                                ]
+
+        errors = validationLogic.validate_char_equipment(
+            self.mock_character, self.mock_ctx, total_received_items
+        )
+
+        non_none_errors = [e for e in errors if e is not None]
+        flask_errors = [e for e in non_none_errors if "flask" in str(e).lower()]
+        self.assertEqual(len(flask_errors), 0, f"Expected flask errors, got: {non_none_errors}")
+
     def test_validate_char_equipment_gucci_hobo_mode(self):
         """Test Gucci Hobo Mode validation"""
         self.mock_ctx.game_options["gucciHobo"] = 3  # No non-unique items
