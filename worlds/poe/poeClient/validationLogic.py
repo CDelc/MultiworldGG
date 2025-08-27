@@ -330,7 +330,9 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
         errors.append("Unique Flasks")
 
     gucci_hobo_mode = ctx.game_options.get("gucciHobo", False)
-    if gucci_hobo_mode == 1 or gucci_hobo_mode == 2 or gucci_hobo_mode ==3:
+    if (gucci_hobo_mode == Options.GucciHoboMode.option_allow_one_slot_of_any_rarity or
+            gucci_hobo_mode == Options.GucciHoboMode.option_allow_one_slot_of_normal_rarity or
+            gucci_hobo_mode == Options.GucciHoboMode.option_no_non_unique_items):
         normal_gear = gucci_rarity_check.setdefault("Normal", 0)
         magic_gear = gucci_rarity_check.setdefault("Magic", 0)
         rare_gear = gucci_rarity_check.setdefault("Rare", 0)

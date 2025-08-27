@@ -108,11 +108,11 @@ class GucciHoboMode(Choice):
     Expect a very slow start, involving farming early act 1 zones.
     """
     display_name = "Gucci Hobo Mode"
-    option_disabled = 4
+    option_disabled = 0
     option_allow_one_slot_of_any_rarity = 1
     option_allow_one_slot_of_normal_rarity = 2
     option_no_non_unique_items = 3
-    default = 4
+    default = 0
 
 #--- Generation Options ---
 
