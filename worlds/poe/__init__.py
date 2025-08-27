@@ -15,6 +15,7 @@ from . import Items
 from . import Locations
 from . import Regions as poeRegions
 from . import Rules as poeRules
+from . import Options
 from .Version import POE_VERSION
 
 logger = logging.getLogger("poe")
