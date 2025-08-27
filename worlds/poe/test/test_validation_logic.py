@@ -515,7 +515,7 @@ class TestValidationLogic(PoeTestBase):
              patch('worlds.poe.poeClient.validationLogic.validate_and_update') as mock_validate, \
              patch('worlds.poe.poeClient.validationLogic.check_for_victory') as mock_victory:
             
-            mock_get_zone.return_value = "The Twilight Strand"
+            mock_get_zone.return_value = "early act 1"
             mock_get_char.return_value = self.mock_character
             mock_get_items.return_value = []
             mock_validate.return_value = []
@@ -545,7 +545,7 @@ class TestValidationLogic(PoeTestBase):
         self.mock_ctx.character_name = None
         
         with patch('worlds.poe.poeClient.validationLogic.textUpdate.get_zone_from_line') as mock_get_zone:
-            mock_get_zone.return_value = "The Twilight Strand"
+            mock_get_zone.return_value = "early act 1"
             
             # Should handle gracefully
             await validationLogic.when_enter_new_zone(self.mock_ctx, test_line)

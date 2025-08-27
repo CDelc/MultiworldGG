@@ -33,8 +33,8 @@ class NumberOfBosses(Range):
     This is ignored if Goal isn't set to defeat_bosses. This specifies the number of bosses that need to be defeated
     (and for you to pick up their drops) in order for you to goal. This will max out at the number of bosses available in the world.
     """
-    display_name = "Bosses to kill (ignored if Goal is not set to defeat_bosses)"
-    range_start = 0
+    display_name = "Bosses to kill (if Goal is set Defeat Bosses)"
+    range_start = 1
     range_end = len(Locations.bosses.values())
     default = 1
 
@@ -63,13 +63,13 @@ class StartingCharacter(Choice):
     The starting character for the world. This will determine the class available at the start.
     """
     display_name = "Starting Character"
-    option_marauder    = 1
-    option_ranger      = 2
-    option_witch       = 3
-    option_duelist     = 4
-    option_templar     = 5
-    option_shadow      = 6
-    option_scion       = 7
+    option_scion       = 1
+    option_marauder    = 2
+    option_ranger      = 3
+    option_witch       = 4
+    option_duelist     = 5
+    option_templar     = 6
+    option_shadow      = 7
     default = "random"
 
 class AscendanciesAvailablePerClass(Range):
@@ -449,12 +449,12 @@ class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
 
 def option_starting_character_to_class_name(option_id: int) -> str:
     mapping = {
-        1: "Marauder",
-        2: "Ranger",
-        3: "Witch",
-        4: "Duelist",
-        5: "Templar",
-        6: "Shadow",
-        7: "Scion",
+        1: "Scion",
+        2: "Marauder", 
+        3: "Ranger",
+        4: "Witch",
+        5: "Duelist",
+        6: "Templar",
+        7: "Shadow",
     }
     return mapping.get(option_id, "Unknown")
