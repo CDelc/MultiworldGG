@@ -104,7 +104,7 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
     
     ascedancy_count = state.count_from_list([item['name'] for item in Items.get_ascendancy_class_items(opt.starting_character.current_option_name)], world.player)
     gear_count = state.count_from_list([item['name'] for item in Items.get_gear_items()], world.player)
-    flask_count = state.count_from_list([item['name'] for item in Items.get_flask_items() if 'Unique' not in item['category']], world.player) # unique flasks are not logically required
+    flask_count = state.count_from_list([item['name'] for item in Items.get_flask_items() if 'Unique' not in item.get('category', '')], world.player) # unique flasks are not logically required
     support_gem_count = state.count_from_list([item['name'] for item in Items.get_support_gem_items()], world.player)
     gem_slot_count = state.count_from_list([item['name'] for item in Items.get_max_links_items()], world.player)
     passive_count = state.count("Progressive passive point", world.player)
