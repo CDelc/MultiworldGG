@@ -121,7 +121,7 @@ class PathOfExileWorld(World):
         item_objs = []
         count = item.get("count", 1)
         for i in range(count):
-            item_obj = Items.PathOfExileItem(item_to_place["name"], ItemClassification.progression, item_id, self.player)
+            item_obj = Items.PathOfExileItem(item_to_place["name"], item.get("classification", ItemClassification.filler), item_id, self.player)
             item_objs.append(item_obj)
         return item_objs
 
@@ -216,7 +216,7 @@ class PathOfExileWorld(World):
 
         # get the item from the item table, by name
         id = self.item_name_to_id.get(item_name)
-        item = ItemTable.item_table.get(id)
+        item = Items.item_table.get(id)
         if item is None:
             if "defeat" in item_name:
                 #its a boss
