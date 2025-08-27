@@ -262,8 +262,6 @@ class TTSSpeed(Range):
     range_end = 500
     default = 250
 
-
-
 poe_options_groups = [
     OptionGroup("Goal Options", [
         Goal,

@@ -77,6 +77,7 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
     global base_item_id_to_relative_wav_path
     item_filter_str = ""
     for base_item_location_id in ctx.locations_info:
+        write_wav = ctx.tts_options.enable
         if base_item_location_id in ctx.checked_locations or \
            (recently_checked_locations and base_item_location_id in recently_checked_locations):
             continue
@@ -87,7 +88,7 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
         relative_wav_path = base_item_id_to_relative_wav_path.get(base_item_location_id, None)
         if relative_wav_path is None:
             logger.error(f"[ERROR] No wav path found for base item location ID {base_item_location_id}.")
-            continue
+            write_wav = False
         flags = ctx.locations_info[base_item_location_id].flags
         progression = 0
 
@@ -110,7 +111,7 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
         elif progression == ItemClassification.trap:
             style_string = trap_style_string
 
-        if ctx.tts_options.enable:
+        if write_wav:
             item_filter_str += generate_item_filter_block(base_type_name, alert_sound=relative_wav_path, style_string=style_string) + "\n\n"
         else:
             item_filter_str += generate_item_filter_block_without_sound(base_type_name, style_string=style_string) + "\n\n"
