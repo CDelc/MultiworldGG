@@ -15,7 +15,7 @@ sm64hack_items: Tuple[str] = (
     "Wing Cap", 
     "Vanish Cap", 
     "Metal Cap", 
-    "Power Star", 
+    "Power Star",
     "Progressive Key", 
     "Course 1 Cannon",
     "Course 2 Cannon",
@@ -55,7 +55,8 @@ sm64hack_items: Tuple[str] = (
     "Green Demon Trap",
     "Mario Choir",
     "Heave-Ho Trap",
-    "Squish Trap"
+    "Squish Trap",
+    "Castle Moat" 
 )
 
 traps: Tuple[str] = (
@@ -170,7 +171,7 @@ class Data:
 
 
     def import_json(self, file_name):
-        json_dir = os.path.join(Utils.local_path("data", "sm64hacks"))
+        json_dir = os.path.join(Utils.home_path(), "sm64hack_jsons")
         os.makedirs(json_dir, exist_ok=True)
         json_file = list(Path(json_dir).rglob(file_name)) #external takes priority over internal
         local_file = True

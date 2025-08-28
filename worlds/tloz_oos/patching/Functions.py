@@ -375,6 +375,7 @@ def set_treasure_data(rom: RomData,
 
 
 def set_player_start_inventory(assembler: Z80Assembler, patch_data):
+    obtained_treasures_address = parse_hex_string_to_value(DEFINES["wObtainedTreasureFlags"])
     start_inventory_changes = defaultdict(int)
 
     # ###### Base changes ##############################################
@@ -435,7 +436,6 @@ def set_player_start_inventory(assembler: Z80Assembler, patch_data):
         start_inventory_data[SEED_ITEMS[patch_data["options"]["default_seed"]]] = 1  # Add seeds to the start inventory
 
     # Inventory obtained flags
-    obtained_treasures_address = parse_hex_string_to_value(DEFINES["wObtainedTreasureFlags"])
     current_inventory_index = parse_hex_string_to_value(DEFINES["wInventoryB"])
     for item in start_inventory_data:
         item_id = ITEMS_DATA[item]["id"]
@@ -498,6 +498,8 @@ def set_player_start_inventory(assembler: Z80Assembler, patch_data):
         hex_ore_count = parse_hex_string_to_value(f"${start_inventory_changes[0xc6a7]}")
         start_inventory_changes[0xc6a7] = hex_ore_count % 0x100
         start_inventory_changes[0xc6a8] = hex_ore_count // 0x100
+    if obtained_treasures_address in start_inventory_changes:
+        start_inventory_changes[obtained_treasures_address] |= 1 << 2 # Add treasure punch flag
 
     heart_pieces = (start_inventory_data.get("Piece of Heart", 0) + start_inventory_data.get("Rare Peach Stone", 0))
     additional_hearts = (start_inventory_data.get("Heart Container", 0) + heart_pieces // 4)
@@ -777,34 +779,20 @@ def make_text_data(text: dict[str, str], patch_data):
 
     # Map stuff, replaces the group 05 since it's all linked game dialogues
     text["TX_0500"] = "Unknown Portal"
-    text["TX_0501"] = ("Portal to\n"
-                       "Eastern Suburbs")
-    text["TX_0502"] = ("Portal to\n"
-                       "Spool Swamp")
-    text["TX_0503"] = ("Portal to\n"
-                       "Mt. Cucco")
-    text["TX_0504"] = ("Portal to\n"
-                       "Eyeglass Lake")
-    text["TX_0505"] = ("Portal to\n"
-                       "Horon Village")
-    text["TX_0506"] = ("Portal to\n"
-                       "Temple Remains")
-    text["TX_0507"] = ("Portal to\n"
-                       "Temple Summit")
-    text["TX_0508"] = ("Portal to\n"
-                       "Subrosia Village")
-    text["TX_0509"] = ("Portal to\n"
-                       "Subrosian Market")
-    text["TX_050a"] = ("Portal to\n"
-                       "Subrosian Wilds")
-    text["TX_050b"] = ("Portal to\n"
-                       "Great Furnace")
-    text["TX_050c"] = ("Portal to\n"
-                       "House of Pirates")
-    text["TX_050d"] = ("Portal to\n"
-                       "Subrosian Volcanoes")
-    text["TX_050e"] = ("Portal to\n"
-                       "Subrosian Dungeon")
+    text["TX_0501"] = normalize_text("Portal to Eastern Suburbs")
+    text["TX_0502"] = normalize_text("Portal to Spool Swamp")
+    text["TX_0503"] = normalize_text("Portal to Mt. Cucco")
+    text["TX_0504"] = normalize_text("Portal to Eyeglass Lake")
+    text["TX_0505"] = normalize_text("Portal to Horon Village")
+    text["TX_0506"] = normalize_text("Portal to Temple Remains")
+    text["TX_0507"] = normalize_text("Portal to Temple Summit")
+    text["TX_0508"] = normalize_text("Portal to Subrosian Village")
+    text["TX_0509"] = normalize_text("Portal to Subrosian Market")
+    text["TX_050a"] = normalize_text("Portal to Subrosian Wilds")
+    text["TX_050b"] = normalize_text("Portal to Great Furnace")
+    text["TX_050c"] = normalize_text("Portal to House of Pirates")
+    text["TX_050d"] = normalize_text("Portal to Subrosian Volcanoes")
+    text["TX_050e"] = normalize_text("Portal to Subrosian Dungeon")
 
     # Default satchel seed
     seed_name = SEED_ITEMS[patch_data["options"]["default_seed"]].replace(" ", "\n")

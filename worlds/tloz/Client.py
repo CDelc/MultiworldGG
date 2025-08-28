@@ -336,12 +336,12 @@ async def nes_sync_task(ctx: ZeldaContext):
                 continue
 
 
-def main():
+def main(*launcher_args: str):
     # Text Mode to use !hint and such with games that have no text entry
     Utils.init_logging("ZeldaClient")
 
+    global DISPLAY_MSGS
     DISPLAY_MSGS = get_settings()["tloz_options"]["display_msgs"]
-
 
     async def run_game(romfile: str) -> None:
         auto_start = typing.cast(typing.Union[bool, str],
@@ -353,8 +353,12 @@ def main():
             subprocess.Popen([auto_start, romfile],
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+    async def main():
+        parser = get_base_parser()
+        parser.add_argument('diff_file', default="", type=str, nargs="?",
+                            help='Path to a MultiworldGG Binary Patch file')
+        args = parser.parse_args(launcher_args)
 
-    async def main(args):
         if args.diff_file:
             import Patch
             logging.info("Patch file was supplied. Creating nes rom..")
@@ -378,14 +382,9 @@ def main():
         if ctx.nes_sync_task:
             await ctx.nes_sync_task
 
-
     import colorama
 
-    parser = get_base_parser()
-    parser.add_argument('diff_file', default="", type=str, nargs="?",
-                        help='Path to a MultiworldGG Binary Patch file')
-    args = parser.parse_args()
     colorama.just_fix_windows_console()
 
-    asyncio.run(main(args))
+    asyncio.run(main())
     colorama.deinit()

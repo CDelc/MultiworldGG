@@ -16,6 +16,6 @@ JSON Author credit:
 * LudwigVonKoopa - Cursed Castles, Shining Stars Repainted, SM64 and the Koopa Power, SM64 and the Grand Star, Eureka, Mario's New Earth, Phenomena, Despairs Mario Gambit, Aventure Alpha Redone, SM64 Sapphire
 * duckSM64/mr.zebra - SM74 Ten Years After
 * zuils - Super Mario 74
-* GraymonDgt - Unoriginal Cringe Meme Hack
+* GraymonDgt - Unoriginal Cringe Meme Hack, Kaizo Mario 64
 * Awesome7285 - Star Revenge 6.5, Star Revenge 7, Star Revenge 1, Star Revenge 2 TTM, Star Revenge 3, Star Revenge 5, Star Revenge 1.5, Star Revenge 8 Advanced, Peach's Memory, Star Revenge 4, Star Revenge 6
-* Iwer Sonsch - Ztar Attack 2
+* Iwer Sonsch - Ztar Attack 2, Plutonium Mario 64

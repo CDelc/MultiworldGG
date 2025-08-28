@@ -147,6 +147,16 @@ DYNAMIC_FLAGS = {
         "has_items": [("Treasure Map #28 (Ruins NW)", 1)],
         "set_if_true": [(0x1BA653, 0x1)]
     },
+    "Goron Chu Map": {
+        "on_scenes": [0x1002],
+        "not_has_locations": ["Goron Island Yellow Chu Item"],
+        "unset_if_true": [(0x1ba652, 0x10)],
+        "reset_flags": ["RESET Goron Chu Map"]
+    },
+    "RESET Goron Chu Map": {
+        "has_items": [("Treasure Map #16 (Goron NE)", 1)],
+        "set_if_true": [(0x1ba652, 0x10)]
+    },
     # TotoK 1F
     "TotoK Don't open key door": {
         "on_scenes": [0x2500],

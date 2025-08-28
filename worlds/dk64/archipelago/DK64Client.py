@@ -14,10 +14,7 @@ import colorama
 import sys
 import random
 import traceback
-try:
-    from Utils import instance_name as apname
-except ImportError:
-    apname = "Archipelago"
+
 import time
 import typing
 from client.common import DK64MemoryMap, create_task_log_exception, check_version
@@ -643,7 +640,7 @@ class DK64Client:
         while not self.check_safe_gameplay():
             if self.should_reset_auth:
                 self.should_reset_auth = False
-                raise Exception(f"Resetting due to wrong {apname} server")
+                raise Exception("Resetting due to wrong archipelago server")
         logger.info("Game connection ready!")
 
     async def is_victory(self):
@@ -875,7 +872,7 @@ class DK64Context(CommonContext):
             logging_pairs = [
                 ("Client", "Archipelago"),
             ]
-            base_title = f"{apname} Donkey Kong 64 Client (Version {ap_version})"
+            base_title = f"Archipelago Donkey Kong 64 Client (Version {ap_version})"
 
             def build(self):
                 b = super().build()
@@ -1362,7 +1359,7 @@ class DK64Context(CommonContext):
                         await self.send_checks()
                     if self.client.should_reset_auth:
                         self.client.should_reset_auth = False
-                        raise Exception(f"Resetting due to wrong {apname} server")
+                        raise Exception("Resetting due to wrong archipelago server")
             # There is 100% better ways to handle this exception, but for now this will do to allow us to exit the loop
             except Exception as e:
                 print(e)
@@ -1376,7 +1373,7 @@ def launch():
     async def main():
         """Entrypoint of codebase."""
         parser = get_base_parser(description="Donkey Kong 64 Client.")
-        parser.add_argument("--url", help=f"{apname} connection url")
+        parser.add_argument("--url", help="Archipelago connection url")
 
         args = parser.parse_args()
         check_version()
