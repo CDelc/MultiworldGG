@@ -10,7 +10,12 @@ import traceback
 import types
 from collections import deque
 from pathlib import Path
-import winreg
+
+
+
+
+if (sys.platform == "win32"):
+    import winreg
 
 import typing
 if typing.TYPE_CHECKING:
@@ -289,6 +294,8 @@ async def read_dict_from_pickle_file(file_path: Path) -> dict:
 
 def get_poe_install_location_from_registry() -> str | None:
     """Retrieve the Path of Exile install location from the Windows registry."""
+    if( sys.platform != "win32"):
+        return None
     try:
         registry_key = r"Software\GrindingGearGames\Path of Exile"
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, registry_key) as key:
