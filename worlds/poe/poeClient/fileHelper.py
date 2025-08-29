@@ -11,9 +11,6 @@ import types
 from collections import deque
 from pathlib import Path
 
-
-
-
 if (sys.platform == "win32"):
     import winreg
 
@@ -91,8 +88,12 @@ def load_vendor_modules():
         # Clean up the copied zip file after extraction
         os.remove(zip_dest)
 
-
         sys.path.insert(0, str(vendor_dir))
+        
+        # Add each subdirectory to the path as well
+        for subdir in vendor_dir.iterdir():
+            if subdir.is_dir():
+                sys.path.insert(0, str(subdir))
 
     except Exception as e:
         logger.error(f"[vendor] Failed to load vendor modules: {e}")
