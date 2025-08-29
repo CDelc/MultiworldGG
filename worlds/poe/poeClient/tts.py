@@ -83,7 +83,7 @@ def generate_tts_from_missing_locations(ctx: "PathOfExileContext", WPM: int = WP
         item_text = get_item_name_tts_text(ctx, network_item)
         filename = fileHelper.safe_filename(f"{item_text.lower()}_{WPM}.wav")
 
-        relative_path = f"{itemFilter.filter_sounds_dir_name}/{filename.lower()}"
+        relative_path = f"{itemFilter.FILTER_SOUNDS_DIR_NAME}/{filename.lower()}"
         full_path = itemFilter.filter_sounds_path / f"{filename}"
 
         if not os.path.exists(full_path):
@@ -114,7 +114,7 @@ def generate_tts_tasks_from_missing_locations(ctx: "PathOfExileContext", tts_spe
         item_text = get_item_name_tts_text(ctx, network_item)
         filename = fileHelper.safe_filename(f"{item_text.lower()}_{speed}.wav")
 
-        relative_path = f"{itemFilter.filter_sounds_dir_name}/{filename.lower()}"
+        relative_path = f"{itemFilter.FILTER_SOUNDS_DIR_NAME}/{filename.lower()}"
         full_path = itemFilter.filter_sounds_path / f"{filename}"
 
         if not os.path.exists(full_path):

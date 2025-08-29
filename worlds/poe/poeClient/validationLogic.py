@@ -423,7 +423,7 @@ async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bo
             logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
             filename = None
         if filename:
-            invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block(f"{itemFilter.filter_sounds_dir_name}/{filename}")
+            invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block(f"{itemFilter.FILTER_SOUNDS_DIR_NAME}/{filename}")
         else:
             invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block_without_sound()
     else:

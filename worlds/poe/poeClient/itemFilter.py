@@ -17,14 +17,25 @@ from worlds.poe import Locations
 
 AP_FILTER_NAME = "__ap"
 INVALID_FILTER_NAME = "__invalid"
-
-filter_file_dir = Path.home() / "Documents" / "My Games" / "Path of Exile"
-filter_file_path = Path.home() / "Documents" / "My Games" / "Path of Exile" / f"{AP_FILTER_NAME}.filter"
-invalid_filter_file_path = Path.home() / "Documents" / "My Games" / "Path of Exile" / f"{INVALID_FILTER_NAME}.filter"
-filter_sounds_dir_name = "apsound"
-filter_sounds_path = filter_file_dir / filter_sounds_dir_name
+FILTER_SOUNDS_DIR_NAME = "apsound"
 start_item_filter_block = "# <Base Item Hunt item>"
 end_item_filter_block = "# </Base Item Hunt item>"
+
+poe_doc_path = Path()
+filter_file_path = ""
+invalid_filter_file_path = ""
+filter_sounds_path = ""
+
+def set_poe_doc_path(new_path: Path | str) -> None:
+    if isinstance(new_path, str):
+        new_path = Path(new_path)
+    global poe_doc_path, filter_file_path, invalid_filter_file_path, filter_sounds_path
+    poe_doc_path = new_path
+    filter_file_path = poe_doc_path / f"{AP_FILTER_NAME}.filter"
+    invalid_filter_file_path = poe_doc_path / f"{INVALID_FILTER_NAME}.filter"
+    filter_sounds_path = poe_doc_path / FILTER_SOUNDS_DIR_NAME
+
+set_poe_doc_path(Path.home() / "Documents" / "My Games" / "Path of Exile")
 
 logger = logging.getLogger("poeClient.itemFilter")
 
@@ -92,7 +103,7 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", recently_checked
         flags = ctx.locations_info[base_item_location_id].flags
         progression = 0
 
-        if flags & 0b001:  # advancement
+        if flags & 0b001:  # progression
             progression = ItemClassification.progression
         elif flags & 0b010:  # useful
             progression = ItemClassification.useful
@@ -121,7 +132,7 @@ def generate_item_filter_block(base_type_name, alert_sound, style_string=default
     if base_type_name not in base_item_locations_by_base_item_name:
         logger.error(f"[ERROR] Base type '{base_type_name}' not found in item table.")
         return ""
-    if not Path.exists(filter_file_dir / alert_sound):
+    if not Path.exists(poe_doc_path / alert_sound):
         logger.error(f"[ERROR] Alert sound '{alert_sound}' does not exist in {filter_sounds_path}.")
         return generate_item_filter_block_without_sound(base_type_name=base_type_name, style_string=style_string)
     return f"""
@@ -142,7 +153,7 @@ BaseType == "{base_type_name}"
 
 
 def generate_invalid_item_filter_block(alert_sound) -> str:
-    if not Path.exists(filter_file_dir / alert_sound):
+    if not Path.exists(poe_doc_path / alert_sound):
         logger.error(f"[ERROR] Alert sound '{alert_sound}' does not exist in {filter_sounds_path}.")
         return generate_invalid_item_filter_block_without_sound()
     return f"""
@@ -168,7 +179,7 @@ def write_item_filter(item_filter:str, item_filter_import:str|None=None, file_pa
     if item_filter_import and item_filter_import in _valid_base_item_filter_paths:
         write_filter = True
 
-    if not write_filter and item_filter_import and Path.exists(filter_file_dir / item_filter_import):
+    if not write_filter and item_filter_import and Path.exists(poe_doc_path / item_filter_import):
         # If the import path exists, we can use it
         _valid_base_item_filter_paths.add(item_filter_import)
         write_filter = True

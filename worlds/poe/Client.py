@@ -53,6 +53,27 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
             self.output("TTS generation disabled.")
         return True
 
+    def _cmd_poe_documents_directory(self, path:str) -> bool:
+        r"""Change the default directory for poe item filters -- by default it's at C:\Users\<USER>\Documents\My Games\Path of Exile.
+        this may be needed if running on linux with wine, or if you have a custom installation."""
+        global logger
+        if not path:
+            self.output("The current directory for poe item filters is:")
+            self.output(f"  {itemFilter.get_poe_doc_path()}")
+            return False
+        filter_path = Path(path)
+        if not filter_path.exists():
+            self.output(f"ERROR: The provided path does not exist: {path}")
+            return False
+        if not filter_path.is_dir():
+            self.output(f"ERROR: The provided path is not a directory: {path}")
+            return False
+        itemFilter.set_poe_doc_path(filter_path)
+        self.ctx.poe_doc_path = str(filter_path)
+        self.ctx.update_settings()
+        logger.debug(f"[DEBUG] Set poe documents directory to: {filter_path}")
+        return True
+
     def _cmd_tts_speed(self, speed: int) -> bool:  # actually receives a string from the CLI
         """Set the speed of TTS generation."""
         try:
@@ -263,6 +284,7 @@ class PathOfExileContext(CommonContext):
     character_name: str = ""
     client_text_path: Path = ""
     base_item_filter: str = ""
+    poe_doc_path: str = ""
     generated_version: str = ""
     slot_data = {}
     game_options = {}
@@ -333,7 +355,10 @@ class PathOfExileContext(CommonContext):
                         self.client_text_path = settings.get("client_txt", self.client_text_path)
                         self.character_name = settings.get("last_char", self.character_name)
                         self.base_item_filter = settings.get("base_item_filter", self.base_item_filter)
+                        self.poe_doc_path = settings.get("poe_doc_path", self.poe_doc_path)
                         logger.debug(f"[DEBUG] Loaded settings: {settings}")
+                    if self.poe_doc_path:
+                        itemFilter.set_poe_doc_path(self.poe_doc_path)
                 except Exception as e:
                     logger.info(f"[ERROR] Failed to load settings: {e}")
 
