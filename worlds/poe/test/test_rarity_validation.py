@@ -14,22 +14,22 @@ poe_client_vendor_dir = os.path.join(archipelago_dir, "lib", "poe_client_vendor"
 if poe_client_vendor_dir not in sys.path:
     sys.path.insert(0, poe_client_vendor_dir)
 
+from pathlib import Path
+for subdir in Path(poe_client_vendor_dir).iterdir():
+    if subdir.is_dir():
+        sys.path.insert(0, str(subdir))
 
-try:
-    from . import PoeTestBase
-    from ..poeClient import validationLogic
-except ImportError:
-    import sys
-    import os
+import sys
+import os
+
+sys.path.insert(0, archipelago_dir)
+sys.path.insert(0, worlds_dir)
+
+from test.bases import WorldTestBase
+from ..poeClient import validationLogic
     
-    sys.path.insert(0, archipelago_dir)
-    sys.path.insert(0, worlds_dir)
-    
-    from test.bases import WorldTestBase
-    from poe.poeClient import validationLogic
-    
-    class PoeTestBase(WorldTestBase):
-        game = "Path of Exile"
+class PoeTestBase(WorldTestBase):
+    game = "Path of Exile"
 
 
 class TestRarityValidation(PoeTestBase):

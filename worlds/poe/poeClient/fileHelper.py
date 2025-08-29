@@ -63,7 +63,18 @@ def load_vendor_modules():
     _ensure_stdlib_shims()
     zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
     if vendor_dir.exists():
-        shutil.rmtree(vendor_dir)
+        try:
+            shutil.rmtree(vendor_dir)
+        except PermissionError:
+            # Directory is in use (likely during tests), just skip recreation
+            logger.debug("[vendor] Vendor directory in use, skipping recreation")
+            if str(vendor_dir) not in sys.path:
+                sys.path.insert(0, str(vendor_dir))
+                # Add subdirectories as well
+                for subdir in vendor_dir.iterdir():
+                    if subdir.is_dir():
+                        sys.path.insert(0, str(subdir))
+            return
 
     # Ensure vendor directory exists
     os.makedirs(vendor_dir, exist_ok=True)

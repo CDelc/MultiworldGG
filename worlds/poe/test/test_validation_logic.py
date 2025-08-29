@@ -17,22 +17,9 @@ poe_client_vendor_dir = os.path.join(archipelago_dir, "lib", "poe_client_vendor"
 if poe_client_vendor_dir not in sys.path:
     sys.path.insert(0, poe_client_vendor_dir)
 
-try:
-    from . import PoeTestBase
-    from .. import Items, Locations, Options
-    from ..poeClient import validationLogic, gggAPI
-except ImportError:
-    # Fallback imports for when running from different contexts
-    
-    sys.path.insert(0, archipelago_dir)
-    sys.path.insert(0, worlds_dir)
-    
-    from test.bases import WorldTestBase
-    from poe import Items, Locations, Options
-    from poe.poeClient import validationLogic, gggAPI
-    
-    class PoeTestBase(WorldTestBase):
-        game = "Path of Exile"
+from . import PoeTestBase
+from .. import Items, Locations, Options
+from ..poeClient import validationLogic, gggAPI
 
 
 class TestValidationLogic(PoeTestBase):
