@@ -22,7 +22,6 @@ from .Rom import TLoZDeltaPatch, get_base_rom_path, first_quest_dungeon_items_ea
     cave_type_flags, warp_cave_offset, starting_sword_cave_location_byte, white_sword_pond_location_byte, \
     magical_sword_grave_location_byte, letter_cave_location_byte, TLOZProcedurePatch
 from .Rules import set_rules
-from .Client import TLOZClient
 from .EntranceRandoRules import create_entrance_randomizer_set
 from worlds.AutoWorld import World, WebWorld
 from worlds.generic.Rules import add_rule
