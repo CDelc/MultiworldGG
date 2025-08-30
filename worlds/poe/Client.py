@@ -373,9 +373,10 @@ class PathOfExileContext(CommonContext):
                 try:
                     settings = task.result()
                     if settings:
-                        self.filter_options.tts_enabled = settings.get("tts_enabled", self.client_options.get('ttsEnabled', False) == True)
-                        self.filter_options.loot_filter_sounds = settings.get("loot_filter_sounds", int(self.client_options.get('lootFilterSounds', 0)))
-                        self.filter_options.loot_filter_display = settings.get("loot_filter_display", int(self.client_options.get('lootFilterDisplay', 0)))
+                        tts_settings = settings.get("tts_enabled") # can be True, False, or None
+                        self.filter_options.tts_enabled = tts_settings if tts_settings is isinstance(bool) else bool(self.client_options.get('ttsEnabled', False))
+                        self.filter_options.loot_filter_sounds = settings.get("loot_filter_sounds") or int(self.client_options.get('lootFilterSounds')) or Options.LootFilterSounds.default
+                        self.filter_options.loot_filter_display = settings.get("loot_filter_display") or int(self.client_options.get('lootFilterDisplay')) or  Options.LootFilterDisplay.default
                         self.filter_options.tts_speed = settings.get("tts_speed", int(self.client_options.get('ttsSpeed', 250)))
                         self.client_text_path = settings.get("client_txt", self.client_text_path)
                         self.character_name = settings.get("last_char", self.character_name)
