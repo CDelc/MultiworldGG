@@ -243,19 +243,30 @@ class SupportGemsPerAct(Range):
 
 #--- Client Options ---
 
-class EnableTTS(Choice):
+class LootFilterSounds(Choice):
     """
-    Settings for the Text-to-Speech (TTS) feature.
+    sounds for the lootfilter.
     """
-    display_name = "Text-to-Speech"
-    option_no_tts     = 0
-    option_enabled_AP_Item = 1
-    option_enabled_Base_Item = 2
+    display_name = "Loot filter drop sounds."
+    option_no_sound = 0
+    option_TTS = 1
+    option_jingles = 2
+    default = 2
+
+class LootFilterDisplay(Choice):
+    """
+    Loot filter display style.
+    """
+    display_name = "Loot filter display style."
+    option_hide_classification = 0
+    option_show_classification = 1
+    option_randomize_lootfilter_color = 2
+    option_randomize_lootfilter_style = 3
     default = 1
 
 class TTSSpeed(Range):
     """
-    Speed of the Text-to-Speech (TTS) feature.
+    Speed of the Text-to-Speech (TTS) feature, if enabled.
     """
     display_name = "TTS Speed"
     range_start = 50
@@ -299,7 +310,8 @@ poe_options_groups = [
         SupportGemsPerAct,
     ]),
     OptionGroup("Client Options", [
-        EnableTTS,
+        LootFilterSounds,
+        LootFilterDisplay,
         TTSSpeed,
     ]),
 ]
@@ -440,7 +452,8 @@ class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
     add_support_gems_to_item_pool: AddSupportGemsToItemPool
     support_gems_per_act: SupportGemsPerAct
 
-    enable_tts: EnableTTS
+    loot_filter_sounds: LootFilterSounds
+    loot_filter_display: LootFilterDisplay
     tts_speed: TTSSpeed
 
 

@@ -77,6 +77,8 @@ async def async_load(ctx: "PathOfExileContext" = None):
         tts.generate_tts_tasks_from_missing_locations(ctx, ctx.tts_options.speed)
         threading.Thread(target=tts.run_tts_tasks, daemon=True).start()  # Run TTS tasks in a separate thread
 
+
+
     itemFilter.update_item_filter_from_context(ctx)
 
     listener = keyboard.Listener(on_press=on_press)
