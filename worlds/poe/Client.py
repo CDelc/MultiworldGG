@@ -25,6 +25,28 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         ctx: "PathOfExileContext"
     logger = logging.getLogger("poeClient.PathOfExileCommandProcessor")
 
+    def _cmd_loot_filter_sounds(self, sounds: str) -> bool:
+        """Set the lootfilter drop sound. \nno_sound = 0\nTTS = 1\njingles = 2"""
+        if sounds not in {"0", "1", "2"}:
+            self.output("ERROR: Please provide a valid sounds configuration (0, 1, 2).")
+            return False
+        self.ctx.filter_options.loot_filter_sounds = int(sounds)
+        self.ctx.update_settings()
+        sound_string = {0: "no_sound", 1: "TTS", 2: "jingles"}.get(int(sounds), "unknown")
+        self.output(f"Loot filter drop sounds set to: {sound_string}")
+        return True
+    
+    def _cmd_loot_filter_display(self, display: str) -> bool:
+        """Set the lootfilter display mode. \nshow_classification = 0\nhide_classification = 1\nrandomize_lootfilter_style = 2"""
+        if display not in {"0", "1", "2"}:
+            self.output("ERROR: Please provide a valid display configuration (0, 1, 2).")
+            return False
+        self.ctx.filter_options.loot_filter_display = int(display)
+        self.ctx.update_settings()
+        display_string = {0: "no_display", 1: "highlight", 2: "show"}.get(int(display), "unknown")
+        self.output(f"Loot filter display mode set to: {display_string}")
+        return True
+
     def _cmd_enable_tts(self, enable: bool | str | None = None) -> bool:
         """Enable or disable TTS generation."""
         if enable is None:
@@ -54,6 +76,21 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
             self.output("TTS generation disabled.")
         return True
 
+    def _cmd_tts_speed(self, speed: int) -> bool:  # actually receives a string from the CLI
+        """Set the speed of TTS generation."""
+        try:
+            speed = int(speed)
+        except (TypeError, ValueError):
+            self.output("ERROR: Please provide a valid positive integer for TTS speed.")
+            return False
+        if speed <= 0:
+            self.output("ERROR: Please provide a valid positive integer for TTS speed.")
+            return False
+        self.ctx.filter_options.tts_speed = speed
+        self.ctx.update_settings()
+        self.output(f"TTS speed set to {speed} words per minute.")
+        return True
+    
     def _cmd_poe_documents_directory(self, path:str) -> bool:
         r"""Change the default directory for poe item filters -- by default it's at C:\Users\<USER>\Documents\My Games\Path of Exile.
         this may be needed if running on linux with wine, or if you have a custom installation."""
@@ -73,21 +110,6 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         self.ctx.poe_doc_path = str(filter_path)
         self.ctx.update_settings()
         logger.debug(f"[DEBUG] Set poe documents directory to: {filter_path}")
-        return True
-
-    def _cmd_tts_speed(self, speed: int) -> bool:  # actually receives a string from the CLI
-        """Set the speed of TTS generation."""
-        try:
-            speed = int(speed)
-        except (TypeError, ValueError):
-            self.output("ERROR: Please provide a valid positive integer for TTS speed.")
-            return False
-        if speed <= 0:
-            self.output("ERROR: Please provide a valid positive integer for TTS speed.")
-            return False
-        self.ctx.filter_options.tts_speed = speed
-        self.ctx.update_settings()
-        self.output(f"TTS speed set to {speed} words per minute.")
         return True
 
     def _cmd_generate_tts(self) -> bool:
