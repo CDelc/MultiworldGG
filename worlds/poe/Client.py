@@ -17,6 +17,7 @@ from .poeClient import main as poe_main
 from .poeClient import gggAPI
 from .poeClient import textUpdate
 from .poeClient import itemFilter
+from . import Options
 from .Version import POE_VERSION, BACKWARDS_COMPATIBLE_VERSIONS
 
 class PathOfExileCommandProcessor(ClientCommandProcessor):
@@ -27,7 +28,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
     def _cmd_enable_tts(self, enable: bool | str | None = None) -> bool:
         """Enable or disable TTS generation."""
         if enable is None:
-            tts_enabled_implied = not self.ctx.tts_options.enable
+            tts_enabled_implied = not self.ctx.filter_options.tts_enabled
             self.output(f"Turning TTS {'on' if tts_enabled_implied else 'off'}")
             enable = tts_enabled_implied
         if isinstance(enable, str):
@@ -45,7 +46,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
             self.output("ERROR: Please provide a valid boolean value for enabling TTS (True/False).")
             return False
 
-        self.ctx.tts_options.enable = enable_bool
+        self.ctx.filter_options.tts_enabled = enable_bool
         self.ctx.update_settings()
         if enable_bool:
             self.output("TTS generation enabled.")
@@ -84,7 +85,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         if speed <= 0:
             self.output("ERROR: Please provide a valid positive integer for TTS speed.")
             return False
-        self.ctx.tts_options.speed = speed
+        self.ctx.filter_options.tts_speed = speed
         self.ctx.update_settings()
         self.output(f"TTS speed set to {speed} words per minute.")
         return True
@@ -96,8 +97,8 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         if not self.ctx.missing_locations:
             self.output("No missing locations to generate TTS for, are you connected to the server?")
             return False
-        if not self.ctx.tts_options.enable:
-            self.output("TTS is disabled in the client options, please enable it to generate TTS.")
+        if not self.ctx.filter_options.tts_enabled:
+            self.output("TTS is disabled, please enable it using '/enable_tts' to generate TTS.")
             return False
         tts.generate_tts_tasks_from_missing_locations(self.ctx)
         tts.run_tts_tasks()
@@ -153,10 +154,6 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         self.ctx.update_settings()
         self.output(f"Character name set to: {character_name}")
         return True
-        
-
-    #def _cmd_set_current_character(self) -> bool:
-    #    self.ctx.player_verify_code = Random.randint()
 
     def _cmd_base_item_filter(self, filter_name: str = "") -> bool:
         """Set the base item filter. (this needs to be a local file, and remember to add the .filter extension)"""
@@ -265,10 +262,14 @@ def handle_task_errors(task: asyncio.Task, ctx: "PathOfExileContext", cmdprocess
         cmdprocessor._cmd_start_poe()
 
 @dataclass
-class TTSOptions:
+class FilterOptions:
     """Options for Text-to-Speech (TTS) generation."""
-    speed: int = 250  # Default TTS speed in words per minute
-    enable: bool = True  # Default TTS enabled state
+    tts_speed: int = 250  # Default TTS speed in words per minute
+    tts_enabled: bool = False  # Default TTS enabled state
+    loot_filter_display: int = 0  #    option_show_classification = 0    option_hide_classification = 1    option_randomize_lootfilter_style = 2
+    loot_filter_sounds: int = 0  #    option_no_sound = 0    option_TTS = 1    option_jingles = 2
+    #    sfx_enabled: bool = True  # Whether to play random sound effects for item pickups (trap)
+    
 class PathOfExileContext(CommonContext):
     game = "Path of Exile"
     command_processor = PathOfExileCommandProcessor
@@ -292,7 +293,7 @@ class PathOfExileContext(CommonContext):
 
     running_task : asyncio.Task | None = None
 
-    tts_options = TTSOptions()
+    filter_options = FilterOptions()
 
     _debug = True  # Enable debug mode for poe client
 
@@ -350,8 +351,10 @@ class PathOfExileContext(CommonContext):
                 try:
                     settings = task.result()
                     if settings:
-                        self.tts_options.enable = settings.get("tts_enabled", self.client_options.get('ttsEnabled', True) == True)
-                        self.tts_options.speed = settings.get("tts_speed", int(self.client_options.get('ttsSpeed', 250)))
+                        self.filter_options.tts_enabled = settings.get("tts_enabled", self.client_options.get('ttsEnabled', False) == True)
+                        self.filter_options.loot_filter_sounds = settings.get("loot_filter_sounds", int(self.client_options.get('lootFilterSounds', 0)))
+                        self.filter_options.loot_filter_display = settings.get("loot_filter_display", int(self.client_options.get('lootFilterDisplay', 0)))
+                        self.filter_options.tts_speed = settings.get("tts_speed", int(self.client_options.get('ttsSpeed', 250)))
                         self.client_text_path = settings.get("client_txt", self.client_text_path)
                         self.character_name = settings.get("last_char", self.character_name)
                         self.base_item_filter = settings.get("base_item_filter", self.base_item_filter)

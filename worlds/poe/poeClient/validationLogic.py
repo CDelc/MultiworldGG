@@ -69,7 +69,7 @@ async def when_enter_new_zone(ctx: "PathOfExileContext", line: str):
 
     if not is_char_in_logic:
         error_msg = ", and ".join(logic_errors) if logic_errors else "unknown errors"
-        await asyncio.wait_for(send_multiple_poe_text([f"/itemfilter {itemFilter.INVALID_FILTER_NAME}", f"@{ctx.character_name} you are out of logic: {error_msg}"]), TIMEOUT)
+        await asyncio.wait_for(send_multiple_poe_text([f"/itemfilter {itemFilter.INVALID_FILTER_NAME}", f"@{ctx.character_name} Illegal state detected, resolve to continue: {error_msg}"]), TIMEOUT)
     elif victory_task:
         pass # callback handles victory and chat sending
     else:
@@ -202,9 +202,9 @@ async def validate_and_update(ctx: "PathOfExileContext", char, found_items_list:
         logger.debug("[DEBUG] No locations to check, skipping check_locations.")
 
     if not is_char_in_logic:
-        await update_filter_to_invalid_char_filter(errors=validate_errors, enable_tts=ctx.tts_options.enable, tts_speed=ctx.tts_options.speed)
+        await update_filter_to_invalid_char_filter(errors=validate_errors, enable_tts=ctx.filter_options.tts_enabled, tts_speed=ctx.filter_options.tts_speed)
     else:
-        itemFilter.update_item_filter_from_context(ctx, recently_checked_locations=location_ids_to_check)
+        itemFilter.update_item_filter_from_context(ctx, exclude_locations=location_ids_to_check)
     return validate_errors
 
 
@@ -406,11 +406,11 @@ async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bo
     invalid_item_filter_string = ""
     if enable_tts:
         if len(errors) > 1:
-            error_text = " and ... ".join(errors)
+            error_text = "... and ... ".join(errors)
         else:
             error_text = errors[0]
         filename = f"{fileHelper.short_hash(error_text)}_{tts.WPM}.wav" # this could be a long text, so we use a hash
-        full_error_text = f"YOU ARE OUT OF LOGIC: {error_text}"
+        full_error_text = f"Illegal state: {error_text}"
 
         try:
             await asyncio.wait_for(await tts.safe_tts_async(
@@ -423,12 +423,12 @@ async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bo
             logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
             filename = None
         if filename:
-            invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block(f"{itemFilter.FILTER_SOUNDS_DIR_NAME}/{filename}")
+            invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block(f"{itemFilter.TTS_FILTER_SOUNDS_DIR_NAME}/{filename}")
         else:
             invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block_without_sound()
     else:
         invalid_item_filter_string = itemFilter.generate_invalid_item_filter_block_without_sound()
-    itemFilter.write_item_filter(item_filter=invalid_item_filter_string, item_filter_import=None, file_path=itemFilter.invalid_filter_file_path)
+    itemFilter.write_item_filter(item_filter=invalid_item_filter_string, item_filter_import=None, file_path=(itemFilter.poe_doc_path / f"{itemFilter.INVALID_FILTER_NAME}.filter"))
 
 def get_held_item_names_ilvls_from_char(char: gggAPI.Character) -> list[tuple[str, int]]:
     """

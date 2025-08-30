@@ -245,7 +245,7 @@ class SupportGemsPerAct(Range):
 
 class LootFilterSounds(Choice):
     """
-    sounds for the lootfilter.
+    sounds for the Archipelago items drop.
     """
     display_name = "Loot filter drop sounds."
     option_no_sound = 0
@@ -258,11 +258,20 @@ class LootFilterDisplay(Choice):
     Loot filter display style.
     """
     display_name = "Loot filter display style."
-    option_hide_classification = 0
-    option_show_classification = 1
-    option_randomize_lootfilter_color = 2
-    option_randomize_lootfilter_style = 3
-    default = 1
+    option_show_classification = 0
+    option_hide_classification = 1
+    option_randomize_lootfilter_style = 2
+    default = 0
+
+class EnableTTS(DefaultOnToggle):
+    """
+    Enable Text-to-Speech (TTS). If using other loot filter sounds, this option will still generate TTS audio files for invalid state warnings.
+    If this is disabled, this will ignore Loot Filter Sounds if set to TTS.
+    If TTS is enabled, the client will generate audio files for item drops that are not already present,
+    This may take some time initially, but will speed as audio files are generated and saved.
+    """
+    display_name = "Enable TTS"
+    default = True
 
 class TTSSpeed(Range):
     """
@@ -312,6 +321,7 @@ poe_options_groups = [
     OptionGroup("Client Options", [
         LootFilterSounds,
         LootFilterDisplay,
+        EnableTTS,
         TTSSpeed,
     ]),
 ]
@@ -454,6 +464,7 @@ class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
 
     loot_filter_sounds: LootFilterSounds
     loot_filter_display: LootFilterDisplay
+    enable_tts: EnableTTS
     tts_speed: TTSSpeed
 
 

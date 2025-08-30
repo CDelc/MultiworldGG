@@ -245,10 +245,10 @@ class PathOfExileWorld(World):
             "deathlink": options.death_link.value,
         }
         client_options = {
-            "ttsSpeed" : options.tts_speed.value,
-            "ttsEnabled": options.loot_filter_sounds.value == options.loot_filter_sounds.option_TTS,
             "lootFilterSounds": options.loot_filter_sounds.value,
             "lootFilterDisplay": options.loot_filter_display.value,
+            "ttsSpeed" : options.tts_speed.value,
+            "ttsEnabled": options.enable_tts.value,
         }
         return {
             "game_options": game_options,
