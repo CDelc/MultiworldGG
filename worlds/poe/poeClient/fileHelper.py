@@ -223,7 +223,7 @@ async def save_settings(ctx: "PathOfExileContext", path: Path = settings_file_pa
         default_key = "world default"
         new_world_data = {
             "tts_speed": str(ctx.filter_options.tts_speed),
-            "tts_enabled": str(ctx.filter_options.tts_enabled),
+            "tts_enabled": bool(ctx.filter_options.tts_enabled),
             "loot_filter_sounds": int(ctx.filter_options.loot_filter_sounds),
             "loot_filter_display": int(ctx.filter_options.loot_filter_display),
             "client_txt": str(ctx.client_text_path),
