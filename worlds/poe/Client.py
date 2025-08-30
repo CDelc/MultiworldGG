@@ -228,6 +228,23 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
 
         return True
 
+    def _cmd_client(self, path: str = "") -> bool:
+        """Shortcut for setting the client text path."""
+        return self._cmd_set_client_text_path(path)
+
+    def _cmd_char(self, character_name: str = "") -> bool:
+        """Shortcut for setting the character name. (can also be done by typing '@<charname> !ap char' into the in game chat)"""
+        return self._cmd_char_name(character_name)
+
+
+    def _cmd_filter(self, filter_name: str = "") -> bool:
+        """Shortcut for setting the base item filter."""
+        return self._cmd_base_item_filter(filter_name)
+
+    def _cmd_start(self) -> bool:
+        """Shortcut for starting the Path of Exile client."""
+        return self._cmd_start_poe()
+
     def _cmd_stop(self) -> bool:
         """Stop the Path of Exile client."""
         if self.ctx.running_task:
@@ -241,24 +258,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         else:
             self.output("Path of Exile client is not running.")
             return False
-
-    def _cmd_client(self, path: str = "") -> bool:
-        """Shortcut for setting the client text path."""
-        return self._cmd_set_client_text_path(path)
-
-    def _cmd_char(self, character_name: str = "") -> bool:
-        """shortcut for setting the character name."""
-        return self._cmd_char_name(character_name)
-
-
-    def _cmd_filter(self, filter_name: str = "") -> bool:
-        """shortcut for setting the base item filter."""
-        return self._cmd_base_item_filter(filter_name)
-
-    def _cmd_start(self) -> bool:
-        """shortcut for starting the Path of Exile client."""
-        return self._cmd_start_poe()
-
+    
     def _cmd_deathlink(self):
         """Toggles deathlink"""
         def on_complete(task):
