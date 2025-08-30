@@ -3,8 +3,8 @@
 ## Required Software
 
 - Dolphin Emulator: [Dolphin Emulator Releases](https://dolphin-emu.org/download/?ref=btn)
-- MultiworldGG: [Latest releases](https://github.com/MultiworldGG/MultiworldGG/releases)
-- TTYD APWorld: [Latest releases](https://github.com/jamesbrq/ArchipelagoTTYD/releases) (not needed for MultiworldGG)
+- Archipelago: [Latest releases](https://github.com/ArchipelagoMW/Archipelago/releases)
+- TTYD APWorld: [Latest releases](https://github.com/jamesbrq/ArchipelagoTTYD/releases)
 - A US copy of Paper Mario The Thousand Year Door. (EU and JP versions are not supported at this time)
 	- This can not be a .ciso or .nkit.iso (or nkit.rvz) file as the data will not be structured properly.
 
