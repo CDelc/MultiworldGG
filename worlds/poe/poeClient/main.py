@@ -83,16 +83,32 @@ async def async_load(ctx: "PathOfExileContext" = None):
     jingle_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        import pkg_resources
-    
-        # List all files in the jingles directory
-        jingle_files = pkg_resources.resource_listdir('worlds.poe.data.sounds', 'jingles')
+        # All files to extract from the jingles directory (including documentation)
+        jingle_files = [
+            "Filler.wav",
+            "Useful.wav", 
+            "Trap.wav",
+            "ProgUseful.wav",
+            "Progression.wav",
+            "LICENSE.md",
+            "README.md"
+        ]
         
         for filename in jingle_files:
-            src_data = pkg_resources.resource_string('worlds.poe.data.sounds.jingles', filename)
-            dest_path = jingle_dir / filename
-            dest_path.write_bytes(src_data)
-            logger.debug(f"Extracted jingle file: {filename}")
+            if filename is None:
+                continue
+                
+            try:
+                src_data = pkgutil.get_data('worlds.poe.data.sounds.jingles', filename)
+                if src_data is not None:
+                    dest_path = jingle_dir / filename
+                    dest_path.write_bytes(src_data)
+                    logger.debug(f"Extracted jingle file: {filename}")
+                else:
+                    logger.warning(f"Could not find jingle file: {filename}")
+            except Exception as file_error:
+                logger.warning(f"Could not extract jingle file {filename}: {file_error}")
+                continue
                 
     except Exception as e:
         logger.error(f"Could not extract jingles: {e}")
