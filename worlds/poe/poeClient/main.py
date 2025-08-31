@@ -74,13 +74,16 @@ async def async_load(ctx: "PathOfExileContext" = None):
     global context
     ctx = ctx if ctx is not None else context
 
-    if ctx.filter_options.tts_enabled:
-        tts.generate_tts_tasks_from_missing_locations(ctx, ctx.filter_options.tts_speed)
-        threading.Thread(target=tts.run_tts_tasks, daemon=True).start()  # Run TTS tasks in a separate thread
-    
     # Extract jingle sound files from package data to the filter sounds directory
     jingle_dir = itemFilter.poe_doc_path / itemFilter.JINGLE_FILTER_SOUNDS_DIR_NAME
     jingle_dir.mkdir(parents=True, exist_ok=True)
+
+    tts_dir = itemFilter.poe_doc_path / itemFilter.TTS_FILTER_SOUNDS_DIR_NAME
+    tts_dir.mkdir(parents=True, exist_ok=True)
+
+    if ctx.filter_options.tts_enabled:
+        tts.generate_tts_tasks_from_missing_locations(ctx, ctx.filter_options.tts_speed)
+        threading.Thread(target=tts.run_tts_tasks, daemon=True).start()  # Run TTS tasks in a separate thread
 
     try:
         # All files to extract from the jingles directory (including documentation)
@@ -99,7 +102,7 @@ async def async_load(ctx: "PathOfExileContext" = None):
                 continue
                 
             try:
-                src_data = pkgutil.get_data('worlds.poe.data.sounds.jingles', filename)
+                src_data = pkgutil.get_data("worlds.poe.data", f"sounds/jingles/{filename}")
                 if src_data is not None:
                     dest_path = jingle_dir / filename
                     dest_path.write_bytes(src_data)
