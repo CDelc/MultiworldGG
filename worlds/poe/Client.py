@@ -95,7 +95,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
     
     def _cmd_poe_documents_directory(self, path:str) -> bool:
         r"""Change the default directory for poe item filters -- by default it's at C:\Users\<USER>\Documents\My Games\Path of Exile.
-        this may be needed if running on linux with wine, or if you have a custom installation."""
+        this may be needed if running on linux. (or maybe onedrive?)"""
         global logger
         if not path:
             self.output("The current directory for poe item filters is:")
@@ -115,7 +115,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         return True
 
     def _cmd_generate_tts(self) -> bool:
-        """Generate TTS for missing locations."""
+        """Generate TTS for missing locations. Run this after connecting to the server."""
         from .poeClient import tts
 
         if not self.ctx.missing_locations:
