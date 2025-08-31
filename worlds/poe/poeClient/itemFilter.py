@@ -183,7 +183,7 @@ def generate_item_filter_block(base_type_name, alert_sound, style_string=default
         logger.error(f"[ERROR] Base type '{base_type_name}' not found in item table.")
         return ""
     if not Path.exists(poe_doc_path / alert_sound):
-        logger.error(f"[ERROR] Alert sound '{alert_sound}' does not exist.")
+        logger.error(f"[ERROR] baseitem Alert sound '{alert_sound}' does not exist.")
         return generate_item_filter_block_without_sound(base_type_name=base_type_name, style_string=style_string)
     return f"""
 {start_item_filter_block}
@@ -204,7 +204,7 @@ BaseType == "{base_type_name}"
 
 def generate_invalid_item_filter_block(alert_sound) -> str:
     if not Path.exists(poe_doc_path / alert_sound):
-        logger.error(f"[ERROR] Alert sound '{alert_sound}' does not exist.")
+        logger.error(f"[ERROR] 'Invalid state' Alert sound '{alert_sound}' does not exist.")
         return generate_invalid_item_filter_block_without_sound()
     return f"""
 Show 

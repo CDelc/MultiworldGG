@@ -115,7 +115,7 @@ def generate_tts_tasks_from_missing_locations(ctx: "PathOfExileContext", tts_spe
         filename = fileHelper.safe_filename(f"{item_text.lower()}_{speed}.wav")
 
         relative_path = f"{itemFilter.TTS_FILTER_SOUNDS_DIR_NAME}/{filename.lower()}"
-        full_path = itemFilter.filter_sounds_path / f"{filename}"
+        full_path = itemFilter.poe_doc_path / itemFilter.TTS_FILTER_SOUNDS_DIR_NAME / f"{filename}"
 
         if not os.path.exists(full_path):
             if _debug:

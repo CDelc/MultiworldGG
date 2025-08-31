@@ -25,25 +25,27 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         ctx: "PathOfExileContext"
     logger = logging.getLogger("poeClient.PathOfExileCommandProcessor")
 
-    def _cmd_loot_filter_sounds(self, sounds: str) -> bool:
+    def _cmd_loot_filter_sounds(self, sounds: str = "") -> bool:
         """Set the lootfilter drop sound. \nno_sound = 0\nTTS = 1\njingles = 2"""
+        int_mapping = {0: "no_sound", 1: "TTS", 2: "jingles"}
         if sounds not in {"0", "1", "2"}:
-            self.output("ERROR: Please provide a valid sounds configuration (0, 1, 2).")
+            self.output(f"To set, please provide a valid sounds configuration (0, 1, 2).\nCurrent setting is: {int_mapping.get(self.ctx.filter_options.loot_filter_sounds, 'unknown')}")
             return False
         self.ctx.filter_options.loot_filter_sounds = int(sounds)
         self.ctx.update_settings()
-        sound_string = {0: "no_sound", 1: "TTS", 2: "jingles"}.get(int(sounds), "unknown")
+        sound_string = int_mapping.get(int(sounds), "unknown")
         self.output(f"Loot filter drop sounds set to: {sound_string}")
         return True
     
-    def _cmd_loot_filter_display(self, display: str) -> bool:
+    def _cmd_loot_filter_display(self, display: str = "") -> bool:
         """Set the lootfilter display mode. \nshow_classification = 0\nhide_classification = 1\nrandomize_lootfilter_style = 2"""
+        int_mapping = {0: "show_classification", 1: "hide_classification", 2: "randomize_lootfilter_style"}
         if display not in {"0", "1", "2"}:
-            self.output("ERROR: Please provide a valid display configuration (0, 1, 2).")
+            self.output(f"To set, please provide a valid display configuration (0, 1, 2).\nCurrent setting is: {int_mapping.get(self.ctx.filter_options.loot_filter_display, 'unknown')}")
             return False
         self.ctx.filter_options.loot_filter_display = int(display)
         self.ctx.update_settings()
-        display_string = {0: "no_display", 1: "highlight", 2: "show"}.get(int(display), "unknown")
+        display_string = int_mapping.get(int(display), "unknown")
         self.output(f"Loot filter display mode set to: {display_string}")
         return True
 
@@ -181,7 +183,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         """Set the base item filter. (this needs to be a local file, and remember to add the .filter extension)"""
         filter_name = Path(filter_name).name
         if not filter_name:
-            self.output("ERROR: Please provide a valid item filter name.")
+            self.output(f"Please provide a valid item filter name. The current item filter is: {self.ctx.base_item_filter or 'None'}")
             return False
         if not filter_name.endswith(".filter"):
             filter_name += ".filter"
@@ -373,6 +375,7 @@ class PathOfExileContext(CommonContext):
                 try:
                     settings = task.result()
                     if settings:
+                        # if there are local settings, use those first -- otherwise use server settings -- otherwise use defaults.
                         tts_settings = settings.get("tts_enabled") # can be True, False, or None
                         self.filter_options.tts_enabled = tts_settings if isinstance(tts_settings, bool) else bool(self.client_options.get('ttsEnabled', False))
                         self.filter_options.loot_filter_sounds = settings.get("loot_filter_sounds") or int(self.client_options.get('lootFilterSounds')) or Options.LootFilterSounds.default

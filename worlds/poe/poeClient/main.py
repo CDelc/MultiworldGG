@@ -95,7 +95,7 @@ async def async_load(ctx: "PathOfExileContext" = None):
             logger.debug(f"Extracted jingle file: {filename}")
                 
     except Exception as e:
-        logger.warning(f"Could not extract jingles: {e}")
+        logger.error(f"Could not extract jingles: {e}")
         # Continue execution - jingles are optional
 
     itemFilter.update_item_filter_from_context(ctx)

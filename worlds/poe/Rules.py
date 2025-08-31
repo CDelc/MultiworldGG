@@ -25,7 +25,8 @@ ACT_0_ARMOUR_TYPES = 2
 ACT_0_ADDITIONAL_LOCATIONS = 8
 _debug = False
 _very_debug = False
-
+if ACT_0_USABLE_GEMS + ACT_0_WEAPON_TYPES + ACT_0_ARMOUR_TYPES + ACT_0_FLASK_SLOTS > 19:
+    raise Exception("Act 0 requirements are too high, there are not enough locations in early act 1 to satisfy them")
 
 armor_categories = ["BodyArmour", "Boots", "Gloves", "Helmet", "Amulet", "Belt", "Ring (left)", "Ring (right)", "Quiver", "Shield"]
 weapon_categories = ["Axe","Bow","Claw","Dagger","Mace","Sceptre","Staff","Sword","Wand",

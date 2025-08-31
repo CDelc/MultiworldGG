@@ -79,7 +79,7 @@ def check_for_victory(ctx: "PathOfExileContext", zone: str, char: gggAPI.Charact
     goal = ctx.game_options.get("goal", -1)
     return_task: asyncio.Task | None = None
     if goal == -1:
-        logger.info("ERROR: No goal set in client options.")
+        logger.error("No goal set in client options.")
         raise ValueError("No goal set in client options.")
 
     def send_goal():
