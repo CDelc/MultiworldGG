@@ -280,17 +280,18 @@ def validate_char_equipment(character: gggAPI.Character, ctx: "PathOfExileContex
                     equipped_sockets += 1
                 if socketed_item.baseType not in total_received_items_names:
                     if "eye jewel" in socketed_item.baseType.lower():
-                        continue # eye jewels are not tracked right now.
+                        continue     # eye jewels are not tracked right now.
                     # Check for alternate gems
-                    if socketed_item.baseType.startswith("Vaal "):
+                    elif socketed_item.baseType.startswith("Vaal "):
                         if not "Vaal Gems" in total_received_items_names:
                             errors.append(f"Socketed Vaal Gem {socketed_item.baseType} in {equipped_item.inventoryId} ")
-                            continue
-                    if socketed_item.baseType in Items.alternate_gems:
+
+                    elif socketed_item.baseType in Items.alternate_gems:
                         if not Items.alternate_gems[socketed_item.baseType].get("baseGem") in total_received_items_names:
                             errors.append(f"Socketed Alternate Gem {socketed_item.baseType} in {equipped_item.inventoryId} ")
-                            continue
-                    errors.append(f"Socketed {socketed_item.baseType} in {equipped_item.inventoryId}")
+
+                    else:
+                        errors.append(f"Socketed {socketed_item.baseType} in {equipped_item.inventoryId}")
 
         links = [i["name"] for i in total_received_items if i["name"] == f"Progressive max links - {equipped_item.inventoryId}"]
         if len(links) < equipped_sockets:
