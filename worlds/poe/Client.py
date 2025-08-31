@@ -26,7 +26,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
     logger = logging.getLogger("poeClient.PathOfExileCommandProcessor")
 
     def _cmd_loot_filter_sounds(self, sounds: str = "") -> bool:
-        """Set the lootfilter drop sound. \nno_sound = 0\nTTS = 1\njingles = 2"""
+        """Set the lootfilter drop sound. no_sound = 0; TTS = 1; jingles = 2"""
         int_mapping = {0: "no_sound", 1: "TTS", 2: "jingles"}
         if sounds not in {"0", "1", "2"}:
             self.output(f"To set, please provide a valid sounds configuration (0, 1, 2).\nCurrent setting is: {int_mapping.get(self.ctx.filter_options.loot_filter_sounds, 'unknown')}")
@@ -38,7 +38,7 @@ class PathOfExileCommandProcessor(ClientCommandProcessor):
         return True
     
     def _cmd_loot_filter_display(self, display: str = "") -> bool:
-        """Set the lootfilter display mode. \nshow_classification = 0\nhide_classification = 1\nrandomize_lootfilter_style = 2"""
+        """Set the lootfilter display mode. show_classification = 0; hide_classification = 1; randomize_lootfilter_style = 2"""
         int_mapping = {0: "show_classification", 1: "hide_classification", 2: "randomize_lootfilter_style"}
         if display not in {"0", "1", "2"}:
             self.output(f"To set, please provide a valid display configuration (0, 1, 2).\nCurrent setting is: {int_mapping.get(self.ctx.filter_options.loot_filter_display, 'unknown')}")

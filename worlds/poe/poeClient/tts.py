@@ -97,6 +97,10 @@ async def safe_tts_async(text, filename, rate=250, volume=1, voice_id=None, over
 
 
 def generate_tts_tasks_from_missing_locations(ctx: "PathOfExileContext", tts_speed: int = None) -> None:
+
+    tts_dir = itemFilter.poe_doc_path / itemFilter.TTS_FILTER_SOUNDS_DIR_NAME
+    tts_dir.mkdir(parents=True, exist_ok=True)
+
     """Generate TTS files for missing locations."""
     if not ctx or not ctx.missing_locations:
         logger.info("[DEBUG] No missing locations to generate TTS for.")

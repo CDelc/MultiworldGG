@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
 from pathlib import Path
 from worlds.poe.Locations import base_item_locations_by_base_item_name, LocationDict
 from worlds.poe import Locations
-from worlds.poe.Options import PathOfExileOptions, LootFilterDisplay
+from worlds.poe.Options import PathOfExileOptions, LootFilterDisplay, LootFilterSounds
 
 AP_FILTER_NAME = "__ap"
 INVALID_FILTER_NAME = "__invalid"
@@ -81,10 +81,10 @@ minimap_icon_colors = ["Red", "Green", "Blue", "Brown", "White", "Yellow", "Cyan
 minimap_play_effect = ["Red", "Green", "Blue", "Brown", "White", "Yellow", "Cyan", "Grey", "Orange", "Pink", "Purple"]
 def get_random_style_string() -> str:
     style = ""
-    style += f"SetFontSize {random.randint(20, 45)}\n"
-    style += f"SetTextColor {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)}\n"
+    style += f"SetFontSize {random.randint(28, 45)}\n"
+    style += f"SetTextColor {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(180, 255)}\n"
     style += f"SetBorderColor {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)}\n"
-    style += f"SetBackgroundColor {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)}\n"
+    style += f"SetBackgroundColor {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(0, 255)} {random.randint(100, 255)}\n"
     style += f"MinimapIcon {random.randint(0,2)} {random.choice(minimap_icon_colors)} {random.choice(minimap_icon_shapes)}\n"
     style += f"PlayEffect {random.choice(minimap_play_effect)}\n"
     return style
@@ -153,9 +153,9 @@ def update_item_filter_from_context(ctx : "PathOfExileContext", exclude_location
         if ctx.filter_options.tts_enabled or ctx.filter_options.jingle_enabled:
             write_wav = True
 
-            if ctx.filter_options.tts_enabled:
+            if ctx.filter_options.loot_filter_sounds == LootFilterSounds.option_TTS:
                 relative_wav_path = base_item_id_to_relative_tts_wav_path.get(base_item_location_id, None)
-            else: # ctx.filter_options.jingle_enabled
+            elif ctx.filter_options.loot_filter_sounds == LootFilterSounds.option_jingles:
                 if progression == ItemClassification.progression:
                     relative_wav_path = poe_doc_path / JINGLE_FILTER_SOUNDS_DIR_NAME / "Progression.wav"
                 elif progression == ItemClassification.useful:
