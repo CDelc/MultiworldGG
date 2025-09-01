@@ -32,6 +32,9 @@ logger.setLevel(logging.DEBUG)
 
 PASSIVE_POINT_ITEM_ID = Items.get_by_name("Progressive passive point")["id"]
 TIMEOUT_FOR_TTS_GENERATION_ON_NEW_ZONE = 1.5
+INVALID_STATE_TTS_ERROR_MESSAGE = "Invalid state"
+INVALID_STATE_CHAT_ERROR_MESSAGE = "Invalid state"
+
 
 last_zone = None
 # Timeouts (seconds)
@@ -60,7 +63,7 @@ async def when_enter_new_zone(ctx: "PathOfExileContext", line: str):
         logger.error(f"Error fetching character {ctx.character_name}: {e}\nTraceback:\n{tb_str}")
         raise
 
-    logic_errors = await validate_and_update(ctx, char, found_items_list)
+    logic_errors = await validate_and_update(ctx, char, found_items_list) # this updates the filter if needed.
     victory_task = check_for_victory(ctx, zone, char)
 
     # THIS IS FOR DEBUGGING PURPOSES, I'm tired of respeccing my character to test the logic, lol
@@ -69,7 +72,7 @@ async def when_enter_new_zone(ctx: "PathOfExileContext", line: str):
 
     if not is_char_in_logic:
         error_msg = ", and ".join(logic_errors) if logic_errors else "unknown errors"
-        await asyncio.wait_for(send_multiple_poe_text([f"/itemfilter {itemFilter.INVALID_FILTER_NAME}", f"@{ctx.character_name} Illegal state detected, resolve to continue: {error_msg}"]), TIMEOUT)
+        await asyncio.wait_for(send_multiple_poe_text([f"/itemfilter {itemFilter.INVALID_FILTER_NAME}", f"@{ctx.character_name} {INVALID_STATE_CHAT_ERROR_MESSAGE}: {error_msg}"]), TIMEOUT)
     elif victory_task:
         pass # callback handles victory and chat sending
     else:
@@ -411,7 +414,7 @@ async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bo
         else:
             error_text = errors[0]
         filename = f"{fileHelper.short_hash(error_text)}_{tts.WPM}.wav" # this could be a long text, so we use a hash
-        full_error_text = f"Illegal state: {error_text}"
+        full_error_text = f"{INVALID_STATE_TTS_ERROR_MESSAGE} {error_text}"
 
         try:
             await asyncio.wait_for(await tts.safe_tts_async(
