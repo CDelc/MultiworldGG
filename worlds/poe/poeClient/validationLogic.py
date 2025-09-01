@@ -31,8 +31,8 @@ logger = logging.getLogger("poeClient.validationLogic")
 logger.setLevel(logging.DEBUG)
 
 PASSIVE_POINT_ITEM_ID = Items.get_by_name("Progressive passive point")["id"]
-TIMEOUT_FOR_TTS_GENERATION_ON_NEW_ZONE = 1.5
-INVALID_STATE_TTS_ERROR_MESSAGE = "Invalid state"
+TIMEOUT_FOR_TTS_GENERATION_ON_NEW_ZONE = 2.5
+INVALID_STATE_TTS_ERROR_MESSAGE = "Invalid state ... "
 INVALID_STATE_CHAT_ERROR_MESSAGE = "Invalid state"
 
 
@@ -76,7 +76,7 @@ async def when_enter_new_zone(ctx: "PathOfExileContext", line: str):
     elif victory_task:
         pass # callback handles victory and chat sending
     else:
-        await asyncio.wait_for(inputHelper.important_send_poe_text(f"/itemfilter {itemFilter.AP_FILTER_NAME}", retry_times=40, retry_delay=0.5), TIMEOUT)
+        await asyncio.wait_for(inputHelper.important_send_poe_text(f"/itemfilter {itemFilter.AP_FILTER_NAME}", retry_times=9, retry_delay=0.5), TIMEOUT)
 
 def check_for_victory(ctx: "PathOfExileContext", zone: str, char: gggAPI.Character) -> asyncio.Task | None:
     goal = ctx.game_options.get("goal", -1)
@@ -417,9 +417,9 @@ async def update_filter_to_invalid_char_filter(errors: list[str], enable_tts: bo
         full_error_text = f"{INVALID_STATE_TTS_ERROR_MESSAGE} {error_text}"
 
         try:
-            await asyncio.wait_for(await tts.safe_tts_async(
+            await asyncio.wait_for(tts.safe_tts_async(
                 text=full_error_text,
-                filename=itemFilter.filter_sounds_path / f"{filename}",
+                filename=itemFilter.poe_doc_path / itemFilter.TTS_FILTER_SOUNDS_DIR_NAME / f"{filename}",
                 rate=tts_speed
             ), TIMEOUT_FOR_TTS_GENERATION_ON_NEW_ZONE)
         except Exception as e:
