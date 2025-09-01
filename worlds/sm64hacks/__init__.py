@@ -75,6 +75,10 @@ class SM64HackWorld(World):
                 self.progressive_keys = self.data.locations["Other"]["Settings"]["prog_key"]
             except TypeError:
                 raise ValueError("JSON is too old and does not have a default for progressive keys")
+        
+        non_local_traps = [trap for trap in traps if trap != "Mario Choir"]
+        self.options.non_local_items.value |= set(non_local_traps)
+
 
     @staticmethod
     def normalize_to_json_filename(name: str) -> str:
@@ -83,7 +87,7 @@ class SM64HackWorld(World):
         (case-insensitive) if hack was selected on webworld frontend.
         """
         # 1. Replace _
-        sanitized = name.replace('_', '')
+        sanitized = name.replace('_', '').replace('dot', '.')
         # 2. Check for .json suffix (case-insensitive)
         if not sanitized.lower().endswith('.json'):
             sanitized += '.json'
@@ -161,7 +165,7 @@ class SM64HackWorld(World):
                 self.multiworld.itempool += [self.create_item(sm64hack_items[item])]
         
         if(self.options.randomize_moat):
-            if self.data.locations["Other"]["Stars"][6]["exists"]:
+            if self.data.locations["Other"]["Stars"][5]["exists"]:
                 self.multiworld.itempool += [self.create_item("Castle Moat")]
         
         if("sr7" in self.data.locations["Other"]["Settings"]):
@@ -370,7 +374,7 @@ class SM64HackWorld(World):
                     lambda state, star_data=self.data.locations[course]["Cannon"]: self.can_access_location(state, star_data))
                     
             star_data = self.data.locations[course]["Troll Star"]
-            if(star_data.get("exists")):
+            if(star_data.get("exists") and self.options.troll_stars):
                 add_rule(self.multiworld.get_location(f"{course} Troll Star", self.player),
                     lambda state, star_data=self.data.locations[course]["Troll Star"]: self.can_access_location(state, star_data))
 
@@ -383,7 +387,7 @@ class SM64HackWorld(World):
     
     def generate_basic(self) -> None:
         self.multiworld.get_location("Victory Location", self.player).place_locked_item(self.create_event("Victory"))
-        if not self.options.randomize_moat.value and self.data.locations["Other"]["Stars"][6]["exists"]:
+        if not self.options.randomize_moat.value and self.data.locations["Other"]["Stars"][5]["exists"]:
             self.multiworld.get_location("Castle Moat", self.player).place_locked_item(self.create_item("Castle Moat"))
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 

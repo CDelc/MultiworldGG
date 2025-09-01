@@ -1039,6 +1039,10 @@ class OracleOfSeasonsWorld(World):
         # The structure is made to make it easy to call CreateHints
         slot_data_item_hints = []
         for item_hint in self.item_hints:
+            if item_hint is None:
+                # Joke hint
+                slot_data_item_hints.append(None)
+                continue
             player = item_hint[2]
             if player is None:
                 player = self.player

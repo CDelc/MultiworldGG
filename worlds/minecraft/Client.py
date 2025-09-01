@@ -697,9 +697,9 @@ def run_simple_setup(args):
                 messagebox.showinfo(
                     "Minecraft Server Started",
                     "Minecraft Forge Server is now running!\n\n"
-                    "Please open Minecraft via Forge 1.20.4 and connect to localhost\n\n"
-                    "The server console can be found in a separate window.\n\n"
-                    "You may close this window."
+                    "Please open Minecraft via Forge 1.20.4 and connect to localhost.\n\n"
+                    "The server console can be found in a separate terminal window.\n\n"
+                    "You may close this prompt."
                 )
                 
                 root.destroy()

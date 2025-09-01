@@ -32,7 +32,7 @@ Currently, the following games are supported:
 * Bumper Stickers
 * Candy Box 2
 * Cat Quest
-* Celeste
+* Celeste (+ Open World)
 * Celeste 64
 * Chained Echoes
 * Chatipelago

@@ -82,7 +82,6 @@ from randomizer.Patching.ShopRandomizer import ApplyShopRandomizer
 from randomizer.Patching.UpdateHints import (
     PushHints,
     replaceIngameText,
-    wipeHints,
     PushItemLocations,
     PushHelpfulHints,
     PushHintTiedRegions,
@@ -690,14 +689,13 @@ def patching_response(spoiler):
     PushItemLocations(spoiler, ROM_COPY)
 
     if spoiler.settings.wrinkly_hints != WrinklyHints.off:
-        wipeHints()
         PushHints(spoiler, ROM_COPY)
         if spoiler.settings.dim_solved_hints:
             PushHelpfulHints(spoiler, ROM_COPY)
     if Types.Hint in spoiler.settings.shuffled_location_types and spoiler.settings.progressive_hint_item == ProgressiveHintItem.off:
         PushHintTiedRegions(spoiler, ROM_COPY)
 
-    writeBootMessages(ROM_COPY, spoiler.settings.random)
+    writeBootMessages(ROM_COPY, spoiler)
     enableTriggerText(spoiler, ROM_COPY)
     shortenCastleMinecart(spoiler, ROM_COPY)
     alterStoryCutsceneWarps(spoiler, ROM_COPY)

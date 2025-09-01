@@ -77,6 +77,9 @@
 # Celeste
 /worlds/celeste/ @doshyw
 
+# Celeste (Open World)
+/worlds/celeste_open_world/ @PoryGone
+
 # Celeste 64
 /worlds/celeste64/ @PoryGone
 
