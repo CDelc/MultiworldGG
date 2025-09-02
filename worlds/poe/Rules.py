@@ -18,14 +18,9 @@ MAX_LINK_UPGRADES       = 22
 MAX_SKILL_GEMS          = 50 # you will get more, but this is the max required for "logic"
 MAX_SUPPORT_GEMS        = 50 # you will get more, but this is the max required for "logic"
 
-ACT_0_USABLE_GEMS = 4
-ACT_0_FLASK_SLOTS = 3
-ACT_0_WEAPON_TYPES = 2
-ACT_0_ARMOUR_TYPES = 2
-ACT_0_ADDITIONAL_LOCATIONS = 8
-_debug = False
-_very_debug = False
-if ACT_0_USABLE_GEMS + ACT_0_WEAPON_TYPES + ACT_0_ARMOUR_TYPES + ACT_0_FLASK_SLOTS > 19:
+_debug = True
+_very_debug = True
+if Items.ACT_0_USABLE_GEMS + Items.ACT_0_WEAPON_TYPES + Items.ACT_0_ARMOUR_TYPES + Items.ACT_0_FLASK_SLOTS > 19:
     raise Exception("Act 0 requirements are too high, there are not enough locations in early act 1 to satisfy them")
 
 armor_categories = ["BodyArmour", "Boots", "Gloves", "Helmet", "Amulet", "Belt", "Ring (left)", "Ring (right)", "Quiver", "Shield"]
@@ -126,10 +121,30 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
             if category_items and state.has_from_list(category_items, world.player, 1):
                 distinct_armor_count += 1
 
-        reachable &= usable_skill_gem_count >= ACT_0_USABLE_GEMS
-        reachable &= len(valid_weapon_types) >= ACT_0_WEAPON_TYPES
-        reachable &= distinct_armor_count >= ACT_0_ARMOUR_TYPES
-        reachable &= flask_count >= ACT_0_FLASK_SLOTS
+        reachable &= usable_skill_gem_count >= Items.ACT_0_USABLE_GEMS
+        reachable &= len(valid_weapon_types) >= Items.ACT_0_WEAPON_TYPES
+        reachable &= distinct_armor_count >= Items.ACT_0_ARMOUR_TYPES
+        reachable &= flask_count >= Items.ACT_0_FLASK_SLOTS
+
+        if not reachable:
+            if _debug:
+                log = f"Act 0 not reachable with gear:"
+                if len(valid_weapon_types) < Items.ACT_0_WEAPON_TYPES:
+                    log += f" weapon types: {len(valid_weapon_types)}/{Items.ACT_0_WEAPON_TYPES},"
+                if distinct_armor_count < Items.ACT_0_ARMOUR_TYPES:
+                    log += f" armor types: {distinct_armor_count}/{Items.ACT_0_ARMOUR_TYPES},"
+                if flask_count < Items.ACT_0_FLASK_SLOTS:
+                    log += f" flask: {flask_count}/{Items.ACT_0_FLASK_SLOTS},"
+                if usable_skill_gem_count < Items.ACT_0_USABLE_GEMS:
+                    log += f" skill gems: {usable_skill_gem_count}/{Items.ACT_0_USABLE_GEMS},"
+                log += f" for {opt.starting_character.current_option_name}"
+                logger.debug(log)
+
+            return False
+
+        else:
+            if _debug and _very_debug:
+                logger.debug(f"!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\nAct 0 is reachable with gear for {opt.starting_character.current_option_name}")
 
 
     reachable &= ascedancy_count >= ascedancy_amount and \
@@ -206,7 +221,7 @@ def SelectLocationsToAdd (world: "PathOfExileWorld", target_amount):
         if act < 1:
             return 0
         needed_locations = 0
-        needed_locations += ACT_0_USABLE_GEMS + ACT_0_WEAPON_TYPES + ACT_0_ARMOUR_TYPES + ACT_0_FLASK_SLOTS + ACT_0_ADDITIONAL_LOCATIONS
+        needed_locations += Items.ACT_0_USABLE_GEMS + Items.ACT_0_WEAPON_TYPES + Items.ACT_0_ARMOUR_TYPES + Items.ACT_0_FLASK_SLOTS + Items.ACT_0_ADDITIONAL_LOCATIONS
         needed_locations += get_ascendancy_amount_for_act(act, opt)
         needed_locations += get_gear_amount_for_act(act, opt)
         needed_locations += get_flask_amount_for_act(act, opt)

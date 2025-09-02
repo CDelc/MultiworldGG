@@ -1,3 +1,4 @@
+import random
 import typing
 from collections import defaultdict
 
@@ -15,6 +16,12 @@ import logging
 logger = logging.getLogger("poe.Items")
 logger.setLevel(logging.DEBUG)
 _verbose_debug = False  # Set to True to enable verbose debug logging
+
+ACT_0_USABLE_GEMS = 4
+ACT_0_FLASK_SLOTS = 3
+ACT_0_WEAPON_TYPES = 2
+ACT_0_ARMOUR_TYPES = 2
+ACT_0_ADDITIONAL_LOCATIONS = 8
 
 class ItemDict(TypedDict, total=False): 
     classification: ItemClassification 
@@ -35,16 +42,6 @@ class PathOfExileItem(Item):
     category = list[str]()
 
 
-
-#def get_items():
-#    """
-#    Returns a list of all items available in the Path of Exile world.
-#    This function can be extended to include specific item definitions.
-#    """
-#    return items
-
-
-
 item_table: Dict[int, ItemDict] = ItemTable.item_table
 alternate_gems: Dict[str, Dict] = ItemTable.alternate_gems
 if _verbose_debug:
@@ -55,15 +52,20 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
     opt: PathOfExileOptions = world.options
     
     still_required_gem_ids = set()
-    
+
+    #act 0 starter gems
+    selected_gems = [] # a list, we may have duplicates, but that's fine
+    lvl_1_gems = [item for item in get_main_skill_gem_items(table) if item["reqLevel"] == 1]
+    selected_gems.extend(world.random.sample(lvl_1_gems, k=4 )) # 4 starting gems
+
     for act in range(1, world.goal_act + 1):
         main_gems_for_act = [item for item in get_main_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
         support_gems_for_act = [item for item in get_support_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
         utility_gems_for_act = [item for item in get_utility_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
         
-        if main_gems_for_act:  
-            selected_gems = world.random.sample(main_gems_for_act, k=min(opt.skill_gems_per_act.value + 1, len(main_gems_for_act))) #need at _least_ one main skill gem per act
-            selected_gems.extend(world.random.sample(support_gems_for_act, k=min(opt.skill_gems_per_act.value, len(support_gems_for_act))))
+        if main_gems_for_act:
+            selected_gems.extend(world.random.sample(main_gems_for_act, k=min(max(opt.skill_gems_per_act.value, 1), len(main_gems_for_act)))) #need at _least_ one main skill gem per act
+            selected_gems.extend(world.random.sample(support_gems_for_act, k=min(opt.support_gems_per_act.value, len(support_gems_for_act))))
             selected_gems.extend(world.random.sample(utility_gems_for_act, k=min(opt.skill_gems_per_act.value, len(utility_gems_for_act))))
 
 
@@ -83,28 +85,31 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
                     item["classification"] = ItemClassification.filler
     return table
 
-GUARANTEED_WEAPON_COUNT = 2  # The number of guaranteed weapons to keep in the world
 def deprioritize_non_logic_gear(world: "PathOfExileWorld", table: Dict[int, ItemDict]) -> Dict[int, ItemDict]:
     opt: PathOfExileOptions = world.options
 
-    required_weps = list()
+    required_categories = list()
     progression_main_gems = [gem for gem in get_main_skill_gem_items(table) if gem["classification"] == ItemClassification.progression]
     for gem in progression_main_gems:
-        for wep in gem.get("reqToUse", []):
-            required_weps.append(wep)
+        if gem.get("reqToUse"):
+            required_categories.append(random.choice(gem.get("reqToUse")))
     
-    required_weps = world.random.sample(required_weps, k=min(GUARANTEED_WEAPON_COUNT, len(required_weps)))
-    if "Unarmed" in required_weps: required_weps.remove("Unarmed")
-    required_weps.extend(["Wand", "Bow", "Sword"])
-    required_weps = required_weps[:GUARANTEED_WEAPON_COUNT]  # Ensure we only keep the guaranteed number of weapons
+    required_categories = world.random.sample(required_categories, k=min(ACT_0_WEAPON_TYPES, len(required_categories)))
+    if "Unarmed" in required_categories: required_categories.remove("Unarmed")
+    required_categories.extend(["Wand", "Bow", "Sword"])
+    required_categories = required_categories[:ACT_0_WEAPON_TYPES]  # Ensure we only keep the guaranteed number of weapons
 
 
+    required_armor_ids = [i['id'] for i in  world.random.sample(get_armor_items(table), k=min(ACT_0_ARMOUR_TYPES, len(get_armor_items(table))))]
     gear_ids = [item["id"] for item in get_gear_items(table)]
     progression_sample_size = min(opt.gear_upgrades_per_act.value * world.goal_act, len(gear_ids))
     progression_gear_ids = world.random.sample(gear_ids, progression_sample_size)
 
+    required_categories.append("Flask") # Flasks are always progression
     for item in [ item for item in get_gear_items(table)]:
-        if item["name"] in required_weps or item["id"] in progression_gear_ids:
+        if (any(cat in item["category"] for cat in required_categories)
+            or item["id"] in required_armor_ids
+            or item["id"] in progression_gear_ids):
             item["classification"] = ItemClassification.progression
         else:
             if item["classification"] == ItemClassification.progression:
