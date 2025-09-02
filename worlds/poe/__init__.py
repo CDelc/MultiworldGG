@@ -115,7 +115,7 @@ class PathOfExileWorld(World):
         self.items_to_place = copy.deepcopy(Items.item_table)
 
 
-    def remove_and_create_item_by_itemdict(self, item: Items.ItemDict) -> list[Items.PathOfExileItem]:
+    def remove_and_create_items_by_itemdict(self, item: Items.ItemDict) -> list[Items.PathOfExileItem]:
         item_id = item["id"]
         item_to_place = self.items_to_place.pop(item_id)  # Remove from items to place
         item_objs = []
@@ -205,7 +205,7 @@ class PathOfExileWorld(World):
         options: PathOfExileOptions = self.options
         # iterate over a copy to be safe while modifying the dictionary
         for item in list(self.items_to_place.values()):
-            list_of_items = self.remove_and_create_item_by_itemdict(item)
+            list_of_items = self.remove_and_create_items_by_itemdict(item)
             for item in list_of_items:
                 self.multiworld.itempool.append(item)
 
@@ -338,32 +338,35 @@ def setup_early_items(world: PathOfExileWorld, options: PathOfExileOptions):
         all_gear_items = Items.get_gear_items(table=world.items_to_place)
         gear_upgrades = [item for item in all_gear_items if set(item["category"]).intersection(categories)]
         for item in gear_upgrades:
-            item_objs = world.remove_and_create_item_by_itemdict(item)
+            item_objs = world.remove_and_create_items_by_itemdict(item)
             for item_obj in item_objs:
                 world.precollect(item_obj)
     if options.add_flask_slots_to_item_pool.value == False:
         flask_slots = Items.get_flask_items(table=world.items_to_place)
         for item in flask_slots:
-            item_objs = world.remove_and_create_item_by_itemdict(item)
+            item_objs = world.remove_and_create_items_by_itemdict(item)
             for item_obj in item_objs:
                 world.precollect(item_obj)
     if options.add_max_links_to_item_pool.value == False:
         support_gem_slots = Items.get_max_links_items(table=world.items_to_place)
         for item in support_gem_slots:
-            item_obj = world.remove_and_create_item_by_itemdict(item)
-            world.precollect(item_obj)
+            item_objs = world.remove_and_create_items_by_itemdict(item)
+            for item_obj in item_objs:
+                world.precollect(item_obj)
 
     if options.add_skill_gems_to_item_pool == False:
         skill_gems = Items.get_by_has_any_category({"MainSkillGem", "UtilSkillGem"}, table=world.items_to_place)
         for item in skill_gems:
-            item_obj = world.remove_and_create_item_by_itemdict(item)
-            world.precollect(item_obj)
+            item_objs = world.remove_and_create_items_by_itemdict(item)
+            for item_obj in item_objs:
+                world.precollect(item_obj)
 
     if options.add_support_gems_to_item_pool == False:
         support_gems = Items.get_by_category("SupportGem", table=world.items_to_place)
         for item in support_gems:
-            item_obj = world.remove_and_create_item_by_itemdict(item)
-            world.precollect(item_obj)
+            item_objs = world.remove_and_create_items_by_itemdict(item)
+            for item_obj in item_objs:
+                world.precollect(item_obj)
 
 def setup_character_items(world, options):
     def handle_starting_character(char):

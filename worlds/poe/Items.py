@@ -56,7 +56,7 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
     #act 0 starter gems
     selected_gems = [] # a list, we may have duplicates, but that's fine
     lvl_1_gems = [item for item in get_main_skill_gem_items(table) if item["reqLevel"] == 1]
-    selected_gems.extend(world.random.sample(lvl_1_gems, k=4 )) # 4 starting gems
+    selected_gems.extend(world.random.sample(lvl_1_gems, k=min(ACT_0_USABLE_GEMS, len(lvl_1_gems)))) # 4 starting gems
 
     for act in range(1, world.goal_act + 1):
         main_gems_for_act = [item for item in get_main_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
