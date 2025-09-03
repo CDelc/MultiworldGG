@@ -430,11 +430,11 @@ def store_data_package_for_checksum(game: str, data: typing.Dict[str, Any]) -> N
 @cache_argsless
 def get_unique_identifier():
     common_path = cache_path("common.json")
-    try:
+    if os.path.exists(common_path):
         with open(common_path) as f:
             common_file = json.load(f)
             uuid = common_file.get("uuid", None)
-    except FileNotFoundError:
+    else:
         common_file = {}
         uuid = None
 
@@ -444,9 +444,6 @@ def get_unique_identifier():
     from uuid import uuid4
     uuid = str(uuid4())
     common_file["uuid"] = uuid
-
-    cache_folder = os.path.dirname(common_path)
-    os.makedirs(cache_folder, exist_ok=True)
     with open(common_path, "w") as f:
         json.dump(common_file, f, separators=(",", ":"))
     return uuid

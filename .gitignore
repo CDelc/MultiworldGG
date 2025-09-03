@@ -68,7 +68,6 @@ Output Logs/
 /installdelete.iss
 /data/user.kv
 /datapackage
-/data/sprites/alttp/remote/*
 /custom_worlds
 
 # Byte-compiled / optimized / DLL files
