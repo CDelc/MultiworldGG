@@ -94,7 +94,7 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
 def deprioritize_non_logic_gear(world: "PathOfExileWorld", table: Dict[int, ItemDict]) -> Dict[int, ItemDict]:
     opt: PathOfExileOptions = world.options
 
-    # If gear upgrades are disabled, don't try to deprioritize any gear
+    # If gear upgrades are disabled, don't try to deprioritize any gear, flask are already progressive.
     if opt.gear_upgrades.value == opt.gear_upgrades.option_no_gear_unlocked:
         return table
 
@@ -108,7 +108,6 @@ def deprioritize_non_logic_gear(world: "PathOfExileWorld", table: Dict[int, Item
     if "Unarmed" in required_categories: required_categories.remove("Unarmed")
     required_categories.extend(["Wand", "Bow", "Sword"])
     required_categories = required_categories[:ACT_0_WEAPON_TYPES]  # Ensure we only keep the guaranteed number of weapons
-
 
     required_armor_ids = [i['id'] for i in  world.random.sample(get_armor_items(table), k=min(ACT_0_ARMOUR_TYPES, len(get_armor_items(table))))]
     gear_ids = [item["id"] for item in get_gear_items(table)]
@@ -124,8 +123,8 @@ def deprioritize_non_logic_gear(world: "PathOfExileWorld", table: Dict[int, Item
         else:
             if item["classification"] == ItemClassification.progression:
                 item["classification"] = ItemClassification.useful
-            elif item["classification"] == ItemClassification.useful:
-                item["classification"] = ItemClassification.filler
+ #           elif item["classification"] == ItemClassification.useful:
+ #               item["classification"] = ItemClassification.filler
     
     return table
 
