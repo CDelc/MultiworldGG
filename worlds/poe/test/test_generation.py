@@ -70,8 +70,8 @@ class TestSetupEarlyItems(PoeTestBase):
         self.mock_options.gear_upgrades.option_all_normal_gear_unlocked = 3
         self.mock_options.gear_upgrades.option_all_uniques_unlocked = 4
         
-        self.mock_options.add_flask_slots_to_item_pool = Mock()
-        self.mock_options.add_flask_slots_to_item_pool.value = True
+        self.mock_options.add_flasks_to_item_pool = Mock()
+        self.mock_options.add_flasks_to_item_pool.value = True
         
         self.mock_options.add_max_links_to_item_pool = Mock()
         self.mock_options.add_max_links_to_item_pool.value = True

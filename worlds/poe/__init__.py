@@ -341,7 +341,7 @@ def setup_early_items(world: PathOfExileWorld, options: PathOfExileOptions):
             item_objs = world.remove_and_create_items_by_itemdict(item)
             for item_obj in item_objs:
                 world.precollect(item_obj)
-    if options.add_flask_slots_to_item_pool.value == False:
+    if options.add_flasks_to_item_pool.value == False:
         flask_slots = Items.get_flask_items(table=world.items_to_place)
         for item in flask_slots:
             item_objs = world.remove_and_create_items_by_itemdict(item)
@@ -362,7 +362,7 @@ def setup_early_items(world: PathOfExileWorld, options: PathOfExileOptions):
                 world.precollect(item_obj)
 
     if options.add_support_gems_to_item_pool == False:
-        support_gems = Items.get_by_category("SupportGem", table=world.items_to_place)
+        support_gems = Items.get_support_gem_items(table=world.items_to_place)
         for item in support_gems:
             item_objs = world.remove_and_create_items_by_itemdict(item)
             for item_obj in item_objs:

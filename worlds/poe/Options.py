@@ -158,7 +158,7 @@ class GearUpgradesPerAct(Range):
     range_end = 38
     default = 5
 
-class AddFlaskSlotsToItemPool(Toggle):
+class AddFlasksToItemPool(Toggle):
     """
     Specifies if flasks should be restricted, unlockable through items found in the multiworld.
     You may equip up to 5 flasks of a given rarity, and can unlock more flasks of a rarity through items.
@@ -166,7 +166,7 @@ class AddFlaskSlotsToItemPool(Toggle):
     display_name = "Restricted Flasks"
     default = True
 
-class FlaskSlotsPerAct(Range):
+class FlasksPerAct(Range):
     """
     Specifies a minimum number of available flask slots per act. (there are 5 total)
     This will be ignored if the "Flask Slots" option is turned off.
@@ -303,8 +303,8 @@ poe_options_groups = [
         GearUpgrades,
         GearUpgradesPerAct,
 
-        AddFlaskSlotsToItemPool,
-        FlaskSlotsPerAct,
+        AddFlasksToItemPool,
+        FlasksPerAct,
 
         AddMaxLinksToItemPool,
         MaxLinksPerAct,
@@ -417,7 +417,7 @@ poe_presets = {
         "usable_starting_gear":UsableStartingGear.option_no_starting_gear,
         "add_passive_skill_points_to_item_pool": True,
         "add_leveling_up_to_location_pool": True,
-        "add_flask_slots_to_item_pool": True,
+        "add_flasks_to_item_pool": True,
         "add_max_links_to_item_pool": True,
         "ascendancies_available_per_class": 0,
         "allow_unlock_of_other_characters": False,
@@ -447,8 +447,8 @@ class PathOfExileOptions(DeathLinkMixin, PerGameCommonOptions):
     gear_upgrades: GearUpgrades
     gear_upgrades_per_act: GearUpgradesPerAct
 
-    add_flask_slots_to_item_pool: AddFlaskSlotsToItemPool
-    flask_slots_per_act: FlaskSlotsPerAct
+    add_flasks_to_item_pool: AddFlasksToItemPool
+    flasks_per_act: FlasksPerAct
 
     add_max_links_to_item_pool: AddMaxLinksToItemPool
     max_links_per_act: MaxLinksPerAct

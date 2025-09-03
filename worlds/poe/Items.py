@@ -59,10 +59,10 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
     selected_gems.extend(world.random.sample(lvl_1_gems, k=min(ACT_0_USABLE_GEMS, len(lvl_1_gems)))) # 4 starting gems
 
     for act in range(1, world.goal_act + 1):
-        main_gems_for_act = [item for item in get_main_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
-        support_gems_for_act = [item for item in get_support_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
-        utility_gems_for_act = [item for item in get_utility_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"]]
-        
+        main_gems_for_act = [item for item in get_main_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"] and item not in selected_gems]
+        support_gems_for_act = [item for item in get_support_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"] and item not in selected_gems]
+        utility_gems_for_act = [item for item in get_utility_skill_gem_items(table) if item["reqLevel"] <= Locations.acts[act]["maxMonsterLevel"] and item not in selected_gems]
+
         if main_gems_for_act:
             selected_gems.extend(world.random.sample(main_gems_for_act, k=min(max(opt.skill_gems_per_act.value, 1), len(main_gems_for_act)))) #need at _least_ one main skill gem per act
             selected_gems.extend(world.random.sample(support_gems_for_act, k=min(opt.support_gems_per_act.value, len(support_gems_for_act))))
@@ -81,8 +81,8 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
             else:
                 if item["classification"] == ItemClassification.progression:
                     item["classification"] = ItemClassification.useful
-                elif item["classification"] == ItemClassification.useful:
-                    item["classification"] = ItemClassification.filler
+#                elif item["classification"] == ItemClassification.useful:
+#                    item["classification"] = ItemClassification.filler
     return table
 
 def deprioritize_non_logic_gear(world: "PathOfExileWorld", table: Dict[int, ItemDict]) -> Dict[int, ItemDict]:
@@ -140,6 +140,9 @@ def cull_items_to_place(world: "PathOfExileWorld", items: Dict[int, ItemDict], l
         if not filler_items and not useful_items:
             logger.error("[ERROR] No items available to remove. Cannot match location count.")
             break
+
+        if len(filler_items + useful_items) < amount_to_cull:
+            logger.error(f"\n[ERROR] Not enough non-progressive items to cull ({len(filler_items + useful_items)}) to meet location count need to cull({amount_to_cull}).")
 
         filler_items = world.random.sample(filler_items, k=min(len(filler_items), amount_to_cull))
         useful_items = world.random.sample(useful_items, k=min(len(useful_items), amount_to_cull))

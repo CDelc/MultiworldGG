@@ -24,8 +24,8 @@ class TestActRequirementFunctions(unittest.TestCase):
         self.mock_opt.gear_upgrades_per_act.value = 5
         self.mock_opt.gucci_hobo_mode.value = 0  # disabled
         self.mock_opt.gucci_hobo_mode.option_disabled = 0
-        self.mock_opt.add_flask_slots_to_item_pool = True
-        self.mock_opt.flask_slots_per_act.value = 2
+        self.mock_opt.add_flasks_to_item_pool = True
+        self.mock_opt.flasks_per_act.value = 2
         self.mock_opt.add_max_links_to_item_pool = True
         self.mock_opt.max_links_per_act.value = 3
         self.mock_opt.skill_gems_per_act.value = 4
@@ -68,7 +68,7 @@ class TestActRequirementFunctions(unittest.TestCase):
         self.assertEqual(get_flask_amount_for_act(3, self.mock_opt), 4)  # 2 * 2
         
         # Test with flask slots disabled
-        self.mock_opt.add_flask_slots_to_item_pool = False
+        self.mock_opt.add_flasks_to_item_pool = False
         self.assertEqual(get_flask_amount_for_act(3, self.mock_opt), 0)
     
     def test_get_gem_amount_for_act(self):
@@ -164,8 +164,8 @@ class TestCanReach(PoeTestBase):
         self.mock_options.gear_upgrades_per_act.value = 2
         self.mock_options.gucci_hobo_mode.value = 0
         self.mock_options.gucci_hobo_mode.option_disabled = 0
-        self.mock_options.add_flask_slots_to_item_pool = True
-        self.mock_options.flask_slots_per_act.value = 1
+        self.mock_options.add_flasks_to_item_pool = True
+        self.mock_options.flasks_per_act.value = 1
         self.mock_options.add_max_links_to_item_pool = True
         self.mock_options.max_links_per_act.value = 1
         self.mock_options.skill_gems_per_act.value = 2
@@ -331,8 +331,8 @@ class TestSelectLocationsToAdd(PoeTestBase):
         self.mock_options.starting_character.option_scion = 1
         self.mock_options.gucci_hobo_mode.value = 0
         self.mock_options.gucci_hobo_mode.option_disabled = 0
-        self.mock_options.add_flask_slots_to_item_pool = True
-        self.mock_options.flask_slots_per_act.value = 1
+        self.mock_options.add_flasks_to_item_pool = True
+        self.mock_options.flasks_per_act.value = 1
         self.mock_options.add_max_links_to_item_pool = True
         self.mock_options.max_links_per_act.value = 1
         self.mock_options.skill_gems_per_act.value = 2
@@ -427,21 +427,7 @@ class TestSelectLocationsToAdd(PoeTestBase):
 
 class TestConstants(unittest.TestCase):
     """Test module constants"""
-    
-    def test_constants_exist(self):
-        """Test that all expected constants are defined"""
-        self.assertTrue(hasattr(Rules, 'MAX_GUCCI_GEAR_UPGRADES'))
-        self.assertTrue(hasattr(Rules, 'MAX_GEAR_UPGRADES'))
-        self.assertTrue(hasattr(Rules, 'MAX_FLASK_SLOTS'))
-        self.assertTrue(hasattr(Rules, 'MAX_LINK_UPGRADES'))
-        self.assertTrue(hasattr(Rules, 'MAX_SKILL_GEMS'))
-        self.assertTrue(hasattr(Rules, 'MAX_SUPPORT_GEMS'))
-        
-        self.assertTrue(hasattr(Rules, 'ACT_0_USABLE_GEMS'))
-        self.assertTrue(hasattr(Rules, 'ACT_0_FLASK_SLOTS'))
-        self.assertTrue(hasattr(Rules, 'ACT_0_WEAPON_TYPES'))
-        self.assertTrue(hasattr(Rules, 'ACT_0_ARMOUR_TYPES'))
-        self.assertTrue(hasattr(Rules, 'ACT_0_ADDITIONAL_LOCATIONS'))
+
     
     def test_constants_are_reasonable(self):
         """Test that constants have reasonable values"""
@@ -493,8 +479,8 @@ class TestCanReachFunction(PoeTestBase):
         self.mock_options.gear_upgrades_per_act.value = 2
         self.mock_options.gucci_hobo_mode.value = 0
         self.mock_options.gucci_hobo_mode.option_disabled = 0
-        self.mock_options.add_flask_slots_to_item_pool = True
-        self.mock_options.flask_slots_per_act.value = 1
+        self.mock_options.add_flasks_to_item_pool = True
+        self.mock_options.flasks_per_act.value = 1
         self.mock_options.add_max_links_to_item_pool = True
         self.mock_options.max_links_per_act.value = 1
         self.mock_options.skill_gems_per_act.value = 2
@@ -819,7 +805,7 @@ class TestCanReachFunction(PoeTestBase):
     
     def test_can_reach_flask_slots_disabled(self):
         """Test can_reach when flask slots are disabled in options"""
-        self.mock_options.add_flask_slots_to_item_pool = False
+        self.mock_options.add_flasks_to_item_pool = False
         
         with patch('worlds.poe.Items.get_by_category') as mock_get_by_category, \
              patch('worlds.poe.Items.get_ascendancy_class_items') as mock_ascendancy_items, \

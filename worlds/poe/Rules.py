@@ -53,7 +53,7 @@ def get_ascendancy_amount_for_act(act, opt):
     ) if act >= 3 else 0
 
 def get_gear_amount_for_act(act, opt): return min(opt.gear_upgrades_per_act.value * (act - 1), MAX_GEAR_UPGRADES if opt.gucci_hobo_mode.value == opt.gucci_hobo_mode.option_disabled else MAX_GUCCI_GEAR_UPGRADES)
-def get_flask_amount_for_act(act, opt): return 0 if not opt.add_flask_slots_to_item_pool else min(opt.flask_slots_per_act.value * (act - 1), MAX_FLASK_SLOTS)
+def get_flask_amount_for_act(act, opt): return 0 if not opt.add_flasks_to_item_pool else min(opt.flasks_per_act.value * (act - 1), MAX_FLASK_SLOTS)
 def get_gem_amount_for_act(act, opt): return 0 if not opt.add_max_links_to_item_pool else min(opt.max_links_per_act.value * (act - 1), MAX_LINK_UPGRADES)
 def get_skill_gem_amount_for_act(act, opt): return min(opt.skill_gems_per_act.value * (act - 1), MAX_SKILL_GEMS)
 def get_support_gem_amount_for_act(act, opt): return min(opt.support_gems_per_act.value * (act - 1), MAX_SUPPORT_GEMS)
@@ -191,7 +191,6 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
                           state.count_from_list([item["name"] for item in Items.get_ascendancy_class_items(opt.starting_character.current_option_name)], world.player)
             #logger.debug(f"[DEBUG] total items {total_items}, ")
             #logger.debug(f"[DEBUG] expecting   {gear_amount + flask_amount + gem_slot_amount + skill_gem_amount} items")
-            logger.debug(f"\n")
     
     
     return reachable
@@ -240,7 +239,7 @@ def SelectLocationsToAdd (world: "PathOfExileWorld", target_amount):
             break
 
         if needed_locations_for_act > len(locations_in_act):
-            logger.error(f"[ERROR] Not enough locations for Act {act}. Needed: {needed_locations_for_act}, Available: {len(locations_in_act)}, going to try to generate anyway...")
+            logger.error(f"\n@@@@@@@@@@\n[ERROR] Not enough locations for Act {act}. Needed: {needed_locations_for_act}, Available: {len(locations_in_act)}, going to try to generate anyway...")
 
         selected_locations = world.random.sample(locations_in_act, k=min(needed_locations_for_act, len(locations_in_act)))
         for loc in selected_locations:
