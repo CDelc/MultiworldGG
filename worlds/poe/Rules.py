@@ -138,13 +138,14 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
                 if usable_skill_gem_count < Items.ACT_0_USABLE_GEMS:
                     log += f" skill gems: {usable_skill_gem_count}/{Items.ACT_0_USABLE_GEMS},"
                 log += f" for {opt.starting_character.current_option_name}"
-                logger.debug(log)
+                #logger.debug(log)
 
             return False
 
         else:
             if _debug and _very_debug:
-                logger.debug(f"!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\n!!!!!!!!!!\nAct 0 is reachable with gear for {opt.starting_character.current_option_name}")
+                #logger.debug(f"Act 0 is reachable with gear for {opt.starting_character.current_option_name}")
+                pass
 
 
     reachable &= ascedancy_count >= ascedancy_amount and \
@@ -157,7 +158,7 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
 
     if not reachable:
         if _debug:
-            log = f"Act {act} not reachable with gear:"
+            log = f"Act {act} not reachable with:"
             if gear_count < gear_amount:
                 log += f"gear: {gear_count}/{gear_amount},"
             if flask_count < flask_amount:
@@ -178,8 +179,8 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
 
             logger.debug(log)
         if _very_debug:
-            logger.debug(f"[DEBUG] expecting Act {act} - Gear: {gear_amount}, Flask: {flask_amount}, Gem Slots: {gem_slot_amount}, Skill Gems: {skill_gem_amount}, Ascendancies: {ascedancy_amount}")
-            logger.debug(f"[DEBUG] we have   Act {act} - Gear: {gear_count}, Flask: {flask_count}, Gem Slots: {gem_slot_count}, Skill Gems: {usable_skill_gem_count}, Ascendancies: {ascedancy_count}")
+            #logger.debug(f"[DEBUG] expecting Act {act} - Gear: {gear_amount}, Flask: {flask_amount}, Gem Slots: {gem_slot_amount}, Skill Gems: {skill_gem_amount}, Ascendancies: {ascedancy_amount}")
+            #logger.debug(f"[DEBUG] we have   Act {act} - Gear: {gear_count}, Flask: {flask_count}, Gem Slots: {gem_slot_count}, Skill Gems: {usable_skill_gem_count}, Ascendancies: {ascedancy_count}")
             #add up all the prog items
 
 
@@ -188,9 +189,9 @@ def can_reach(act: int, world , state: CollectionState) -> bool:
                           state.count_from_list([item["name"] for item in Items.get_max_links_items()], world.player) + \
                           state.count_from_list([item["name"] for item in Items.get_main_skill_gem_items()], world.player) + \
                           state.count_from_list([item["name"] for item in Items.get_ascendancy_class_items(opt.starting_character.current_option_name)], world.player)
-            logger.debug(f"[DEBUG] total items {total_items}, ")
-            logger.debug(f"[DEBUG] expecting   {gear_amount + flask_amount + gem_slot_amount + skill_gem_amount} items")
-            logger.debug(f"\n\n")
+            #logger.debug(f"[DEBUG] total items {total_items}, ")
+            #logger.debug(f"[DEBUG] expecting   {gear_amount + flask_amount + gem_slot_amount + skill_gem_amount} items")
+            logger.debug(f"\n")
     
     
     return reachable
