@@ -234,6 +234,7 @@ class TestItemDeprioritization(PoeTestBase):
         
         self.mock_options = Mock()
         self.mock_options.skill_gems_per_act.value = 2
+        self.mock_options.support_gems_per_act.value = 1
         self.mock_options.gear_upgrades_per_act.value = 3
         self.mock_world.options = self.mock_options
         
@@ -263,10 +264,31 @@ class TestItemDeprioritization(PoeTestBase):
              patch.object(Items, 'get_support_gem_items', return_value=[self.mock_item_table[3]]), \
              patch.object(Items, 'get_utility_skill_gem_items', return_value=[self.mock_item_table[4]]):
             
-            result = Items.deprioritize_non_logic_gems(self.mock_world, self.mock_item_table.copy())
+            # Create a copy to test against original
+            original_table = self.mock_item_table.copy()
+            result = Items.deprioritize_non_logic_gems(self.mock_world, original_table)
             
             # Should return the modified table
             self.assertIsInstance(result, dict)
+            self.assertEqual(len(result), len(self.mock_item_table))
+            
+            # Check that selected gems remain progression
+            # With goal_act=5, skill_gems_per_act=2, support_gems_per_act=1:
+            # - Act 0: 4 starter gems (level 1 main gems)
+            # - Acts 1-5: 2 main + 1 support + 2 utility per act
+            # Since we only have limited test gems, some should remain progression
+            
+            # At least some gems should remain progression (the selected ones)
+            progression_gems = [item for item in result.values() 
+                              if any(cat in item["category"] for cat in ["MainSkillGem", "SupportGem", "UtilSkillGem"])
+                              and item["classification"] == ItemClassification.progression]
+            self.assertGreater(len(progression_gems), 0, "Some gems should remain progression for logic")
+            
+            # Test that the function actually modifies gem classifications
+            # Since we have limited test data, at least the structure should be maintained
+            for item_id, item in result.items():
+                self.assertIn("classification", item)
+                self.assertIsInstance(item["classification"], ItemClassification)
     
     @patch('worlds.poe.Items.get_main_skill_gem_items')
     @patch('worlds.poe.Items.get_gear_items')
