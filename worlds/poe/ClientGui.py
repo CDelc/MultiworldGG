@@ -97,8 +97,8 @@ class PoeOptionsTab(MDBoxLayout):
         tts_layout.add_widget(tts_speed_btn)
 
         self.tts_speed_input = MDTextField(hint_text="TTS Speed", input_filter="int")
-        if self.ctx.tts_options.speed:
-            self.tts_speed_input.text = str(self.ctx.tts_options.speed)
+        if self.ctx.filter_options.tts_speed:
+            self.tts_speed_input.text = str(self.ctx.filter_options.tts_speed)
         tts_layout.add_widget(self.tts_speed_input)
         self.add_widget(tts_layout)
 

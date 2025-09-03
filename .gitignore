@@ -68,6 +68,7 @@ Output Logs/
 /installdelete.iss
 /data/user.kv
 /datapackage
+/data/sprites/alttp/remote/*
 /custom_worlds
 
 # Byte-compiled / optimized / DLL files
@@ -190,6 +191,10 @@ _speedups.html
 
 #undertale stuff
 /Undertale/
+
+#Path of Exile Generated Files
+poe_access_token.pkl
+poe_settings.pkl
 
 # OS General Files
 .DS_Store

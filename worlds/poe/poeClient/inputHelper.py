@@ -1,12 +1,10 @@
 import logging
 import os
 import sys
-vendor_dir = os.path.join(os.path.dirname(__file__), "vendor")
-if vendor_dir not in sys.path:
-    sys.path.insert(0, vendor_dir)
+
 
 import asyncio
-import pygetwindow as gw
+import pywinctl as gw
 import time
 from pynput.keyboard import Controller, Key
 
@@ -17,6 +15,8 @@ _debug = True
 _last_called = None
 _debounce_time = 1  # seconds
 _send_lock = asyncio.Lock()  # Add asyncio lock
+
+GAME_WINDOW_TITLE = "Path of Exile"
 
 def get_clipboard():
     import tkinter as tk
@@ -71,7 +71,7 @@ async def send_multiple_poe_text(commands: list[str], retry_times: int = 1, retr
     # if windows is active
     now = time.monotonic()
     async with _send_lock:  # Acquire lock before any operations
-        if window is not None and window.title == "Path of Exile" and not (_last_called is not None and now - _last_called < _debounce_time):
+        if window is not None and window.title == GAME_WINDOW_TITLE and not (_last_called is not None and now - _last_called < _debounce_time):
 
             logger.debug("Found active Path of Exile window")
 

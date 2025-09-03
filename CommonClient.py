@@ -505,6 +505,7 @@ class CommonContext:
             return
         await self.server.socket.send(encode(msgs))
 
+    # ( ͡° ͜ʖ ͡°)
     def consume_players_package(self, package: typing.List[tuple]):
         self.player_names = {slot: name for team, slot, name, orig_name in package if self.team == team}
         self.player_names[0] = "Archipelago"
