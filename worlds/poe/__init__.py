@@ -308,6 +308,7 @@ def setup_early_items(world: PathOfExileWorld, options: PathOfExileOptions):
     if options.add_passive_skill_points_to_item_pool.value == False:
         item = Items.get_by_name("Progressive passive point", world.items_to_place)
         if item:
+            # there is only one itemDict for passive points, but has a count of how many items to add. This removal should work
             world.items_to_place.pop(item["id"], None)
     else:
         item = Items.get_by_name("Progressive passive point", world.items_to_place)

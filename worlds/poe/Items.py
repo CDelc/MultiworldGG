@@ -51,6 +51,11 @@ memoize_cache: Dict[str, list[ItemDict]] = {}
 def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, ItemDict]) -> Dict[int, ItemDict]:
     opt: PathOfExileOptions = world.options
     
+    # Early exit if no gems are in the table (e.g., when gems are disabled)
+    all_gems = get_all_gems(table)
+    if not all_gems:
+        return table
+    
     still_required_gem_ids = set()
 
     #act 0 starter gems
@@ -88,6 +93,10 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
 
 def deprioritize_non_logic_gear(world: "PathOfExileWorld", table: Dict[int, ItemDict]) -> Dict[int, ItemDict]:
     opt: PathOfExileOptions = world.options
+
+    # If gear upgrades are disabled, don't try to deprioritize any gear
+    if opt.gear_upgrades.value == opt.gear_upgrades.option_no_gear_unlocked:
+        return table
 
     required_categories = list()
     progression_main_gems = [gem for gem in get_main_skill_gem_items(table) if gem["classification"] == ItemClassification.progression]
