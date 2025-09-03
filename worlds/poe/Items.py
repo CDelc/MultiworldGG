@@ -65,11 +65,12 @@ def deprioritize_non_logic_gems(world: "PathOfExileWorld", table: Dict[int, Item
 
         if main_gems_for_act:
             selected_gems.extend(world.random.sample(main_gems_for_act, k=min(max(opt.skill_gems_per_act.value, 1), len(main_gems_for_act)))) #need at _least_ one main skill gem per act
+        if support_gems_for_act:
             selected_gems.extend(world.random.sample(support_gems_for_act, k=min(opt.support_gems_per_act.value, len(support_gems_for_act))))
+        if utility_gems_for_act:
             selected_gems.extend(world.random.sample(utility_gems_for_act, k=min(opt.skill_gems_per_act.value, len(utility_gems_for_act))))
 
-
-            still_required_gem_ids.update(item["id"] for item in selected_gems)
+    still_required_gem_ids.update(item["id"] for item in selected_gems)
     
     for item in table.values():
         if "MainSkillGem" in item["category"]\

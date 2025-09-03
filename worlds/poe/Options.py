@@ -221,7 +221,7 @@ class SkillGemsPerAct(Range):
     """
     display_name = "Minimum Available Skill Gem Slots Per Act"
     range_start = 0
-    range_end = 20
+    range_end = 15
     default = 2
 
 class AddSupportGemsToItemPool(Toggle):
