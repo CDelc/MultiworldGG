@@ -16,7 +16,7 @@ def make_overworld_logic():
         ["mercay island", "totok", True, None],
         ["mercay island", "mercay freedle island", False, "explosives"],
         ["mercay freedle island", "mercay freedle tunnel chest", False, "range"],
-        ["mercay freedle island", "mercay freedle gift", False, "sea_chart", "SW"],
+        ["mercay freedle island", "mercay freedle gift", False, "sea_chart", "SE"],
         ["mercay se", "mercay yellow guy", False, "courage_crest"],
         ["mercay oshus", "mercay oshus gem", False, "oshus_gem"],
         ["mercay oshus", "mercay oshus phantom blade", False, "can_make_phantom_sword"],
@@ -547,12 +547,10 @@ def create_connections(multiworld: MultiWorld, player: int, origin_name: str, op
     ]
 
     test_entrances = {(e["entrance_region"], e["exit_region"]): name for name, e in ENTRANCES.items()}
-    # [print(i) for i in test_entrances]
 
     # Create connections
     for logic_array in all_logic:
         for entrance_desc in logic_array:
-            args = None
             reg1, reg2, is_two_way, rule_lookup, *args = entrance_desc
             region_1 = multiworld.get_region(reg1, player)
             region_2 = multiworld.get_region(reg2, player)

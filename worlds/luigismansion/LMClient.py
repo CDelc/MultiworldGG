@@ -1,14 +1,16 @@
 import asyncio, time, traceback
+import copy
 import random
 from typing import Any
 
 import NetUtils, Utils
-apname = Utils.instance_name if Utils.instance_name else "Archipelago"
 from CommonClient import get_base_parser, gui_enabled, logger, server_loop
 import dolphin_memory_engine as dme
+from .LMUniversalContext import LMUniversalContext
 
 from .Regions import spawn_locations
 from .iso_helper.lm_rom import LMUSAAPPatch
+from .Hints import ALWAYS_HINT, PORTRAIT_HINTS
 from .Items import *
 from .Locations import ALL_LOCATION_TABLE, SELF_LOCATIONS_TO_RECV
 from .Helper_Functions import StringByteFunction as sbf
@@ -17,16 +19,15 @@ from .client.ap_link.energy_link.energy_link_client import EnergyLinkClient
 from .client.ap_link.energy_link.energy_link import EnergyLinkConstants
 from .client.ap_link.energy_link.energy_link_command_processor import EnergyLinkCommandProcessor
 
-CLIENT_VERSION = "V0.5.3"
-
 # Load Universal Tracker modules with aliases
-tracker_loaded = False
+_tracker_loaded = False
 try:
-    from worlds.tracker.TrackerClient import (TrackerCommandProcessor as ClientCommandProcessor,
-                                              TrackerGameContext as CommonContext, UT_VERSION)
-    tracker_loaded = True
+    from worlds.tracker.TrackerClient import TrackerGameContext as CommonContext, UT_VERSION, logger
+    _tracker_loaded = True
 except ImportError:
-    from CommonClient import ClientCommandProcessor, CommonContext
+    from CommonClient import CommonContext, logger
+
+CLIENT_VERSION = "V0.5.3"
 
 CONNECTION_REFUSED_STATUS = "Detected a non-randomized ROM for LM. Please close and load a different one. Retrying in 5 seconds..."
 CONNECTION_LOST_STATUS = "Dolphin connection was lost. Please restart your emulator and make sure LM is running."
@@ -169,7 +170,7 @@ class LMCommandProcessor(EnergyLinkCommandProcessor):
         if isinstance(self.ctx, LMContext):
             Utils.async_start(self.ctx.get_debug_info(), name="Get Luigi's Mansion Debug info")
 
-class LMContext(CommonContext):
+class LMContext(LMUniversalContext):
     command_processor = LMCommandProcessor
     game = "Luigi's Mansion"
     items_handling = 0b111
@@ -223,6 +224,11 @@ class LMContext(CommonContext):
         # Used to handle if mario calling is enabled.
         self.call_mario = False
         self.yelling_in_client = False
+
+        # Know whether to send in-game hints to the multiworld or not
+        self.send_hints = 0
+        self.portrait_hints = 0
+        self.hints = {}
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         """
@@ -293,6 +299,9 @@ class LMContext(CommonContext):
                 self.luigimaxhp = int(args["slot_data"]["luigi max health"])
                 self.spawn = str(args["slot_data"]["spawn_region"])
                 self.boolossus_difficulty = int(args["slot_data"]["boolossus_difficulty"])
+                self.send_hints = int(args["slot_data"]["send_hints"])
+                self.portrait_hints = int(args["slot_data"]["portrait_hints"])
+                self.hints = args["slot_data"]["hints"]
                 Utils.async_start(self.update_death_link(bool(args["slot_data"]["death_link"])), name="Update Deathlink")
                 Utils.async_start(self.update_link_tags(bool(args["slot_data"]["trap_link"]), "TrapLink"), name="Update Traplink")
                 Utils.async_start(self.update_link_tags(bool(args["slot_data"][EnergyLinkConstants.INTERNAL_NAME]),
@@ -346,67 +355,6 @@ class LMContext(CommonContext):
         self.is_luigi_dead = True
         self.set_luigi_dead()
         return
-
-    def make_gui(self):
-        ui = super().make_gui()
-        ui.base_title = f"Luigi's Mansion Client v{CLIENT_VERSION}"
-        if tracker_loaded:
-            if not self.check_universal_tracker_version():
-                Utils.messagebox("Universal Tracker needs updated", "The minimum version of Universal Tracker required for LM is v0.2.11", error=True)
-                raise ImportError("Need to update universal tracker version to at least v0.2.11.")
-            ui.base_title += f" | Universal Tracker {UT_VERSION}"
-
-        # AP version is added behind this automatically
-        ui.base_title += f" | {apname}"
-        return ui
-
-    def check_universal_tracker_version(self) -> bool:
-        import re
-        if not tracker_loaded:
-            return False
-
-        # We are checking for a string that starts with v contains any amount of digits followed by a period
-        # repeating three times (e.x. v0.2.11)
-        match = re.search(r"v\d+.(\d+).(\d+)", UT_VERSION)
-        if len(match.groups()) < 2:
-            return False
-        if int(match.groups()[0]) < 2:
-            return False
-        if int(match.groups()[1]) < 11:
-            return False
-
-        return True
-    
-    async def get_wallet_value(self):
-        # KivyMD support, also keeps support with regular Kivy (hopefully)
-        try:
-            from kvui import MDLabel as Label
-        except ImportError:
-            from kvui import Label
-
-        if not hasattr(self, "wallet_ui"):
-            self.wallet_ui = Label(text="", size_hint_x=None, width=120, halign="center")
-            self.ui.connect_layout.add_widget(self.wallet_ui)
-
-        current_worth = 0
-        if self.check_ingame():
-            current_worth = self.wallet.get_wallet_worth()
-            
-        self.wallet_ui.text = f"Wallet:{current_worth}/{self.wallet.get_rank_requirement()}"
-
-    async def update_boo_count_label(self):
-        # KivyMD support, also keeps support with regular Kivy (hopefully)
-        try:
-            from kvui import MDLabel as Label
-        except ImportError:
-            from kvui import Label
-
-        if not hasattr(self, "boo_count"):
-            self.boo_count = Label(text="", size_hint_x=None, width=120, halign="center")
-            self.ui.connect_layout.add_widget(self.boo_count)
-
-        curr_boo_count = len(set(([item.item for item in self.items_received if item.item in BOO_AP_ID_LIST])))
-        self.boo_count.text = f"Boo Count: {curr_boo_count}/50"
 
 
     def check_alive(self):
@@ -533,6 +481,64 @@ class LMContext(CommonContext):
                 "trap_name": trap_name
             }
         }])
+    async def lm_send_hints(self):
+        # If the hint address is empty, no hint has been looked at and we return
+        current_hint = int.from_bytes(dme.read_bytes(0x803D33AC, 1))
+        if not current_hint > 0:
+            return
+
+        # Check for current room so we know which hint(s) we need to look at, since they mostly all use the same flags
+        current_room = dme.read_word(dme.follow_pointers(ROOM_ID_ADDR, [ROOM_ID_OFFSET]))
+        hint_dict = copy.deepcopy(ALWAYS_HINT)
+        player_id = 0
+        location_id = 0
+
+        # If portrait ghost hints are on, check them too
+        if self.portrait_hints:
+            hint_dict.update(PORTRAIT_HINTS)
+
+        # Go through all the hints to check which hint matches the room we are in
+        for hint, hintfo in self.hints.items():
+            if current_room != hint_dict[hint]:
+                continue
+
+            # If we match in room 53 or 59, figure out which flag is on and use the matching hint
+            if current_room in (59,53):
+                if current_room == 59:
+                    if (current_hint & (1 << 5)) > 0 and hint == "<doll1>":
+                        player_id = int(hintfo["Send Player ID"])
+                        location_id = int(hintfo["Location ID"])
+                    elif (current_hint & (1 << 6)) > 0 and hint == "<doll2>":
+                        player_id = int(hintfo["Send Player ID"])
+                        location_id = int(hintfo["Location ID"])
+                    elif (current_hint & (1 << 7)) > 0 and hint == "<doll3>":
+                        player_id = int(hintfo["Send Player ID"])
+                        location_id = int(hintfo["Location ID"])
+                else:
+                    if (current_hint & (1 << 5)) > 0 and hint == "Left Telephone":
+                        player_id = int(hintfo["Send Player ID"])
+                        location_id = int(hintfo["Location ID"])
+                    elif (current_hint & (1 << 6)) > 0 and hint == "Center Telephone":
+                        player_id = int(hintfo["Send Player ID"])
+                        location_id = int(hintfo["Location ID"])
+                    elif (current_hint & (1 << 7)) > 0 and hint == "Right Telephone":
+                        player_id = int(hintfo["Send Player ID"])
+                        location_id = int(hintfo["Location ID"])
+            else:
+                player_id = int(hintfo["Send Player ID"])
+                location_id = int(hintfo["Location ID"])
+
+            # Make sure we didn't somehow try to send a null hint
+            if player_id == 0 or location_id == 0:
+                logger.error("Hint incorrectly parsed in lm_send_hints while trying to send. Please inform the Luigi's mansion developers")
+                Utils.messagebox("Hint Error","Hint incorrectly parsed in lm_send_hints while trying to send. Please inform the Luigi's mansion developers")
+
+            # Send correct CreateHints command
+            Utils.async_start(self.send_msgs([{
+                "cmd": "CreateHints",
+                "player": player_id,
+                "locations": [location_id],
+            }]))
 
     def check_ram_location(self, loc_data, addr_to_update, curr_map_id, map_to_check) -> bool:
         """
@@ -625,6 +631,9 @@ class LMContext(CommonContext):
                 "status": NetUtils.ClientStatus.CLIENT_GOAL,
             }])
         return
+
+    def get_item_count_by_id(self, item_id: int) -> int:
+        return len([netItem for netItem in self.items_received if netItem.item == item_id])
 
     async def give_lm_items(self):
         if not (self.check_ingame() and self.check_alive()):
@@ -862,8 +871,11 @@ async def dolphin_sync_task(ctx: LMContext):
 
             # At this point, we are verified as connected. Update boo count in LMClient
             if ctx.ui:
-                await ctx.update_boo_count_label()
-                await ctx.get_wallet_value()
+                boo_count = len(set(([item.item for item in ctx.items_received if item.item in BOO_AP_ID_LIST])))
+                ctx.ui.update_boo_count_label(boo_count)
+                ctx.ui.get_wallet_value()
+                ctx.ui.update_flower_label(ctx.get_item_count_by_id(8140))
+                ctx.ui.update_vacuum_label(ctx.get_item_count_by_id(8064))
 
             # Check any Links that a user is subscribed to.
             if "DeathLink" in ctx.tags:
@@ -874,6 +886,8 @@ async def dolphin_sync_task(ctx: LMContext):
             # Lastly check any locations and update the non-saveable ram stuff
             await ctx.lm_check_locations()
             await ctx.give_lm_items()
+            if ctx.send_hints == 1:
+                await ctx.lm_send_hints()
             await ctx.lm_update_non_savable_ram()
             await asyncio.sleep(0.1)
         except Exception:
@@ -954,11 +968,7 @@ def main(output_data: Optional[str] = None, lm_connect=None, lm_password=None):
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="ServerLoop")
 
         # Runs Universal Tracker's internal generator
-        if tracker_loaded:
-            ctx.run_generator()
-            ctx.tags.remove("Tracker")
-        else:
-            logger.warning("Could not find Universal Tracker.")
+        ctx._main()
 
         if gui_enabled:
             ctx.run_gui()

@@ -24,8 +24,7 @@
 
 ## 3) Add the Path of Exile `.apworld` (not needed with MWGG)
 
-1. Download the `.apworld`:
-   - https://github.com/stubobis1/Archipelago/releases
+1. Download the `.apworld` file from [Github](https://github.com/stubobis1/Archipelago/releases):
 2. Place the `.apworld` file into the `MultiworldGG/custom_worlds/` folder.
 
 ---

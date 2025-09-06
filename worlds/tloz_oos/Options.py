@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from Options import Choice, DeathLink, DefaultOnToggle, PerGameCommonOptions, Range, Toggle, StartInventoryPool, \
-    ItemDict, ItemsAccessibility, ItemSet, Visibility, OptionGroup
+    ItemDict, ItemsAccessibility, ItemSet, Visibility, OptionGroup, NamedRange
 from worlds.tloz_oos.data.Items import ITEMS_DATA
 
 
@@ -399,7 +399,7 @@ class OraclesOfSeasonsGoldenBeastsRequirement(Range):
     include_in_slot_data = True
 
 
-class OracleOfSeasonsSignGuyRequirement(Range):
+class OracleOfSeasonsSignGuyRequirement(NamedRange):
     """
     In Subrosia, a NPC will "punish" you if you break more than 100 signs in the vanilla game by giving you an item.
     This option lets you configure how many signs are required to obtain that item, since breaking 100 signs is not
@@ -411,6 +411,26 @@ class OracleOfSeasonsSignGuyRequirement(Range):
     range_end = 250
 
     default = 10
+    special_range_names = {
+        "vanilla": 100
+    }
+    include_in_patch = True
+
+
+class OracleOfSeasonsGashaNutKillRequirement(NamedRange):
+    """
+    This option lets you configure how many kills are required to make a gasha tree grow.
+    Using a gasha ring halves this number.
+    """
+    display_name = "Gasha Nut Requirement"
+
+    range_start = 0
+    range_end = 250
+
+    default = 20
+    special_range_names = {
+        "vanilla": 40
+    }
     include_in_patch = True
 
 
@@ -665,7 +685,7 @@ class OracleOfSeasonsMoveLink(Toggle):
 
 class OracleOfSeasonsBirdHint(Choice):
     """
-    Disabled: The Owls and Know-it-all brids say their vanilla text when talked to
+    Disabled: The Owls and Know-it-all birds say their vanilla text when talked to
     Know-it-all: Enable region hints from the birds in the house next to the advance shop
     Owl: Enable owls to give hints about items from your world
     """
@@ -732,6 +752,7 @@ class OracleOfSeasonsOptions(PerGameCommonOptions):
     tarm_gate_required_jewels: OraclesOfSeasonsTarmGateRequirement
     golden_beasts_requirement: OraclesOfSeasonsGoldenBeastsRequirement
     sign_guy_requirement: OracleOfSeasonsSignGuyRequirement
+    gasha_nut_kill_requirement: OracleOfSeasonsGashaNutKillRequirement
 
     # Other randomizable stuff
     randomize_lost_woods_item_sequence: OracleOfSeasonsLostWoodsItemSequence
@@ -750,7 +771,7 @@ class OracleOfSeasonsOptions(PerGameCommonOptions):
     excluded_rings: OracleOfSeasonsExcludedRings
     fools_ore: OracleOfSeasonsFoolsOre
     combat_difficulty: OracleOfSeasonsCombatDifficulty
-    brid_hint: OracleOfSeasonsBirdHint
+    bird_hint: OracleOfSeasonsBirdHint
     randomize_ai: OracleOfSeasonsRandomizeAi
     move_link: OracleOfSeasonsMoveLink
 
@@ -805,6 +826,7 @@ option_groups = [
         OraclesOfSeasonsTarmGateRequirement,
         OraclesOfSeasonsGoldenBeastsRequirement,
         OracleOfSeasonsSignGuyRequirement,
+        OracleOfSeasonsGashaNutKillRequirement,
     ]),
     OptionGroup("Randomizable Sequences", [
         OracleOfSeasonsLostWoodsItemSequence,

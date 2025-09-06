@@ -223,3 +223,11 @@ gzdoom/cache/*
 
 # Minecraft
 minecraft_versions.json
+
+
+# PoE
+lib/poe_client_vendor/*
+
+# Minecraft
+Minecraft Forge server/*
+jdk*/*

@@ -147,6 +147,16 @@ DYNAMIC_FLAGS = {
         "has_items": [("Treasure Map #28 (Ruins NW)", 1)],
         "set_if_true": [(0x1BA653, 0x1)]
     },
+    "Goron Chu Map": {
+        "on_scenes": [0x1002],
+        "not_has_locations": ["Goron Island Yellow Chu Item"],
+        "unset_if_true": [(0x1ba652, 0x10)],
+        "reset_flags": ["RESET Goron Chu Map"]
+    },
+    "RESET Goron Chu Map": {
+        "has_items": [("Treasure Map #16 (Goron NE)", 1)],
+        "set_if_true": [(0x1ba652, 0x10)]
+    },
     # TotoK 1F
     "TotoK Don't open key door": {
         "on_scenes": [0x2500],
@@ -315,6 +325,34 @@ DYNAMIC_FLAGS = {
         # "on_scenes": [0x1700],
         "not_has_locations": ["Temple of Courage Crayk Dungeon Reward"],
         "unset_if_true": [(0x1B557F, 0x80)]
+    },
+    # Spirit Island cap spirit gems to 20 on enter
+    "Power Gem cap": {
+        "on_scenes": [0x1701],
+        "has_items": [("Power Gem", 20)],
+        "overwrite_if_true": [(0x1BA541, 0x14)],
+        "reset_flags": ["RESET Power Gem cap"]
+    },
+    "Courage Gem cap": {
+        "on_scenes": [0x1701],
+        "has_items": [("Courage Gem", 20)],
+        "overwrite_if_true": [(0x1BA542, 0x14)],
+        "reset_flags": ["RESET Courage Gem cap"]
+    },
+    "Wisdom Gem cap": {
+        "on_scenes": [0x1701],
+        "has_items": [("Wisdom Gem", 20)],
+        "overwrite_if_true": [(0x1BA540, 0x14)],
+        "reset_flags": ["RESET Wisdom Gem cap"]
+    },
+    "RESET Power Gem cap": {
+        "overwrite_if_true": [(0x1BA541, "Power Gem")],
+    },
+    "RESET Courage Gem cap": {
+        "overwrite_if_true": [(0x1BA542, "Courage Gem")]
+    },
+    "RESET Wisdom Gem cap": {
+        "overwrite_if_true": [(0x1BA540, "Wisdom Gem")]
     },
     # Courage Crest Room
     "Courage Crest room not salvaged it": {
@@ -578,12 +616,22 @@ DYNAMIC_FLAGS = {
         "not_has_locations": ["Goron Island Chief Post Dungeon Item"],
         "has_locations": ["Goron Temple Dongorongo Dungeon Reward", "Goron Island Goron Quiz"],
         "set_if_true": [(0x1B558B, 0x40)],
-        "reset_flags": ["RESET Beat goron temple goron chief metal"]
+        "reset_flags": ["RESET remove Crimzonine"]
     },
-    "RESET Beat goron temple goron chief metal": {
+    "Goron Island Crimzonine": {
+        "on_scenes": [0x1002, 0x1003],
+        "unset_if_true": [(0x1B558B, 0x40)],
+        "reset_flags": ["RESET give Crimzonine"]
+    },
+    "RESET remove Crimzonine": {
         # "on_scenes": [0x1003],
-        "not_has_items": [("Crimzonine", 1)],
+        "has_items": [("Crimzonine", 0)],
         "unset_if_true": [(0x1B558B, 0x40)]
+    },
+    "RESET give Crimzonine": {
+        # "on_scenes": [0x1003],
+        "has_items": [("Crimzonine", 1)],
+        "set_if_true": [(0x1b558B, 0x40)]
     },
     "RESET Beat goron temple goron chief": {
         # "on_scenes": [0x1003],
@@ -940,12 +988,10 @@ DYNAMIC_FLAGS = {
     "Frogs show glyph": {
         "on_scenes": [0, 1, 2, 3],
         "has_slot_data": [("randomize_frogs", 0)],
-        "set_if_true": [(0x1B55A2, 0x40)],
-        "reset_flags": ["RESET Frogs show glyph"]
+        "set_if_true": [(0x1B55A2, 0x40)]
     },
-    "RESET Frogs show glyph": {
-        # "on_scenes": [0x1A00],
-        "not_has_locations": ["Uncharted Island Cyclone Slate"],
+    "Uncharted unset frog flag": {
+        "on_scenes": [0x1a00],
         "unset_if_true": [(0x1B55A2, 0x40)]
     },
     # Doyland

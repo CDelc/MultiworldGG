@@ -1006,10 +1006,10 @@ class OracleOfSeasonsWorld(World):
                 break
 
     def post_fill(self) -> None:
-        if self.options.brid_hint.know_it_all():
+        if self.options.bird_hint.know_it_all():
             self.region_hints = create_region_hints(self)
 
-        if self.options.brid_hint.owl():
+        if self.options.bird_hint.owl():
             self.item_hints = create_item_hints(self)
 
     def generate_output(self, output_directory: str):
@@ -1039,6 +1039,10 @@ class OracleOfSeasonsWorld(World):
         # The structure is made to make it easy to call CreateHints
         slot_data_item_hints = []
         for item_hint in self.item_hints:
+            if item_hint is None:
+                # Joke hint
+                slot_data_item_hints.append(None)
+                continue
             player = item_hint[2]
             if player is None:
                 player = self.player

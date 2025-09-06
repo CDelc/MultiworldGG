@@ -5,11 +5,11 @@ from pathlib import Path
 
 import Utils
 from settings import get_settings
-from . import RomData
+from .RomData import RomData
 from .Util import *
 from .asm import asm_files
 from .text import simple_hex, normalize_text
-from .z80asm.Assembler import Z80Assembler
+from .z80asm.Assembler import Z80Assembler, GameboyAddress
 from .z80asm.Util import parse_hex_string_to_value
 from ..Hints import make_hint_texts
 from ..Options import OracleOfSeasonsOldMenShuffle, OracleOfSeasonsGoal, OracleOfSeasonsAnimalCompanion, \
@@ -375,6 +375,7 @@ def set_treasure_data(rom: RomData,
 
 
 def set_player_start_inventory(assembler: Z80Assembler, patch_data):
+    obtained_treasures_address = parse_hex_string_to_value(DEFINES["wObtainedTreasureFlags"])
     start_inventory_changes = defaultdict(int)
 
     # ###### Base changes ##############################################
@@ -435,7 +436,6 @@ def set_player_start_inventory(assembler: Z80Assembler, patch_data):
         start_inventory_data[SEED_ITEMS[patch_data["options"]["default_seed"]]] = 1  # Add seeds to the start inventory
 
     # Inventory obtained flags
-    obtained_treasures_address = parse_hex_string_to_value(DEFINES["wObtainedTreasureFlags"])
     current_inventory_index = parse_hex_string_to_value(DEFINES["wInventoryB"])
     for item in start_inventory_data:
         item_id = ITEMS_DATA[item]["id"]
@@ -498,6 +498,8 @@ def set_player_start_inventory(assembler: Z80Assembler, patch_data):
         hex_ore_count = parse_hex_string_to_value(f"${start_inventory_changes[0xc6a7]}")
         start_inventory_changes[0xc6a7] = hex_ore_count % 0x100
         start_inventory_changes[0xc6a8] = hex_ore_count // 0x100
+    if obtained_treasures_address in start_inventory_changes:
+        start_inventory_changes[obtained_treasures_address] |= 1 << 2  # Add treasure punch flag
 
     heart_pieces = (start_inventory_data.get("Piece of Heart", 0) + start_inventory_data.get("Rare Peach Stone", 0))
     additional_hearts = (start_inventory_data.get("Heart Container", 0) + heart_pieces // 4)
@@ -577,6 +579,10 @@ def apply_miscellaneous_options(rom: RomData, patch_data):
     if patch_data["options"]["master_keys"] == OracleOfSeasonsMasterKeys.option_all_dungeon_keys:
         # Remove boss key consumption on boss keydoor opened
         rom.write_word(0x1834f, 0x0000)
+    rom.write_byte(GameboyAddress(0x0a, 0x46ed).address_in_rom(),
+                   patch_data["options"]["gasha_nut_kill_requirement"])
+    rom.write_byte(GameboyAddress(0x04, 0x6a31).address_in_rom(),
+                   patch_data["options"]["gasha_nut_kill_requirement"] // 2)
 
 
 def set_fixed_subrosia_seaside_location(rom: RomData, patch_data):
@@ -773,38 +779,24 @@ def make_text_data(text: dict[str, str], patch_data):
 
     # Map stuff, replaces the group 05 since it's all linked game dialogues
     text["TX_0500"] = "Unknown Portal"
-    text["TX_0501"] = ("Portal to\n"
-                       "Eastern Suburbs")
-    text["TX_0502"] = ("Portal to\n"
-                       "Spool Swamp")
-    text["TX_0503"] = ("Portal to\n"
-                       "Mt. Cucco")
-    text["TX_0504"] = ("Portal to\n"
-                       "Eyeglass Lake")
-    text["TX_0505"] = ("Portal to\n"
-                       "Horon Village")
-    text["TX_0506"] = ("Portal to\n"
-                       "Temple Remains")
-    text["TX_0507"] = ("Portal to\n"
-                       "Temple Summit")
-    text["TX_0508"] = ("Portal to\n"
-                       "Subrosia Village")
-    text["TX_0509"] = ("Portal to\n"
-                       "Subrosian Market")
-    text["TX_050a"] = ("Portal to\n"
-                       "Subrosian Wilds")
-    text["TX_050b"] = ("Portal to\n"
-                       "Great Furnace")
-    text["TX_050c"] = ("Portal to\n"
-                       "House of Pirates")
-    text["TX_050d"] = ("Portal to\n"
-                       "Subrosian Volcanoes")
-    text["TX_050e"] = ("Portal to\n"
-                       "Subrosian Dungeon")
+    text["TX_0501"] = normalize_text("Portal to Eastern Suburbs")
+    text["TX_0502"] = normalize_text("Portal to Spool Swamp")
+    text["TX_0503"] = normalize_text("Portal to Mt. Cucco")
+    text["TX_0504"] = normalize_text("Portal to Eyeglass Lake")
+    text["TX_0505"] = normalize_text("Portal to Horon Village")
+    text["TX_0506"] = normalize_text("Portal to Temple Remains")
+    text["TX_0507"] = normalize_text("Portal to Temple Summit")
+    text["TX_0508"] = normalize_text("Portal to Subrosian Village")
+    text["TX_0509"] = normalize_text("Portal to Subrosian Market")
+    text["TX_050a"] = normalize_text("Portal to Subrosian Wilds")
+    text["TX_050b"] = normalize_text("Portal to Great Furnace")
+    text["TX_050c"] = normalize_text("Portal to House of Pirates")
+    text["TX_050d"] = normalize_text("Portal to Subrosian Volcanoes")
+    text["TX_050e"] = normalize_text("Portal to Subrosian Dungeon")
 
     # Default satchel seed
     seed_name = SEED_ITEMS[patch_data["options"]["default_seed"]].replace(" ", "\n")
-    text["TX_002d"].replace("Ember\nSeeds", seed_name)
+    text["TX_002d"] = text["TX_002d"].replace("Ember\nSeeds", seed_name)
 
     # Misc
     if patch_data["options"]["rosa_quick_unlock"]:
@@ -902,6 +894,10 @@ def make_text_data(text: dict[str, str], patch_data):
     text["TX_1700"] = text["TX_1701"] = ""
 
     text["TX_0602"] = "Unknown Dungeon"
+
+    # With quick rosa, the escort code is disabled
+    if patch_data["options"]["rosa_quick_unlock"]:
+        text["TX_2906"] = normalize_text("Not me. Maybe ask someone else?")
 
     make_hint_texts(text, patch_data)
 

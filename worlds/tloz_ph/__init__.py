@@ -615,7 +615,6 @@ class PhantomHourglassWorld(World):
         # before anything else.
         for dung_name in DUNGEON_NAMES:
             # Build a list of locations in this dungeon
-            print(f"Pre-filling {dung_name}")
             dungeon_location_names = [name for name, loc in LOCATIONS_DATA.items()
                                       if "dungeon" in loc and loc["dungeon"] == dung_name]
             dungeon_locations = [loc for loc in self.multiworld.get_locations(self.player)
