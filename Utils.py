@@ -440,6 +440,7 @@ def get_unique_identifier():
 
     if uuid:
         return uuid
+
     from uuid import uuid4
     uuid = str(uuid4())
     common_file["uuid"] = uuid

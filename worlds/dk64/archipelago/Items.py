@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from randomizer.Enums.Levels import Levels
 from randomizer.Lists import Item as DK64RItem
 from randomizer.Enums.Items import Items as DK64RItems
+from randomizer.Enums.Settings import WinConditionComplex
 from randomizer.Enums.Types import Types as DK64RTypes, BarrierItems
 import randomizer.ItemPool as DK64RItemPoolUtility
 
@@ -198,6 +199,9 @@ def setup_items(world: World) -> typing.List[DK64Item]:
             DK64RItems.IceTrapDisableB,
             DK64RItems.IceTrapDisableCU,
             DK64RItems.IceTrapDisableZ,
+            DK64RItems.IceTrapGetOutGB,
+            DK64RItems.IceTrapDryGB,
+            DK64RItems.IceTrapFlipGB,
         ]:
             classification = ItemClassification.trap
         elif item.type == DK64RTypes.Key:
@@ -230,7 +234,6 @@ def setup_items(world: World) -> typing.List[DK64Item]:
             world.spoiler.settings.location_pool_size -= 1
             continue
         item_table.append(DK64Item(use_original_name_or_trap_name(item), classification, full_item_table[item.name].code, world.player))
-        # print("Adding item: " + seed_item.name + " | " + str(classification))
 
     # Extract starting moves from the item table - these items will be placed in your starting inventory directly
     for move in world.options.start_inventory:
@@ -309,6 +312,9 @@ def setup_items(world: World) -> typing.List[DK64Item]:
     trap_weights += [DK64RItems.IceTrapDisableB] * world.options.disable_b_trap_weight.value
     trap_weights += [DK64RItems.IceTrapDisableZ] * world.options.disable_z_trap_weight.value
     trap_weights += [DK64RItems.IceTrapDisableCU] * world.options.disable_c_trap_weight.value
+    trap_weights += [DK64RItems.IceTrapGetOutGB] * world.options.get_out_trap_weight.value
+    trap_weights += [DK64RItems.IceTrapDryGB] * world.options.dry_trap_weight.value
+    trap_weights += [DK64RItems.IceTrapFlipGB] * world.options.flip_trap_weight.value
 
     trap_count = 0 if (len(trap_weights) == 0) else math.ceil(filler_item_count * (world.options.trap_fill_percentage.value / 100.0))
     filler_item_count -= trap_count
@@ -331,7 +337,7 @@ def setup_items(world: World) -> typing.List[DK64Item]:
     # print("projected items to place: " + str(len(item_table)))
 
     # Example of accessing Option result
-    if world.options.goal == "krool":
+    if world.options.goal.value == "krool":
         pass
 
     # DEBUG
