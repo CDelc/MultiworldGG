@@ -1,16 +1,16 @@
+from enum import IntEnum
 from typing import TYPE_CHECKING, NamedTuple
 
-from enum import IntEnum
 from BaseClasses import CollectionState, Region
 from worlds.generic.Rules import set_rule
-from .rules import has_sword, has_melee
+
+from .constants import base_id
 from .er_rules import can_shop
+from .logic_helpers import has_sword, has_melee
+
+
 if TYPE_CHECKING:
     from . import TunicWorld
-
-
-# just getting an id that is a decent chunk ahead of the grass ones
-breakable_base_id = 509342400 + 8000
 
 
 class BreakableType(IntEnum):
@@ -341,6 +341,7 @@ breakable_location_table: dict[str, TunicLocationData] = {
 }
 
 
+breakable_base_id = base_id + 8000
 breakable_location_name_to_id: dict[str, int] = {name: breakable_base_id + index
                                                  for index, name in enumerate(breakable_location_table)}
 
