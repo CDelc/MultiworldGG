@@ -6,16 +6,20 @@
 
 - Path of Exile installed and playable.
 - Python 3.12 installed. (Python 3.13 will not work)
-- Archipelago (latest release).
-- The Path of Exile `.apworld` file from the Path of Exile APWorld release page. 
-  - [github.com/stubobis1/Archipelago/releases](https://github.com/stubobis1/Archipelago/releases)
+- MultiworldGG (latest release).
+- If not used with WMGG: The Path of Exile `.apworld` file from the Path of Exile APWorld release page. (https://github.com/stubobis1/Archipelago/releases)
 
 ---
 
 ## 2) Download & Install Archipelago
 
-1. Download the latest [MultiworldGG release](https://github.com/MultiworldGG/MultiworldGG/releases)
-2. Install Python if needed from [here]([python.org/downloads/release/python-31210/](https://www.python.org/downloads/release/python-31210/)
+1. Download the latest MultiworldGG release:
+   - https://github.com/MultiworldGG/MultiworldGG/releases
+2. Install Python if needed:
+   - https://www.python.org/downloads/release/python-31210/
+   - [python.org/downloads/release/python-31210/](https://www.python.org/downloads/release/python-31210/)
+
+
 ---
 
 ## 3) Add the Path of Exile `.apworld` (not needed with MWGG)
@@ -120,7 +124,7 @@ Note: Commands must be whispered to **yourself** (not global chat) using `@YourC
 ## 8) Tips & Troubleshooting
 
 - If you get problems when you are trying to write the filter, it could be Windows OneDrive interfering. Try disabling OneDrive.
-- Keep the Archipelago client running while you play PoE.
+- Keep the client running while you play PoE.
 - If you pick up an item and no check is sent, **enter a new zone** to trigger a check.
 - Make sure your PoE logs are being read (client should detect zone changes and chat whispers).
 - If your normal item filter isn't working, load it with `/filter` in the client console.

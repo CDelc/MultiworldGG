@@ -10,7 +10,9 @@ import traceback
 import types
 from collections import deque
 from pathlib import Path
-import winreg
+
+if sys.platform == "win32":
+    import winreg
 
 import typing
 if typing.TYPE_CHECKING:
@@ -46,52 +48,110 @@ def load_vendor_modules():
     import atexit
     import shutil
     import pkgutil
+    
+    # Import version after other imports to avoid circular imports
+    try:
+        from ..Version import POE_VERSION
+    except ImportError:
+        POE_VERSION = "unknown"
 
     # Prevent double-load
     if getattr(sys, "_vendor_modules_loaded", False):
         return
     sys._vendor_modules_loaded = True
 
-    
-
-
     if vendor_dir in sys.path:
         return
     
     _ensure_stdlib_shims()
+    
+    # Check if vendor directory exists and has matching version
+    version_file = vendor_dir / "poe_version.txt"
+    should_recreate = True
     zip_dest = os.path.join(vendor_dir, "vendor_modules.zip")
     if vendor_dir.exists():
-        shutil.rmtree(vendor_dir)
-
-    # Ensure vendor directory exists
-    os.makedirs(vendor_dir, exist_ok=True)
-    try:
-        vendor_zip_data = pkgutil.get_data("worlds.poe.poeClient", "vendor/vendor_modules.zip")
-
-        if vendor_zip_data is None:
-            base_dir = os.path.dirname(__file__)
-            vendor_zip_path = os.path.join(base_dir, "vendor_modules.zip")
-
-            if not os.path.isfile(vendor_zip_path):
-                logger.warning("[vendor] vendor_modules.zip not found in package or current directory")
+        try:
+            if version_file.exists():
+                with open(version_file, 'r') as f:
+                    stored_version = f.read().strip()
+                if stored_version == POE_VERSION:
+                    should_recreate = False
+                    logger.debug(f"[vendor] Version {POE_VERSION} matches, using existing vendor directory")
+                else:
+                    logger.info(f"[vendor] Version mismatch: stored={stored_version}, current={POE_VERSION}, recreating vendor directory")
+            else:
+                logger.info("[vendor] No version file found, recreating vendor directory")
+        except Exception as e:
+            logger.warning(f"[vendor] Error checking version: {e}, recreating vendor directory")
+    
+    if should_recreate:
+        # Remove existing directory if it exists
+        if vendor_dir.exists():
+            try:
+                shutil.rmtree(vendor_dir)
+            except PermissionError:
+                # Directory is in use (likely during tests), just skip recreation
+                logger.debug("[vendor] Vendor directory in use, skipping recreation")
+                if str(vendor_dir) not in sys.path:
+                    sys.path.append(str(vendor_dir))
+                    # Add subdirectories as well
+                    for subdir in vendor_dir.iterdir():
+                        if subdir.is_dir():
+                            sys.path.append(str(subdir))
                 return
-            shutil.copy2(vendor_zip_path, zip_dest)
-        else:
-            with open(zip_dest, "wb") as f:
-                f.write(vendor_zip_data)
 
-        with zipfile.ZipFile(zip_dest, 'r') as vendor_zip:
-            vendor_zip.extractall(vendor_dir)
+        # Ensure vendor directory exists
+        os.makedirs(vendor_dir, exist_ok=True)
+        
+        try:
+            vendor_zip_data = pkgutil.get_data("worlds.poe.poeClient", "vendor/vendor_modules.zip")
 
-        # Clean up the copied zip file after extraction
-        os.remove(zip_dest)
+            if vendor_zip_data is None:
+                base_dir = os.path.dirname(__file__)
+                vendor_zip_path = os.path.join(base_dir, "vendor_modules.zip")
 
+                if not os.path.isfile(vendor_zip_path):
+                    logger.warning("[vendor] vendor_modules.zip not found in package or current directory")
+                    return
+                shutil.copy2(vendor_zip_path, zip_dest)
+            else:
+                with open(zip_dest, "wb") as f:
+                    f.write(vendor_zip_data)
 
-        sys.path.insert(0, str(vendor_dir))
+            with zipfile.ZipFile(zip_dest, 'r') as vendor_zip:
+                vendor_zip.extractall(vendor_dir)
 
-    except Exception as e:
-        logger.error(f"[vendor] Failed to load vendor modules: {e}")
-        raise
+            # Clean up the copied zip file after extraction
+            os.remove(zip_dest)
+            
+            # Write version file
+            with open(version_file, 'w') as f:
+                f.write(POE_VERSION)
+            logger.info(f"[vendor] Created vendor directory for version {POE_VERSION}")
+
+        except Exception as e:
+            logger.error(f"[vendor] Failed to extract vendor modules: {e}")
+            raise
+
+    # Add vendor modules to sys.path
+    sys.path.append(str(vendor_dir))
+    
+    # Add subdirectories, with httpx and httpcore at the end to avoid stdlib conflicts
+    last_vendor_modules = ['httpx', 'httpcore']
+
+    for subdir in vendor_dir.iterdir():
+        if subdir.is_dir():
+            if subdir.name in last_vendor_modules:
+                sys.path.append(str(subdir))
+            else:
+                sys.path.insert(0, str(subdir))
+            # Add each subdirectory to the path as well
+            for subdir in vendor_dir.iterdir():
+                if subdir.is_dir():
+                    if subdir.name in last_vendor_modules:
+                        sys.path.append(str(subdir))
+                    else:
+                        sys.path.insert(0, str(subdir))
 
 
 def safe_filename(filename: str) -> str:
@@ -208,11 +268,14 @@ async def save_settings(ctx: "PathOfExileContext", path: Path = settings_file_pa
         world_key = build_world_key(ctx)
         default_key = "world default"
         new_world_data = {
-            "tts_speed": str(ctx.client_options["ttsSpeed"]),
-            "tts_enabled": str(ctx.client_options["ttsEnabled"]),
+            "tts_speed": str(ctx.filter_options.tts_speed),
+            "tts_enabled": bool(ctx.filter_options.tts_enabled),
+            "loot_filter_sounds": int(ctx.filter_options.loot_filter_sounds),
+            "loot_filter_display": int(ctx.filter_options.loot_filter_display),
             "client_txt": str(ctx.client_text_path),
             "last_char": str(ctx.character_name),
             "base_item_filter": str(ctx.base_item_filter),
+            "poe_doc_path": str(ctx.poe_doc_path)
         }
 
         # Add/update the world entry in existing settings
@@ -247,12 +310,14 @@ async def load_settings(ctx: "PathOfExileContext", path: Path = settings_file_pa
                 logger.info(f"[DEBUG] No settings found for {world_key}")
 
         loaded_data = {
-            "tts_speed": world_settings.get("tts_speed", default_settings.get("ttsSpeed")),
-            "tts_enabled": world_settings.get("tts_enabled", default_settings.get("ttsEnabled")),
+            "tts_speed": world_settings.get("tts_speed", default_settings.get("tts_speed")),
+            "tts_enabled": world_settings.get("tts_enabled", default_settings.get("tts_enabled")),
+            "loot_filter_sounds": world_settings.get("loot_filter_sounds", default_settings.get("loot_filter_sounds")),
+            "loot_filter_display": world_settings.get("loot_filter_display", default_settings.get("loot_filter_display")),
             "client_txt": world_settings.get("client_txt",
-                                             default_settings.get("clientTextPath", find_possible_client_txt_path())),
-            "last_char": world_settings.get("last_char", default_settings.get("lastChar")),
-            "base_item_filter": world_settings.get("base_item_filter", default_settings.get("baseItemFilter")),
+                                             default_settings.get("client_txt", find_possible_client_txt_path())),
+            "last_char": world_settings.get("last_char", default_settings.get("last_char")),
+            "base_item_filter": world_settings.get("base_item_filter", default_settings.get("base_item_filter")),
         }
 
         return loaded_data
@@ -289,6 +354,8 @@ async def read_dict_from_pickle_file(file_path: Path) -> dict:
 
 def get_poe_install_location_from_registry() -> str | None:
     """Retrieve the Path of Exile install location from the Windows registry."""
+    if sys.platform != "win32":
+        return None
     try:
         registry_key = r"Software\GrindingGearGames\Path of Exile"
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, registry_key) as key:
@@ -304,8 +371,9 @@ def get_poe_install_location_from_registry() -> str | None:
 
 def find_possible_client_txt_path() -> Path | None:
     """Return the first valid path for the client.txt file."""
-    if get_poe_install_location_from_registry():
-        log_path = Path(get_poe_install_location_from_registry()) / "logs" / "client.txt"
+    registry_path = get_poe_install_location_from_registry()
+    if registry_path:
+        log_path = Path(registry_path) / "logs" / "client.txt"
         if log_path.exists():
             print(f"Found client.txt (via registry) at: {log_path}")
             logger.debug(f"Found client.txt (via registry) at: {log_path}")

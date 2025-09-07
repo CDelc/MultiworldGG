@@ -76,7 +76,7 @@ async def chat_commands_callback(ctx: "PathOfExileContext", line: str):
 
     if "!ap char" in message:
         _random_string = random.randbytes(8).hex()
-        await inputHelper.send_poe_text(f"char_{_random_string}")
+        await inputHelper.send_poe_text(f"char_{_random_string}") # don't know the char name yet, so we can't whisper.
     if "char_" in message:
         parts = line.split("char_")
         if parts[1] == _random_string:
