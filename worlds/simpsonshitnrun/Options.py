@@ -103,6 +103,15 @@ class CardPercent(Range):
     range_end = 100
     default = 50
 
+class ShuffleCards(Toggle):
+    """Randomize card locations. This option adds several possible locations for
+       cards. There will still be 49 total cards with 7 in each level.
+       ***THIS OPTION IS UNIMPLEMENTED***"""
+
+    default = True
+    display_name = "Shuffle Cards"
+
+
 class MinShopPrice(Range):
     """The minimum cost of any item in Gil's Shop. If this is greater than the max shop price, then the max will be used instead."""
     display_name = "Min Shop Price"
