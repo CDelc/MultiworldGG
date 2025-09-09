@@ -12,11 +12,12 @@ from flask import flash, redirect, render_template, request, session, url_for
 from pony.orm import commit, db_session
 
 from BaseClasses import get_seed, seeddigits
-from Generate import PlandoOptions, handle_name, mystery_argparse
+from Generate import PlandoOptions, handle_name
 from Main import main as ERmain
 from Utils import __version__, restricted_dumps
 from WebHostLib import app
 from settings import ServerOptions, GeneratorOptions
+from EntranceRandomizer import parse_arguments
 from .check import get_yaml_data, roll_options
 from .models import Generation, STATE_ERROR, STATE_QUEUED, Seed, UUID
 from .upload import upload_zip_to_db
@@ -134,8 +135,7 @@ def gen_game(gen_options: dict, meta: dict[str, Any] | None = None, owner=None, 
 
         seedname = "W" + (f"{random.randint(0, pow(10, seeddigits) - 1)}".zfill(seeddigits))
 
-        args = mystery_argparse()
-        args.multi = playercount
+        args = parse_arguments(['--multi', str(playercount)])
         args.seed = seed
         args.name = {x: "" for x in range(1, playercount + 1)}  # only so it can be overwritten in mystery
         args.spoiler = meta["generator_options"].get("spoiler", 0)
@@ -149,8 +149,6 @@ def gen_game(gen_options: dict, meta: dict[str, Any] | None = None, owner=None, 
         args.skip_output = False
         args.spoiler_only = False
         args.csv_output = False
-        args.sprite = dict.fromkeys(range(1, args.multi+1), None)
-        args.sprite_pool = dict.fromkeys(range(1, args.multi+1), None)
 
         name_counter = Counter()
         for player, (playerfile, settings) in enumerate(gen_options.items(), 1):
