@@ -40,7 +40,7 @@ class FF1World(World):
     settings: typing.ClassVar[FF1Settings]
     settings_key = "ffr_options"
     game = "Final Fantasy"
-    author: str = "jtoyoda (currently unmaintained)"
+    author: str = "Rosalie-A"
     topology_present = False
 
     ff1_items = FF1Items()

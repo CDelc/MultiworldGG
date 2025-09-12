@@ -120,7 +120,7 @@ if baseclasses_loaded:
     from randomizer.SettingStrings import decrypt_settings_string_enum
     from archipelago.Goals import GOAL_MAPPING, QUANTITY_GOALS, calculate_quantity, pp_wincon
     from archipelago.Items import DK64Item, full_item_table, setup_items
-    from archipelago.Options import DK64Options, Goal, SwitchSanity, dk64_option_groups
+    from archipelago.Options import DK64Options, Goal, SwitchSanity, SelectStartingKong, dk64_option_groups
     from archipelago.Regions import all_locations, create_regions, connect_regions
     from archipelago.Rules import set_rules
     from archipelago.client.common import check_version
@@ -629,7 +629,7 @@ if baseclasses_loaded:
             """Generate the world."""
             # V1 LIMITATION: We are restricting settings pretty heavily. This string serves as the base for all seeds, with AP options overriding some options
             # Goal is to hard code every setting to the dict but this will do for now
-            self.settings_string = "PyEAAUvQAAX4AAMEAAGGAADFAAB/oGngFAQMBAcDBAICQUFAwLBwYEQBOqWNwAN4AOAAOIAOQAOYAOgAXIAJmAhOJgQoTAwwmhIJqgBWgWiWkWmWomqms2u2zW1Dbrcrdrurerhrgrfrvrwrirnrjrkrlrmrorprqrrrsrtokk1JmFwgGWqJUAgogUYKQFKCmAgi4LMAjZZT8HQyEsrYC3ASNBCmpJeixC2L1TgVELAITEKAJIkdqqqygYyw5Mk7xFAcryBWODzyWMDIABVM8Q3QQhAALQoAFoYACUOABKIAAdWgAOiQAFRQABosAB0YAAqNAANXAAWT4S34KpsDQgxWC6LY9meLIMEcMAzmSPQ2D4ZpYA+XYpioWhjisDQViGMQijWFxPCSEJ/EsQZIl0XhcEBIUFhgaHCAiJCgqLDAyNDg6PEBCREZISkxOUFJUVlhaXF5gYmRmaGq4ury/WL4AYAAwgBiAB2ADSAP0BKcAE6HiRorPE1eb3h0jxgEO64gy1iEF6+fwDZ4+GE0c7upXsrMzimzq2L4U4UBMIhkKY6EqWxrnwjKZ/AFkAQUEZUKI8EQyFMdCVLY1z4RlOlbXxnW+d88gSKaGx7gDzEZ6CQg1BSjD0lmGnHqXwLxjkVyyAiDKlmnIIpstuvrwVPQAfIA9QB9AD2AH2AA"
+            self.settings_string = "hAAFL0AAF+AADBAABhgAAxQAAf6Bp4BQEDAQHAwQCAkFBQMCwcGBEATqljcADeADgADiADkADmADoAFyACZgITiYEKEwMMJoSCaoAVoFolpFplqJqprNrts1tQ263K3a7q3q4a4K36768K4q56465K5a5q6K6a6q667K7aJKakzC4QDLVEqAQUQKMFIClBTAQRcFmARssp+DoZCWVsBbgJGghTUkvRYhbF6pwKiFgEJiFAEkSO1VVZQMZYcmSd4igOV5ArHB55LGBkAAqmeIboIJ8Jb8FU2BoQYrBdFsezPFkGCOGAZzJHobB8M0sAfLsUxULQxxWBoKxDGIRRrC4nhJCE/iWIMkS6LwuGRALLDReFAwjXCZdIhIlLSggHB4KGBokJx0hKisxMjMNDqwVLzUWXykRCTAuCF8AMAAYQAxAA7ABpAH6AlOACdDxI0VniavN7w6R4wCHdcQZaxCC9fP4Bs8fDCaOd3Ur2VmZxTZ1bF8KcKAmEQyFMdCVLY1z4RlM/gCyAIKCMqFEeCIZCmOhKlsa58IynStr4zrfO+eQJFNDY9wB5iM9BIQagpRh6SzDTj1L4F4xyK5ZARBlSzTkEU2W3X14KnoAPkAeoA+gB7AD7AA"
             settings_dict = decrypt_settings_string_enum(self.settings_string)
 
             # Settings
@@ -744,6 +744,19 @@ if baseclasses_loaded:
             if hasattr(self.multiworld, "generation_is_fake"):
                 # If gen is fake, don't pick random keys to start with, trust the slot data
                 settings_dict["krool_key_count"] = 8
+
+            # Kong settings
+            kong_mapping = {
+                SelectStartingKong.option_donkey: Kongs.donkey,
+                SelectStartingKong.option_diddy: Kongs.diddy,
+                SelectStartingKong.option_lanky: Kongs.lanky,
+                SelectStartingKong.option_tiny: Kongs.tiny,
+                SelectStartingKong.option_chunky: Kongs.diddy,
+                SelectStartingKong.option_any: Kongs.any,
+            }
+
+            settings_dict["starting_kong"] = kong_mapping[self.options.select_starting_kong.value]
+
             # Switchsanity configuration
             settings_dict["switchsanity_enabled"] = self.options.switchsanity.value != SwitchSanity.option_off
 

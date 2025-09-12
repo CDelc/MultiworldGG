@@ -58,6 +58,7 @@ class Goal(Choice):
     option_bosses = 14
     option_bonuses = 15
     option_treasure_hurry = 16
+    option_krools_challenge = 17
     default = 0
 
 
@@ -551,6 +552,18 @@ class RemoveBarriers(OptionList):
         "castle_crypt_doors",
     }
 
+    default = [
+        "japes_coconut_gates",
+        "aztec_tunnel_door",
+        "aztec_5dtemple_switches",
+        "aztec_tiny_temple_ice",
+        "factory_testing_gate",
+        "factory_production_room",
+        "galleon_lighthouse_gate",
+        "galleon_seasick_ship",
+        "caves_igloo_pads",
+    ]
+
 
 class HintItemRandomization(Toggle):
     """Determines if Hints are added into the Item Pool."""
@@ -904,6 +917,23 @@ class PuzzleRando(Choice):
     default = 2
 
 
+class SelectStartingKong(Choice):
+    """Determines which Kong you will start with. This is the Kong that will walk out onto DK Isle at the beginning of the game.
+
+    Select "any" if you want your starting kong to be randomly determined.
+    """
+
+    display_name = "Select Starting Kong"
+    option_donkey = 0
+    option_diddy = 1
+    option_lanky = 2
+    option_tiny = 3
+    option_chunky = 4
+    option_any = 5
+
+    default = 5
+
+
 @dataclass
 class DK64Options(PerGameCommonOptions):
     """Options for DK64R."""
@@ -977,6 +1007,7 @@ class DK64Options(PerGameCommonOptions):
     harder_bosses: HardBosses
     puzzle_rando: PuzzleRando
     goal_quantity: GoalQuantity
+    select_starting_kong: SelectStartingKong
 
 
 dk64_option_groups: List[OptionGroup] = [
@@ -1013,6 +1044,7 @@ dk64_option_groups: List[OptionGroup] = [
         "Item Pool",
         [
             StartingKongCount,
+            SelectStartingKong,
             StartingMoveCount,
             HelmKeyLock,
             ClimbingShuffle,

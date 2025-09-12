@@ -69,6 +69,7 @@ Currently, the following games are supported:
 * Final Fantasy IV: Free Enterprise
 * Final Fantasy Mystic Quest
 * Final Fantasy Tactics Advance
+* Flipwitch
 * Frogmonster
 * Getting Over It
 * Golden Sun: The Lost Age
@@ -95,6 +96,7 @@ Currently, the following games are supported:
 * Lingo
 * Lufia II Ancient Cave
 * Luigi's Mansion
+* Lunacid
 * Mario Kart Double Dash
 * Mario Kart 64
 * Mario & Luigi Superstar Saga
@@ -103,6 +105,7 @@ Currently, the following games are supported:
 * Mega Man Battle Network 3
 * Mega Man X3
 * Meritous
+* Metroid Fusion
 * Metroid Prime
 * Metroid Zero Mission
 * Minecraft
