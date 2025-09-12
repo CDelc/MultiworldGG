@@ -168,6 +168,9 @@
 # Final Fantasy 4: Free Enterprise
 /worlds/ff4fe/ @Rosalie-A
 
+# Final Fantasy (1)
+/worlds/ff1/ @Rosalie-A
+
 # Final Fantasy Mystic Quest
 /worlds/ffmq/ @Alchav @wildham0
 
@@ -580,9 +583,6 @@
 # The following worlds in this repo are currently unmaintained, but currently still work in core. If any update breaks
 # compatibility, these worlds may be deleted. If you are interested in stepping up as maintainer for
 # any of these worlds, please review `/docs/world maintainer.md` documentation.
-
-# Final Fantasy (1)
-# /worlds/ff1/
 
 # Ocarina of Time
 # /worlds/oot/
