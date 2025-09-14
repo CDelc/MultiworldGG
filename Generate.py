@@ -167,19 +167,8 @@ def main(args=None) -> tuple[argparse.Namespace, int]:
                         f"A mix is also permitted.")
 
     from worlds.AutoWorld import AutoWorldRegister
-    from EntranceRandomizer import parse_arguments
-    erargs = parse_arguments(['--multi', str(args.multi)])
-    erargs.seed = seed
-    erargs.plando_options = args.plando
-    erargs.spoiler = args.spoiler
-    erargs.race = args.race
-    erargs.outputname = seed_name
-    erargs.outputpath = args.outputpath
-    erargs.skip_prog_balancing = args.skip_prog_balancing
-    erargs.skip_output = args.skip_output
-    erargs.spoiler_only = args.spoiler_only
-    erargs.name = {}
-    erargs.csv_output = args.csv_output
+    args.outputname = seed_name
+    args.name = {}
 
     settings_cache: dict[str, tuple[argparse.Namespace, ...]] = \
         {fname: (tuple(roll_settings(yaml, args.plando) for yaml in yamls) if args.sameoptions else None)

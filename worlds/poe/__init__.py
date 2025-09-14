@@ -46,7 +46,7 @@ class PathOfExileWebWorld(WebWorld):
     bug_report_page = "https://github.com/stubobis1/Archipelago/issues" # if anyone else wants to help maintain this, please do so
     setup_en = Tutorial(
         tutorial_name="Path of Exile Setup Guide",
-        description="A guide to setting up Archipelago Path of Exile.",
+        description="A guide to setting up MultiworldGG Path of Exile.",
         language="English",
         file_name="setup_en.md",
         link="setup/en",

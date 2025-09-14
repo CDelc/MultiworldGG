@@ -16,6 +16,8 @@ from pathlib import Path
 if TYPE_CHECKING:
     from .Client import PathOfExileContext
 
+from Utils import instance_name
+apname = instance_name if instance_name else "Archipelago"
 
 class PoeOptionsTab(MDBoxLayout):
     """Tab containing Path of Exile specific controls."""
@@ -153,7 +155,7 @@ class PoeManager(GameManager):
     logging_pairs = [
         ("Client", "Archipelago"),
     ]
-    base_title = "Archipelago Path of Exile Client"
+    base_title = f"{apname} Path of Exile Client"
     ctx: "PathOfExileContext"
 
     def build(self):

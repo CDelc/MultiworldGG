@@ -339,7 +339,7 @@ def setup_items(world: World) -> typing.List[DK64Item]:
     # print("projected items to place: " + str(len(item_table)))
 
     # Example of accessing Option result
-    if world.options.goal == "krool":
+    if world.options.goal == "beat_k_rool":
         pass
 
     # DEBUG
