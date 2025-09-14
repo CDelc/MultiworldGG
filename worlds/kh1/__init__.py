@@ -21,7 +21,7 @@ def launch_client(*args: str):
     launch_component(main, name="KH1 Client", args=args)
 
 
-components.append(Component(display_name="KH1 Client", func=launch_client, component_type=Type.CLIENT, icon="kh1_heart"))
+components.append(Component("KH1 Client", func=launch_client, component_type=Type.CLIENT, icon="kh1_heart"))
 
 icon_paths["kh1_heart"] = f"ap:{__name__}/icons/kh1_heart.png"
 
