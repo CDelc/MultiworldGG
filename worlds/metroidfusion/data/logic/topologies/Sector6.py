@@ -1,4 +1,5 @@
 from ..Connection import Connection
+from ..Requirement import PONRRequirement
 from ..VariableConnection import VariableConnection
 from ..Requirements import *
 from ..FusionLocation import FusionLocation
@@ -30,7 +31,10 @@ Sector6Crossroads.connections = [
         Level4KeycardRequirement(["Varia Suit"], [CanPowerBomb])
     ]),
     Connection(Sector6BeforeVariaCoreXZone, [
-        Requirement(["Speed Booster"], [CanBombOrPowerBomb])
+        PONRRequirement(["Speed Booster"], [CanBombOrPowerBomb]),
+        Requirement(["Speed Booster", "Power Bomb Data", "Space Jump"], [
+            CanBombOrPowerBomb
+        ])
     ]),
     Connection(Sector6AfterVariaCoreXZone, [
         Requirement(["Morph Ball", "Varia Suit"], [HasScrewAttack])
@@ -38,7 +42,10 @@ Sector6Crossroads.connections = [
 ]
 
 Sector6BeforeXBOXZone.connections = [
-    Connection(Sector6XBOXZone, [], one_way=True)
+    Connection(Sector6XBOXZone, [
+        PONRRequirement([], []),
+        Requirement([], [CanScrewAttackAndSpaceJump])
+    ], one_way=True)
 ]
 
 Sector6XBOXZone.connections = [

@@ -1,3 +1,4 @@
+import typing
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
@@ -41,3 +42,14 @@ class Requirement:
     @staticmethod
     def check_option_enabled(options: "MetroidFusionOptions") -> bool:
         return True
+
+class PONRRequirement(Requirement):
+    additional_requirements: tuple[list[str], typing.Literal["and", "or"]]
+
+    def __init__(self, items_needed, other_requirements, energy_tanks_needed = 0, additional_requirements = ([], "or")):
+        super().__init__(items_needed, other_requirements, energy_tanks_needed)
+        self.additional_requirements = additional_requirements
+
+    @staticmethod
+    def check_option_enabled(options: "MetroidFusionOptions") -> bool:
+        return options.PointOfNoReturnsInLogic == options.PointOfNoReturnsInLogic.option_true

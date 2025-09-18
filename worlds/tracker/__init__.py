@@ -20,7 +20,7 @@ def launch_client(*args):
     from .TrackerClient import launch as TCMain
     launch(TCMain, name="Universal Tracker client", args=args)
 
-UT_VERSION = "v0.2.15"
+UT_VERSION = "v0.2.18"
 
 class CurrentTrackerState(NamedTuple):
     all_items: Counter
@@ -39,6 +39,12 @@ class CurrentTrackerState(NamedTuple):
         return CurrentTrackerState(Counter(),Counter(),[],[],[],[],[],[],[],None)
 
 class DeferredEntranceMode(Enum):
+    """Determines how worlds should be allowed to use deferred entrances
+    on: Force worlds to disconnect entrances
+    default: Allow worlds to decide if entrances should be deferred
+    off: Force worlds to connect all entrances
+    """
+
     forced = "on"
     default = "default"
     disabled = "off"
@@ -58,12 +64,24 @@ class TrackerSettings(Group):
     
     class UseSplitMapIcons(Bool):
         """Use split icons rather then mixed for the UT map tab"""
+    
+    class DisplayGlitchedLogic(Bool):
+        """Enable showing Glitched/yellow logic in tracker tab"""
+    
+    class SettingDeferredEntranceMode(str):
+        """Determines how worlds should be allowed to use deferred entrances
+        on: Force worlds to disconnect entrances
+        default: Allow worlds to decide if entrances should be deferred
+        off: Force worlds to connect all entrances
+        """
 
     player_files_path: TrackerPlayersPath = TrackerPlayersPath("Players")
     include_region_name: RegionNameBool | bool = False
     include_location_name: LocationNameBool | bool = True
     hide_excluded_locations: HideExcluded | bool = False
     use_split_map_icons: UseSplitMapIcons | bool = True
+    enforce_deferred_entrances: SettingDeferredEntranceMode | str = "default"
+    display_glitched_logic: DisplayGlitchedLogic | bool = True
 
 
 class TrackerWorld(World):
@@ -72,7 +90,6 @@ class TrackerWorld(World):
 
     # to make auto world register happy so we can register our settings
     game = "Universal Tracker"
-    author: str = "Faris"
     hidden = True
     item_name_to_id = {}
     location_name_to_id = {}

@@ -42,6 +42,73 @@ class HasWaveBeam(Requirement):
 
 #endregion
 
+#region Combined Item Requirements
+class CanJumpHigh(Requirement):
+    other_requirements = [
+        Requirement(["Hi-Jump"], []),
+        Requirement(["Space Jump"], [])
+    ]
+
+class CanLavaDive(Requirement):
+    items_needed = ["Varia Suit", "Gravity Suit"]
+
+class CanBomb(Requirement):
+    items_needed = ["Morph Ball", "Bomb Data"]
+
+class CanPowerBomb(Requirement):
+    items_needed = ["Morph Ball", "Power Bomb Data"]
+
+class CanBombOrPowerBomb(Requirement):
+    other_requirements = [CanBomb, CanPowerBomb]
+
+class CanPowerBombAndJumpHigh(Requirement):
+    items_needed = ["Morph Ball", "Power Bomb Data"]
+    other_requirements = [CanJumpHigh]
+
+class CanBallJump(Requirement):
+    items_needed = ["Morph Ball"]
+    other_requirements = [
+        Requirement(["Bomb Data"], []),
+        Requirement(["Hi-Jump"], [])
+    ]
+
+class CanBallJumpAndBomb(Requirement):
+    other_requirements = [
+        Requirement(["Morph Ball", "Bomb Data"], []),
+        Requirement(["Hi-Jump"], [CanPowerBomb])
+    ]
+
+class CanScrewAttackAndSpaceJump(Requirement):
+    items_needed = ["Screw Attack", "Space Jump"]
+
+class CanJumpHighUnderwater(Requirement):
+    items_needed = ["Gravity Suit"]
+    other_requirements = [CanJumpHigh]
+
+class CanSpeedBoosterUnderwater(Requirement):
+    items_needed = ["Gravity Suit", "Speed Booster"]
+
+class CanFreezeEnemies(Requirement):
+    other_requirements = [
+        Requirement(["Ice Missile"], [HasMissile]),
+        Requirement(["Diffusion Missile"], [HasMissile]),
+        Requirement(["Ice Beam"], [])
+    ]
+
+class CanActivatePillar(Requirement):
+    other_requirements = [CanBombOrPowerBomb, HasWaveBeam]
+
+class CanDiffusionMissile(Requirement):
+    items_needed = ["Missile Data", "Diffusion Missile"]
+
+class CanDestroyBombBlocks(Requirement):
+    other_requirements = [CanBombOrPowerBomb, HasScrewAttack]
+
+class CanChargedWaveShot(Requirement):
+    items_needed = ["Charge Beam", "Wave Beam"]
+
+#endregion
+
 #region Optional Requirements
 
 class CanDoBeginnerShinespark(Requirement):
@@ -84,12 +151,45 @@ class CanDoSimpleWallJumpWithScrewAttack(Requirement):
         return (bool(options.SimpleWallJumpsInRegionLogic.value)
                 or options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_beginner)
 
-class CanDoTrickyWallJump(Requirement):
+class CanDoSimpleWallJumpWithHiJumpAndScrewAttack(Requirement):
+    items_needed = ["Hi-Jump", "Screw Attack"]
+
+    @staticmethod
+    def check_option_enabled(options: "MetroidFusionOptions") -> bool:
+        return (bool(options.SimpleWallJumpsInRegionLogic.value)
+                or options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_beginner)
+
+class CanDoSimpleWallJumpAndFreezeEnemies(Requirement):
+    other_requirements = [CanFreezeEnemies]
+
+    @staticmethod
+    def check_option_enabled(options: "MetroidFusionOptions") -> bool:
+        return (bool(options.SimpleWallJumpsInRegionLogic.value)
+                or options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_beginner)
+
+class CanDoAdvancedWallJump(Requirement):
     items_needed = []
 
     @staticmethod
     def check_option_enabled(options: "MetroidFusionOptions") -> bool:
-        return options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_advanced
+        return (bool(options.SimpleWallJumpsInRegionLogic.value)
+                or options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_advanced)
+
+class CanDoAdvancedWallJumpWithHiJump(Requirement):
+    items_needed = ["Hi-Jump"]
+
+    @staticmethod
+    def check_option_enabled(options: "MetroidFusionOptions") -> bool:
+        return (bool(options.SimpleWallJumpsInRegionLogic.value)
+                or options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_advanced)
+
+class CanDoAdvancedWallJumpWithScrewAttack(Requirement):
+    items_needed = ["Screw Attack"]
+
+    @staticmethod
+    def check_option_enabled(options: "MetroidFusionOptions") -> bool:
+        return (bool(options.SimpleWallJumpsInRegionLogic.value)
+                or options.WallJumpTrickDifficulty >= options.WallJumpTrickDifficulty.option_advanced)
 
 class CanFightBossOnAdvanced(Requirement):
     items_needed = ["Missile Data", "Charge Beam"]
@@ -182,73 +282,6 @@ class Level4KeycardRequirement(Requirement):
         self.items_needed.append("Level 4 Keycard")
 #endregion
 
-#region Combined Item Requirements
-class CanJumpHigh(Requirement):
-    other_requirements = [
-        Requirement(["Hi-Jump"], []),
-        Requirement(["Space Jump"], [])
-    ]
-
-class CanLavaDive(Requirement):
-    items_needed = ["Varia Suit", "Gravity Suit"]
-
-class CanBomb(Requirement):
-    items_needed = ["Morph Ball", "Bomb Data"]
-
-class CanPowerBomb(Requirement):
-    items_needed = ["Morph Ball", "Power Bomb Data"]
-
-class CanBombOrPowerBomb(Requirement):
-    other_requirements = [CanBomb, CanPowerBomb]
-
-class CanPowerBombAndJumpHigh(Requirement):
-    items_needed = ["Morph Ball", "Power Bomb Data"]
-    other_requirements = [CanJumpHigh]
-
-class CanBallJump(Requirement):
-    items_needed = ["Morph Ball"]
-    other_requirements = [
-        Requirement(["Bomb Data"], []),
-        Requirement(["Hi-Jump"], [])
-    ]
-
-class CanBallJumpAndBomb(Requirement):
-    other_requirements = [
-        Requirement(["Morph Ball", "Bomb Data"], []),
-        Requirement(["Hi-Jump"], [CanPowerBomb])
-    ]
-
-class CanScrewAttackAndSpaceJump(Requirement):
-    items_needed = ["Screw Attack", "Space Jump"]
-
-class CanJumpHighUnderwater(Requirement):
-    items_needed = ["Gravity Suit"]
-    other_requirements = [CanJumpHigh]
-
-class CanSpeedBoosterUnderwater(Requirement):
-    items_needed = ["Gravity Suit", "Speed Booster"]
-
-class CanFreezeEnemies(Requirement):
-    other_requirements = [
-        Requirement(["Ice Missile"], [HasMissile]),
-        Requirement(["Diffusion Missile"], [HasMissile]),
-        Requirement(["Ice Beam"], [])
-    ]
-
-class CanActivatePillar(Requirement):
-    other_requirements = [CanBombOrPowerBomb, HasWaveBeam]
-
-class CanDiffusionMissile(Requirement):
-    items_needed = ["Missile Data", "Diffusion Missile"]
-
-class CanDestroyBombBlocks(Requirement):
-    other_requirements = [CanBombOrPowerBomb, HasScrewAttack]
-
-class CanChargedWaveShot(Requirement):
-    items_needed = ["Charge Beam", "Wave Beam"]
-
-#endregion
-
 #region Enemy Requirements
 class CanDefeatSmallGeron(Requirement):
     other_requirements = [
@@ -282,6 +315,17 @@ class CanBeatToughEnemyAndJumpHigh(Requirement):
 class CanDefeatStabilizer(Requirement):
     other_requirements = [
         Requirement(["Screw Attack"], []),
+        Requirement(["Charge Beam"], []),
+        Requirement(["Missile Data"], []),
+        CanPowerBomb
+    ]
+
+class CanDefeatThirdStabilizer(Requirement):
+    other_requirements = [
+        Requirement(["Screw Attack"], [
+            CanDoAdvancedWallJump,
+            CanDoSimpleWallJumpWithHiJump
+        ]),
         Requirement(["Charge Beam"], []),
         Requirement(["Missile Data"], []),
         CanPowerBomb
@@ -321,7 +365,10 @@ class CanReachAnimals(Requirement):
 
 class CanReachGenesisSpeedway(Requirement):
     items_needed = ["Morph Ball", "Power Bomb Data"]
-    other_requirements = [CanBallJump]
+    other_requirements = [
+        Requirement(["Bomb Data"], [CanDoSimpleWallJump, CanJumpHigh]),
+        HasHiJump
+    ]
 
 class CanCrossFromReactorToSector2(Requirement):
     items_needed = ["Space Jump", "Missile Data"]
@@ -405,7 +452,8 @@ class CanAccessFieryStorage(Requirement):
     items_needed = ["Varia Suit"]
     other_requirements = [
         CanBeatToughEnemy,
-        CanLavaDive
+        CanLavaDive,
+        CanDoBeginnerShinespark
     ]
 
 class CanAccessFieryStorageUpper(Requirement):
@@ -448,7 +496,8 @@ class CanAscendCheddarBay(Requirement):
 
 class CanAccessReservoirVault(Requirement):
     other_requirements = [
-        Requirement(["Hi-Jump"], [CanBombOrPowerBomb, CanDoSimpleWallJump]),
+        Requirement(["Hi-Jump", "Morph Ball", "Bomb Data"], [CanDoSimpleWallJump]),
+        Requirement(["Hi-Jump", "Morph Ball", "Power Bomb Data"], [CanDoSimpleWallJump]),
         Requirement(["Space Jump"], [CanBallJumpAndBomb])
     ]
 
@@ -488,7 +537,9 @@ class CanCrossSector4LowerSecurityToRightWaterZone(Requirement):
 #region Sector 5 Individual Requirements
 class CanEscapeNightmareRoom(Requirement):
     items_needed = ["Gravity Suit", "Speed Booster"]
-    other_requirements = [CanFightLateGameBoss]
+    other_requirements = [
+        CanFightLateGameBoss, CanFightLategameBossOnAdvanced, CanFightBossOnExpert
+    ]
 
 class CanAccessRipperRoad(Requirement):
     items_needed = ["Morph Ball", "Hi-Jump"]
@@ -498,7 +549,7 @@ class CanAccessRipperRoad(Requirement):
     ]
 
 class CanAccessRipperTreasure(Requirement):
-    items_needed = ["Power Bomb Data"]
+    items_needed = ["Morph Ball", "Power Bomb Data"]
     other_requirements = [
         HasSpaceJump,
         Requirement(["Hi-Jump"], [CanFreezeEnemies]),

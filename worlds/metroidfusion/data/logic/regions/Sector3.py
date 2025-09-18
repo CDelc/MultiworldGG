@@ -31,8 +31,11 @@ class Sector3BobZone(FusionRegion):
 class Sector3BOXZone(FusionRegion):
     name = "Sector 3 BOX Zone"
 
-class Sector3Attic(FusionRegion):
-    name = "Sector 3 Attic"
+class Sector3LowerAttic(FusionRegion):
+    name = "Sector 3 Lower Attic"
+
+class Sector3UpperAttic(FusionRegion):
+    name = "Sector 3 Upper Attic"
 
 class Sector3SovaProcessing(FusionRegion):
     name = "Sector 3 Sova Processing"
@@ -48,6 +51,7 @@ sector_3_regions = [
     Sector3BoilerZone,
     Sector3BobZone,
     Sector3BOXZone,
-    Sector3Attic,
+    Sector3LowerAttic,
+    Sector3UpperAttic,
     Sector3SovaProcessing
 ]

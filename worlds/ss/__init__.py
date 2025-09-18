@@ -43,8 +43,8 @@ from .logic.LogicParser import parse_expression
 from .logic.Logic import ALL_REQUIREMENTS
 
 AP_VERSION = [0, 6, 2]
-WORLD_VERSION = [0, 5, 2]
-RANDO_VERSION = [0, 5, 2]
+WORLD_VERSION = [0, 5, 3]
+RANDO_VERSION = [0, 5, 3]
 
 
 def run_client() -> None:
@@ -94,6 +94,7 @@ class SSContainer(APPlayerContainer, metaclass=AutoPatchRegister):
     """
 
     game: str = "Skyward Sword"
+    author: str = "bcats"
     patch_file_ending: str = ".apssr"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -127,7 +128,6 @@ class SSWorld(World):
     options: SSOptions
        
     game: ClassVar[str] = "Skyward Sword"
-    author: str = "Battlecats59"
     topology_present: bool = True
     web = SSWeb()
     required_client_version: tuple[int, int, int] = (0, 5, 1)
@@ -563,6 +563,8 @@ class SSWorld(World):
 
         # Output options to file.
         for field in fields(self.options):
+            if field.name =="plando_items":
+                continue # Skip adding plando_items to patchfile 
             output_data["Options"][field.name.replace("_", "-")] = getattr(
                 self.options, field.name
             ).value
@@ -725,3 +727,4 @@ class SSWorld(World):
         }
 
         return slot_data
+

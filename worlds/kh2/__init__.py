@@ -20,7 +20,7 @@ def launch_client(*args: str):
     launch_component(main, name="KH2Client", args=args)
 
 
-components.append(Component(display_name="KH2 Client", func=launch_client, component_type=Type.CLIENT))
+components.append(Component("KH2 Client", func=launch_client, component_type=Type.CLIENT))
 
 class KingdomHearts2Web(WebWorld):
     tutorials = [Tutorial(

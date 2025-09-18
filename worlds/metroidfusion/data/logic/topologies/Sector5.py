@@ -1,4 +1,5 @@
 from ..Connection import Connection
+from ..Requirement import PONRRequirement
 from ..VariableConnection import VariableConnection
 from ..Requirements import *
 from ..FusionLocation import FusionLocation
@@ -15,7 +16,7 @@ Sector5Hub.connections = [
         Level3KeycardRequirement([], [])
     ]),
     Connection(Sector5TopLeftBigRoom, [
-        Level3KeycardRequirement([], [CanJumpHigh, CanDoTrickyWallJump]),
+        Level3KeycardRequirement([], [CanJumpHigh, CanDoAdvancedWallJump]),
         Requirement(["Morph Ball"], [HasMissile])
     ]),
     Connection(Sector5FrozenHub, [
@@ -46,7 +47,10 @@ Sector5FrozenHub.connections = [
         Requirement(["Speed Booster"], [CanBombOrPowerBomb]),
         Level3KeycardRequirement([], [HasWaveBeam])
     ], one_way=True),
-    Connection(Sector5TopLeftBigRoom, [CanJumpHigh, CanDoTrickyWallJump])
+    Connection(Sector5TopLeftBigRoom, [
+        Requirement(["Varia Suit"], [CanJumpHigh]),
+        Requirement(["Varia Suit"], [CanDoAdvancedWallJump])
+    ])
 ]
 
 Sector5SecurityZone.connections = [
@@ -86,7 +90,10 @@ Sector5NightmareHub.connections = [
 ]
 
 Sector5NightmareZoneUpper.connections = [
-    Connection(Sector5NightmareZoneArena, [])
+    Connection(Sector5NightmareZoneArena, [
+        PONRRequirement([], []),
+        CanEscapeNightmareRoom
+    ])
 ]
 
 Sector5NightmareZoneArena.connections = [
@@ -95,8 +102,9 @@ Sector5NightmareZoneArena.connections = [
 
 Sector5Hub.locations = [
     FusionLocation("Sector 5 (ARC) -- Gerubus Gully", False, [
-        Level3KeycardRequirement([], [CanPowerBomb]),
-        Level3KeycardRequirement(["Morph Ball", "Bomb Data"], [HasScrewAttack])
+        PONRRequirement(["Morph Ball", "Level 3 Keycard"], [HasScrewAttack]),
+        Requirement(["Level 3 Keycard"], [CanPowerBomb]),
+        Requirement(["Morph Ball", "Bomb Data", "Level 3 Keycard"], [HasScrewAttack])
     ]),
 ]
 
@@ -120,12 +128,18 @@ Sector5FrozenHub.locations = [
 
 Sector5BeforeNightmareHub.locations = [
     FusionLocation("Sector 5 (ARC) -- Crow's Nest", False, [
-        Requirement(["Morph Ball", "Power Bomb Data"], [HasSpaceJump]),
-        Requirement(["Morph Ball"], [CanScrewAttackAndSpaceJump]),
-        Requirement(["Morph Ball", "Power Bomb Data"], [CanDoSimpleWallJumpWithHiJump]),
-        Requirement(["Morph Ball"], [CanDoSimpleWallJumpWithScrewAttack]),
-        Requirement(["Morph Ball", "Power Bomb Data"], [CanDoTrickyWallJump]),
-        Requirement(["Morph Ball", "Screw Attack"], [CanDoTrickyWallJump]),
+        Requirement(
+            ["Morph Ball", "Power Bomb Data"],
+            [HasSpaceJump, CanDoSimpleWallJumpWithHiJump, CanDoAdvancedWallJump]
+        ),
+        Requirement(
+            ["Morph Ball"],
+            [
+                CanScrewAttackAndSpaceJump,
+                CanDoSimpleWallJumpWithHiJumpAndScrewAttack,
+                CanDoAdvancedWallJumpWithScrewAttack
+            ]
+        ),
     ])
 ]
 
@@ -135,16 +149,20 @@ Sector5DataRoom.locations = [
 
 Sector5SecurityZone.locations = [
     FusionLocation("Sector 5 (ARC) -- E-Tank Mimic Den", False, [
-        Level3KeycardRequirement(
-            ["Morph Ball", "Bomb Data"],
+        PONRRequirement(
+            ["Morph Ball", "Power Bomb Data", "Level 3 Keycard"],
             [CanFreezeEnemies, HasSpaceJump]
         ),
-        Level3KeycardRequirement(
-            ["Morph Ball", "Power Bomb Data"],
+        PONRRequirement(
+            ["Morph Ball", "Screw Attack", "Level 3 Keycard"],
             [CanFreezeEnemies, HasSpaceJump]
         ),
-        Level3KeycardRequirement(
-            ["Morph Ball", "Screw Attack"],
+        Requirement(
+            ["Morph Ball", "Bomb Data", "Level 3 Keycard"],
+            [CanFreezeEnemies, HasSpaceJump]
+        ),
+        Requirement(
+            ["Morph Ball", "Power Bomb Data", "Hi-Jump", "Level 3 Keycard"],
             [CanFreezeEnemies, HasSpaceJump]
         ),
     ]),
@@ -152,7 +170,8 @@ Sector5SecurityZone.locations = [
     FusionLocation("Sector 5 (ARC) -- Ripper's Treasure", False, [CanAccessRipperTreasure]),
     FusionLocation("Sector 5 (ARC) -- Security Shaft East", False, [CanPowerBomb]),
     FusionLocation("Sector 5 (ARC) -- Transmutation Trial", False, [
-        Level3KeycardRequirement(["Hi-Jump"], [HasSpaceJump, CanFreezeEnemies])
+        Level3KeycardRequirement(["Morph Ball", "Hi-Jump"], [HasSpaceJump, CanFreezeEnemies]),
+        Level3KeycardRequirement(["Morph Ball", "Bomb Data"], [HasSpaceJump, CanFreezeEnemies])
     ])
 ]
 
@@ -172,7 +191,17 @@ Sector5NightmareHub.locations = [
 ]
 
 Sector5NightmareZoneUpper.locations = [
-    FusionLocation("Sector 5 (ARC) -- Nightmare Nook", False, [CanBallJumpAndBomb])
+    FusionLocation("Sector 5 (ARC) -- Nightmare Nook", False, [
+        PONRRequirement([], [CanBallJumpAndBomb]),
+        Requirement(
+            ["Morph Ball", "Bomb Data", "Gravity Suit", "Speed Booster"],
+            [CanFightLateGameBoss, CanFightLategameBossOnAdvanced, CanFightBossOnExpert]
+        ),
+        Requirement(
+            ["Morph Ball", "Hi-Jump", "Power Bomb Data", "Gravity Suit", "Speed Booster"],
+            [CanFightLateGameBoss, CanFightLategameBossOnAdvanced, CanFightBossOnExpert]
+        ),
+    ])
 ]
 
 Sector5NightmareZoneArena.locations = [

@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import TYPE_CHECKING
 
 from NetUtils import ClientStatus
@@ -10,9 +11,10 @@ from worlds._bizhawk.client import BizHawkClient
 from .data import memory
 from .data.minor_locations import location_order as minor_location_order
 from .data.major_locations import location_order as major_location_order
+from .data.room_names import room_names
 
 if TYPE_CHECKING:
-    from worlds._bizhawk.context import BizHawkClientContext, BizHawkClientCommandProcessor
+    from worlds._bizhawk.context import BizHawkClientContext
 
 logger = logging.getLogger("Client")
 
@@ -40,6 +42,12 @@ class MetroidFusionClient(BizHawkClient):
         self.display_location_found_messages = True
         self.current_sectpr = 0
         self.locations_hinted: list[str] = list()
+        self.deathlink_enabled = False
+        self.sent_deathlink = False
+        self.received_deathlink = False
+        self.recently_received_deathlink = False
+        self.set_tags = False
+        self.current_room_name = "Docking Bay"
 
     async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
         try:
@@ -87,6 +95,11 @@ class MetroidFusionClient(BizHawkClient):
         if ctx.slot is None:
             return
         try:
+            if self.set_tags == False:
+                self.set_tags = True
+                if ctx.slot_data.get("DeathLink", 0) == 1:
+                    self.deathlink_enabled = True
+                    await ctx.update_death_link(True)
             if self.location_name_to_id is None:
                 from . import MetroidFusionWorld
                 self.location_name_to_id = MetroidFusionWorld.location_name_to_id
@@ -96,6 +109,8 @@ class MetroidFusionClient(BizHawkClient):
             await self.sync_upgrades(ctx)
             await self.check_hints(ctx)
             await self.update_map(ctx)
+            if self.deathlink_enabled:
+                await self.check_deathlink(ctx)
         except bizhawk.RequestFailedError:
             # The connector didn't respond. Exit handler and return to main loop to reconnect
             pass
@@ -391,6 +406,10 @@ class MetroidFusionClient(BizHawkClient):
 
     async def update_map(self, ctx: "BizHawkClientContext"):
         current_sector = await self.read_ram_value_guarded(ctx, memory.current_area, self.iwram)
+        current_room = await self.read_ram_value_guarded(ctx, memory.current_room, self.iwram)
+        current_room_list = [room for room in room_names if room["Area"] == current_sector and room["Room"] == current_room]
+        if len(current_room_list) > 0:
+            self.current_room_name = current_room_list.pop()["Name"]
         if current_sector is None:
             return
         if current_sector != self.current_sector:
@@ -402,6 +421,49 @@ class MetroidFusionClient(BizHawkClient):
                 "want_reply": False,
                 "operations": [{"operation": "replace", "value": self.current_sector}],
             }])
+
+    def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
+        if cmd == "Bounced":
+            if "tags" in args:
+                if "DeathLink" in args["tags"]:
+                    if args["data"]["source"] != ctx.player_names[ctx.slot]:
+                        if ctx.last_death_link <= args["data"]["time"] and not self.received_deathlink:
+                            self.received_deathlink = True
+                            ctx.on_deathlink(args["data"])
+
+    async def check_deathlink(self, ctx: "BizHawkClientContext"):
+        current_game_mode_data = await bizhawk.read(ctx.bizhawk_ctx, [(memory.game_mode, 1, self.iwram)])
+        if current_game_mode_data is None or ctx.finished_game:
+            return
+        else:
+            current_game_mode = int.from_bytes(current_game_mode_data[0])
+            tank = memory.tanks["Energy Tank"]
+            current_energy_data = await self.read_ram_values_guarded(ctx, tank.current_address, 2, self.iwram)
+            if current_energy_data is None:
+                return
+            current_energy = int.from_bytes(current_energy_data, "little")
+            if current_game_mode == memory.ingame_mode:
+                if not self.sent_deathlink and current_energy == 0:
+                    if ctx.last_death_link + 5 < time.time():
+                        self.sent_deathlink = True
+                        sector_message = "Main Deck" if self.current_sector == 0 else f"Sector {self.current_sector}"
+                        death_message = (f"{ctx.player_names[ctx.slot]} was defeated in {sector_message}'s "
+                                         f"{self.current_room_name}")
+                        await ctx.send_death(death_message)
+            if (self.received_deathlink
+                    and (current_game_mode == memory.ingame_mode or current_game_mode == memory.map_mode)):
+                tank = memory.tanks["Energy Tank"]
+                write_list = []
+                write_list.append((tank.current_address, [0], self.iwram))
+                write_list.append((tank.current_address + 1, [0], self.iwram))
+                write_successful = await self.write_ram_values_guarded(ctx, write_list)
+                if write_successful:
+                    self.received_deathlink = False
+            if self.sent_deathlink or self.received_deathlink:
+                if (current_game_mode == memory.game_over_mode
+                        or (current_game_mode == memory.ingame_mode and current_energy > 0)):
+                    self.sent_deathlink = False
+                    self.received_deathlink = False
 
     async def read_ram_values_guarded(self, ctx: "BizHawkClientContext", location: int, size: int, domain: str):
         value = await bizhawk.guarded_read(ctx.bizhawk_ctx,

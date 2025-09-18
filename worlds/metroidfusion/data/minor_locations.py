@@ -106,3 +106,11 @@ location_order = [
 	'Sector 6 (NOC) -- Spaceboost Alley -- Lower Item',
 	'Sector 6 (NOC) -- Spaceboost Alley -- Upper Item'
 ]
+
+extended_boss_locations = [
+	'Sector 2 (TRO) -- Zazabi Speedway -- Upper Item',
+	'Sector 2 (TRO) -- Zazabi Speedway -- Lower Item',
+	'Sector 6 (NOC) -- X-B.O.X. Garage -- Upper Item',
+	'Sector 6 (NOC) -- X-B.O.X. Garage -- Lower Item',
+	'Main Deck -- Restricted Airlock',
+]

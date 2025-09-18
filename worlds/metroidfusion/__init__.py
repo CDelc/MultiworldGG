@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import warnings
-from copy import deepcopy
+from copy import deepcopy, copy
 
 import Utils
 import settings
@@ -42,6 +42,7 @@ from .data.logic.regions.Sector4 import Sector4Hub, Sector4TubeLeft, Sector4Tube
 from .data.logic.regions.Sector5 import Sector5Hub, Sector5TubeLeft, Sector5TubeRight
 from .data.logic.regions.Sector6 import (Sector6Hub, Sector6TubeLeft, Sector6TubeRight,
                                          Sector6RestrictedZoneElevatorToTourian)
+from .data.major_locations import boss_locations
 from .data.offworld_sprites import offworld_sprites, SpriteNames
 from .data.room_names import room_names
 from .Client import MetroidFusionClient
@@ -63,7 +64,7 @@ class MetroidFusionWeb(WebWorld):
     theme = "ocean"
     setup = Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up Metroid Fusion for MultiworldGG on your computer.",
+        "A guide to setting up Metroid Fusion for Archipelago on your computer.",
         "English",
         "multiworld_en.md",
         "multiworld/en",
@@ -83,7 +84,6 @@ class MetroidFusionWorld(World):
     """
     settings: typing.ClassVar[MetroidFusionSettings]
     game = "Metroid Fusion"
-    author: str = "Rosalie"
     options_dataclass = MetroidFusionOptions
     options: MetroidFusionOptions
 
@@ -109,7 +109,7 @@ class MetroidFusionWorld(World):
     item_name_to_id = {item: item_data.mars_id for item, item_data in item_table.items()}
     location_name_to_id = {location.name: location.ap_id for location in all_locations}
     location_name_groups = location_groups
-    version = 14
+    version = 15
     debug = False
 
 
@@ -137,12 +137,6 @@ class MetroidFusionWorld(World):
         return MetroidFusionItem(name, ItemClassification.progression, None, self.player)
 
     def generate_early(self) -> None:
-        if self.options.SimpleWallJumpsInRegionLogic:
-            warnings.warn(f"SimpleWallJumpsInRegionLogic for player {self.player_name} is depreecated and will be removed in a future version. "
-                            "Please remove it from your options and switch to WallJumpTrickDifficulty.")
-        if self.options.TrickyShinesparksInRegionLogic:
-            warnings.warn(f"TrickyShinesparksInRegionLogic for player {self.player_name} is depreecated and will be removed in a future version. "
-                            "Please remove it from your options and switch to ShinesparkTrickDifficulty.")
         for origin, destination in default_region_map.items():
             self.region_map[origin.name] = destination.name
         for origin, destination in reverse_region_map.items():
@@ -226,14 +220,6 @@ class MetroidFusionWorld(World):
             region.locations.append(event_location)
             event_location.place_locked_item(self.create_event(event[3]))
 
-    @staticmethod
-    def connect_entrance_callback(_er_state, exits: list[Entrance], entrances: list[Entrance]):
-        for i, connected_exit in enumerate(exits):
-            connected_exit.name = (connected_exit.name.replace(" Destination", "") +
-                                   " to " +
-                                   entrances[i].connected_region.name)
-        return True
-
     def connect_entrances(self) -> None:
         self.er_map = randomize_entrances(self, True, self.er_group_mappings).pairings
         for connection in self.er_map:
@@ -254,7 +240,7 @@ class MetroidFusionWorld(World):
             self.preplaced_item = self.random.choice(sphere_1_item_names)
         elif self.options.EarlyProgression == self.options.EarlyProgression.option_advanced:
             sphere_1_item_names = ["Morph Ball", "Missile Data", "Screw Attack"]
-            if self.options.TrickyShinesparksInRegionLogic:
+            if self.options.ShinesparkTrickDifficulty >= self.options.ShinesparkTrickDifficulty.option_advanced:
                 sphere_1_item_names.append("Speed Booster")
             self.preplaced_item = self.random.choice(sphere_1_item_names)
 
@@ -273,16 +259,37 @@ class MetroidFusionWorld(World):
             sphere_1_item_names.remove(starting_item)
         self.preplaced_item = self.random.choice(sphere_1_item_names)
 
+    def build_metroid_boss_list(self):
+        if self.options.InfantMetroidLocations == self.options.InfantMetroidLocations.option_bosses_encouraged:
+            boss_count = self.random.randint(3, 5)
+            bosses = self.random.sample(boss_locations, k=boss_count)
+            chosen_bosses = []
+            for boss in bosses:
+                chance = self.random.randint(0, 1)
+                if chance == 1:
+                    chosen_bosses.append(boss)
+            return chosen_bosses
+        elif self.options.InfantMetroidLocations == self.options.InfantMetroidLocations.option_only_bosses:
+            bosses = copy(boss_locations)
+            self.random.shuffle(bosses)
+            return bosses
+        else:
+            return []
+
     def create_items(self):
         itempool = []
         if self.options.GameMode == self.options.GameMode.option_vanilla:
             self.build_early_progression_for_vanilla()
         elif self.options.GameMode == self.options.GameMode.option_open_sector_hub:
             self.build_early_progression_for_osh()
+        self.multiworld.local_early_items[self.player][self.preplaced_item] = 1
         item_quantities = deepcopy(default_item_quantities)
         infant_metroids_in_pool = self.options.InfantMetroidsInPool.value
+        if self.options.InfantMetroidLocations == self.options.InfantMetroidLocations.option_only_bosses:
+            infant_metroids_in_pool = min(infant_metroids_in_pool, len(boss_locations))
         item_quantities["Infant Metroid"] = infant_metroids_in_pool
         item_quantities["Power Bomb Tank"] -= infant_metroids_in_pool
+        metroid_bosses = self.build_metroid_boss_list()
         energy_tanks = 0
         max_progressive_energy_tanks = 10
         for item in item_table:
@@ -296,7 +303,13 @@ class MetroidFusionWorld(World):
                 energy_tanks += 1
                 if energy_tanks > max_progressive_energy_tanks:
                     item.classification = ItemClassification.useful
-            self.multiworld.itempool.append(item)
+            if item.name == "Infant Metroid" and len(metroid_bosses) > 0:
+                boss_location = metroid_bosses.pop()
+                self.get_location(boss_location).place_locked_item(item)
+                if self.debug:
+                    print(f"Placed Infant Metroid at {boss_location}")
+            else:
+                self.multiworld.itempool.append(item)
 
     def set_rules(self):
         for location in all_locations:
@@ -308,8 +321,11 @@ class MetroidFusionWorld(World):
             logic_object.requirements, logic_object.energy_tanks = create_logic_rule_for_list(location_data.requirements, self.options, self.debug)
             add_rule(ap_location, logic_object.logic_rule)
         infant_metroids_required = self.options.InfantMetroidsRequired.value
-        if infant_metroids_required > self.options.InfantMetroidsInPool.value:
-            infant_metroids_required = self.options.InfantMetroidsInPool.value
+        infant_metroids_in_pool = self.options.InfantMetroidsInPool.value
+        if self.options.InfantMetroidLocations == self.options.InfantMetroidLocations.option_only_bosses:
+            infant_metroids_in_pool = min(infant_metroids_in_pool, len(boss_locations))
+        if infant_metroids_required > infant_metroids_in_pool:
+            infant_metroids_required = infant_metroids_in_pool
 
 
         add_rule(
@@ -323,6 +339,7 @@ class MetroidFusionWorld(World):
             add_rule(
                 self.get_location("Victory"),
                 lambda state: state.has("Plasma Beam", self.player)
+                              and state.has("Varia Suit", self.player)
                               and state.has("Energy Tank", self.player, 6))
         if self.options.CombatDifficulty < self.options.CombatDifficulty.option_advanced:
             add_rule(
@@ -333,7 +350,7 @@ class MetroidFusionWorld(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
     def pre_fill(self) -> None:
-        self.multiworld.local_early_items[self.player][self.preplaced_item] = 1
+        pass
 
     def generate_basic(self):
         pass
@@ -761,7 +778,11 @@ class MetroidFusionWorld(World):
             "PowerBombDataAmmo": self.options.PowerBombDataAmmo.value,
             "PowerBombTankAmmo": self.options.PowerBombTankAmmo.value,
             "TrickyShinesparks": self.options.TrickyShinesparksInRegionLogic.value,
+            "ShinesparkDifficulty": self.options.ShinesparkTrickDifficulty.value,
+            "WallJumpDifficulty": self.options.WallJumpTrickDifficulty.value,
+            "CombatDifficulty": self.options.CombatDifficulty.value,
             "GameMode": self.options.GameMode.value,
+            "DeathLink": self.options.death_link.value,
             "UTOptions": self.options.as_dict(
                 "GameMode",
                 "InfantMetroidsInPool",

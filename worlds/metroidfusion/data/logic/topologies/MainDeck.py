@@ -1,4 +1,5 @@
 from ..Connection import Connection
+from ..Requirement import PONRRequirement
 from ..VariableConnection import VariableConnection
 from ..Requirements import *
 from ..FusionLocation import FusionLocation
@@ -16,7 +17,7 @@ MainDeckHub.connections = [
     Connection(VentilationZone, [CanDefeatSmallGeron]),
     Connection(LowerArachnusArena, [HasMorph]),
     Connection(UpperArachnusArena, [
-        Requirement(["Morph Ball", "Screw Attack"], [HasSpaceJump, CanDoSimpleWallJump])
+        Requirement(["Morph Ball", "Screw Attack"], [CanJumpHigh, CanDoSimpleWallJump])
     ]),
     Connection(HabitationDeckElevatorBottom, [HasKeycard2]),
     Connection(SectorHubElevatorTop, [HasMorph, CanDoAdvancedShinespark], one_way=True),
@@ -29,7 +30,10 @@ MainDeckHub.connections = [
 ]
 
 VentilationZone.connections = [
-    Connection(UpperArachnusArena, [CanFightBeginnerBoss])
+    Connection(UpperArachnusArena, [
+        Requirement(["Morph Ball"], [CanFightBeginnerBoss]),
+        PONRRequirement([], [CanFightBeginnerBoss])
+    ])
 ]
 
 OperationsDeckElevatorBottom.connections = [
@@ -55,7 +59,10 @@ HabitationDeckElevatorTop.connections = [
 ]
 
 ReactorZone.connections = [
-    Connection(YakuzaZone, [CanAccessYakuza]),
+    Connection(YakuzaZone, [
+        PONRRequirement([], [CanAccessYakuza]),
+        Requirement(["Space Jump"], [CanAccessYakuza]),
+    ]),
     Connection(AuxiliaryReactor, [HasWaveBeam], one_way=True),
     Connection(Sector2NettoriZone, [CanCrossFromReactorToSector2], one_way=True)
 ]

@@ -1,4 +1,5 @@
 from ..Connection import Connection
+from ..Requirement import PONRRequirement
 from ..VariableConnection import VariableConnection
 from ..Requirements import *
 from ..FusionLocation import FusionLocation
@@ -46,10 +47,17 @@ Sector1FirstStabilizerZone.connections = [
 ]
 
 Sector1SecondStabilizerZone.connections = [
-    Connection(Sector1ChargeCoreZone, [HasMorph], one_way=True),
+    Connection(Sector1ThirdStabilizerZone, []),
     Connection(Sector1TourianExit, [
         Requirement(["Screw Attack"], [])
     ], one_way=True)
+]
+
+Sector1ThirdStabilizerZone.connections = [
+    Connection(Sector1ChargeCoreZone, [
+        PONRRequirement(["Morph Ball"], [CanDefeatThirdStabilizer]),
+        Requirement(["Morph Ball", "Missile Data"], [CanDefeatThirdStabilizer])
+    ], one_way=True),
 ]
 
 Sector1ChargeCoreZone.connections = [
@@ -103,10 +111,13 @@ Sector1SecondStabilizerZone.locations = [
     ]),
     FusionLocation("Sector 1 (SRX) -- Lava Lake -- Upper Left Item", False, [
         HasSpaceJump,
-        CanDoAdvancedShinespark
+        CanDoBeginnerShinespark
     ]),
     FusionLocation("Sector 1 (SRX) -- Lava Lake -- Upper Right Item", False, []),
-    FusionLocation("Sector 1 (SRX) -- Stabilizer Storage", False, []),
+]
+
+Sector1ThirdStabilizerZone.locations = [
+    FusionLocation("Sector 1 (SRX) -- Stabilizer Storage", False, [CanDefeatThirdStabilizer])
 ]
 
 Sector1ChargeCoreZone.locations = [
@@ -126,11 +137,17 @@ Sector1AfterChargeCoreZone.locations = [
 ]
 
 Sector1TourianHub.locations = [
-    FusionLocation("Sector 1 (SRX) -- Animorphs Cache", False, [CanReachAnimorphs]),
+    FusionLocation("Sector 1 (SRX) -- Animorphs Cache", False, [
+        PONRRequirement([], [CanReachAnimorphs]),
+        Requirement(["Space Jump"], [CanReachAnimorphs]),
+    ]),
     FusionLocation("Sector 1 (SRX) -- Ridley Arena", True, [
-        CanFightLateGameBoss,
-        CanFightLategameBossOnAdvanced,
-        CanFightBossOnExpert
+        Requirement(["Charge Beam", "Wave Beam"], [CanFightLateGameBoss]),
+        Requirement(["Power Bomb Data"], [CanFightLateGameBoss]),
+        Requirement(["Charge Beam", "Wave Beam"], [CanFightLategameBossOnAdvanced]),
+        Requirement(["Power Bomb Data"], [CanFightLategameBossOnAdvanced]),
+        Requirement(["Charge Beam", "Wave Beam"], [CanFightBossOnExpert]),
+        Requirement(["Power Bomb Data"], [CanFightBossOnExpert])
     ]),
     FusionLocation("Sector 1 (SRX) -- Ripper Maze", False, [CanDiffusionMissile])
 ]

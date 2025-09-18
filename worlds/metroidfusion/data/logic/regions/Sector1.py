@@ -19,6 +19,9 @@ class Sector1FirstStabilizerZone(FusionRegion):
 class Sector1SecondStabilizerZone(FusionRegion):
     name = "Sector 1 Second Stabilizer Zone"
 
+class Sector1ThirdStabilizerZone(FusionRegion):
+    name = "Sector 1 Third Stabilizer Zone"
+
 class Sector1ChargeCoreZone(FusionRegion):
     name = "Sector 1 Charge Core Zone"
 
@@ -41,6 +44,7 @@ sector_1_regions = [
     Sector1Antechamber,
     Sector1FirstStabilizerZone,
     Sector1SecondStabilizerZone,
+    Sector1ThirdStabilizerZone,
     Sector1ChargeCoreZone,
     Sector1AfterChargeCoreZone,
     Sector1TourianExit,

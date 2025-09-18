@@ -26,3 +26,18 @@ location_order = [
 	"Main Deck -- Habitation Deck -- Animals",
 	"Main Deck -- Auxiliary Power Station"
 ]
+
+boss_locations = [
+	"Main Deck -- Arachnus Arena -- Core X",
+	"Sector 1 (SRX) -- Charge Core Arena -- Core X",
+	"Sector 2 (TRO) -- Zazabi Arena",
+	"Sector 4 (AQA) -- Serris Arena",
+	"Sector 3 (PYR) -- Data Room",
+	"Sector 6 (NOC) -- Varia Core-X Arena",
+	"Sector 3 (PYR) -- Main Boiler Control Room -- Core X",
+	"Main Deck -- Yakuza Arena",
+	"Sector 2 (TRO) -- Nettori Arena",
+	"Sector 5 (ARC) -- Nightmare Arena",
+	"Sector 6 (NOC) -- X-B.O.X. Arena",
+	"Sector 1 (SRX) -- Ridley Arena",
+]

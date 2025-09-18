@@ -7,6 +7,9 @@ from .Items import mars_name_to_ap_name, major_jingles
 from .data.locations import fusion_regions
 from .data.logic.Requirement import Requirement
 from .data.logic import topologies
+from .data.major_locations import boss_locations
+from .data.minor_locations import extended_boss_locations
+
 
 class MetroidFusionLocation(Location):
     game = "Metroid Fusion"
@@ -265,6 +268,8 @@ sector_6_locations = [
 location_groups = {
     "ShinesparkLocations": difficult_speed_booster_list,
     "MajorLocations": major_location_names,
+    "BossLocations": boss_locations,
+    "BossLocationsExtended": [*boss_locations, *extended_boss_locations],
     "MainDeckLocations": main_deck_locations,
     "Sector1Locations": sector_1_locations,
     "Sector2Locations": sector_2_locations,
