@@ -10,7 +10,7 @@ As we are using Bizhawk, this guide is only applicable to Windows and Linux syst
   - Detailed installation instructions for Bizhawk can be found at the above link.
   - Windows users must run the prerequisite installer first, which can also be found at the above link.
 - The built-in Bizhawk client, which can be installed [here](https://github.com/MultiworldGG/MultiworldGG/releases)
-- A US copy of Mario & Luigi: Superstar Saga
+- A US copy of Metroid Fusion
 
 ## Optional Software
 
