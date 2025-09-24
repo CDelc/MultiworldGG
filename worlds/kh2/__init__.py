@@ -15,9 +15,9 @@ from .Rules import *
 from .Subclasses import KH2Item
 
 
-def launch_client(*args: str):
-    from .ClientStuff.Client import main
-    launch_component(main, name="KH2Client", args=args)
+def launch_client():
+    from .ClientStuff.Client import launch
+    launch_component(launch, name="KH2Client")
 
 
 components.append(Component("KH2 Client", func=launch_client, component_type=Type.CLIENT))

@@ -168,18 +168,21 @@ class TrackerCommandProcessor(ClientCommandProcessor):
         updateTracker(self.ctx)
         baseLocs = len(self.ctx.tracker_core.locations_available)
         counter = Counter()
+        goal_items = []
         items_to_check = {item.name for item in self.ctx.tracker_core.multiworld.get_items() if item.player == self.ctx.tracker_core.player_id and item.advancement}
         for item in items_to_check:
             self.ctx.tracker_core.manual_items.append(item)
-            updateTracker(self.ctx)
+            update_ret = updateTracker(self.ctx)
             newlocs = len(self.ctx.tracker_core.locations_available) - baseLocs
             if newlocs:
                 counter[item] = newlocs
+            if self.ctx.tracker_core.multiworld.completion_condition[self.ctx.tracker_core.player_id](update_ret.state):
+                goal_items.append(item)
             self.ctx.tracker_core.manual_items.pop()
         if not counter:
             logger.info("No item will unlock any checks right now.")
         for (item, count) in counter.most_common():
-            logger.info(f"{item} unlocks {count} check{'s' if count > 1 else ''}.")
+            logger.info(f"{item} unlocks {count} check{'s' if count > 1 else ''}{' (and goal)' if item in goal_items else ''}.")
         updateTracker(self.ctx)
 
     def _cmd_toggle_auto_tab(self):
@@ -538,6 +541,22 @@ class TrackerGameContext(CommonContext):
                 "name" in section and section["name"] in entrance_cache for section in location["sections"]
             )
         }
+        poptracker_entrance_mapping = self.tracker_world.poptracker_entrance_mapping
+        if poptracker_entrance_mapping:
+            tempCoords = {
+                (map_loc["x"],map_loc["y"]):[poptracker_entrance_mapping[section["name"]] for section in location["sections"]
+                    if "name" in section and  section["name"] in poptracker_entrance_mapping and poptracker_entrance_mapping[section["name"]] in entrance_cache]
+                for location in map_locs
+                for map_loc in location["map_locations"]
+                if map_loc["map"] == m["name"] and any(
+                    "name" in section and  section["name"] in poptracker_entrance_mapping and poptracker_entrance_mapping[section["name"]] in entrance_cache for section in location["sections"]
+                )
+            }
+            for maploc, seclist in tempCoords.items():
+                if maploc in dcoords:
+                    dcoords[maploc] += seclist
+                else:
+                    dcoords[maploc] = seclist
         self.coord_dict,self.deferred_dict = self.map_page_coords_func(coords,dcoords,self.use_split)
         if self.tracker_world.location_setting_key:
             self.update_location_icon_coords()
@@ -669,16 +688,31 @@ class TrackerGameContext(CommonContext):
 
             @staticmethod
             def update_color(self, entranceDict):
-                passable = any(status.endswith("passable") for status in entranceDict.values())
-                impassable = any(status.endswith("impassable") for status in entranceDict.values())
+                passable = any(status == "passable" for status in entranceDict.values())
+                impassable = any(status == "impassable" for status in entranceDict.values())
                 if passable:
                     self.color = "#"+get_ut_color("in_logic")
                 elif impassable:
                     self.color = "#"+get_ut_color("out_of_logic")
                 else:
                     self.color = "#"+get_ut_color("collected")
-
-
+            
+            def get_text(self):
+                ctx = manager.get_running_app().ctx
+                host_world:AutoWorld.World = ctx.tracker_core.get_current_world()
+                sReturn = []
+                for entrance, status in self.locationDict.items():
+                    color = get_ut_color("out_of_logic")
+                    if status == "passed":
+                        color = get_ut_color("collected_light")
+                    elif status == "passable":
+                        color = get_ut_color("in_logic")
+                    sReturn.append(f"{entrance} : [color={color}]{status}[/color]")
+                    if host_world:
+                        real_entrance = host_world.get_entrance(entrance)
+                        if real_entrance.connected_region:
+                            sReturn.append(f"\tconnects to ({real_entrance.connected_region.name})")
+                return "\n".join(sReturn)
 
             
         class APLocationMixed(ApLocation):
@@ -972,7 +1006,7 @@ class TrackerGameContext(CommonContext):
                 if self.defered_entrance_datastorage_keys:
                     if isinstance(self.defered_entrance_datastorage_keys,str):
                         self.defered_entrance_datastorage_keys = [self.defered_entrance_datastorage_keys]
-                    self.defered_entrance_datastorage_keys = [key.format(player=self.tracker_core.player_id, team=self.team) for key in self.defered_entrance_datastorage_keys]
+                    self.defered_entrance_datastorage_keys = [key.format(player=self.slot, team=self.team) for key in self.defered_entrance_datastorage_keys]
                     self.defered_entrance_callback = getattr(self.tracker_core.get_current_world(),"reconnect_found_entrances",None)
                     if not self.defered_entrance_callback or not callable(self.defered_entrance_callback):
                         self.defered_entrance_callback = None
@@ -1004,11 +1038,13 @@ class TrackerGameContext(CommonContext):
                             self.updateTracker()
                         elif args["key"] == icon_key:
                             self.update_location_icon_coords()
-                        elif args["key"] in self.defered_entrance_datastorage_keys:
-                            self.update_defered_entrances(args["key"])
                     elif "keys" in args:
                         if icon_key in args["keys"]:
                             self.update_location_icon_coords()
+                if self.defered_entrance_datastorage_keys:
+                    if "key" in args and args["key"] in self.defered_entrance_datastorage_keys:
+                            self.update_defered_entrances(args["key"])
+                    elif "keys" in args:
                         for key in self.defered_entrance_datastorage_keys:
                             if key in args["keys"]:
                                 self.update_defered_entrances(key)

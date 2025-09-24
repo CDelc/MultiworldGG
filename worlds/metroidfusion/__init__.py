@@ -64,7 +64,7 @@ class MetroidFusionWeb(WebWorld):
     theme = "ocean"
     setup = Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up Metroid Fusion for Archipelago on your computer.",
+        "A guide to setting up Metroid Fusion for MultiworldGG on your computer.",
         "English",
         "multiworld_en.md",
         "multiworld/en",
@@ -84,6 +84,7 @@ class MetroidFusionWorld(World):
     """
     settings: typing.ClassVar[MetroidFusionSettings]
     game = "Metroid Fusion"
+    author: str = "Rosalie"
     options_dataclass = MetroidFusionOptions
     options: MetroidFusionOptions
 

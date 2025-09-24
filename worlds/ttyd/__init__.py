@@ -58,7 +58,7 @@ class TTYDSettings(Group):
 
     class RomFile(UserFilePath):
         """File name of the TTYD US iso"""
-        copy_to = "Paper Mario - The Thousand Year Door.iso"
+        copy_to = "Paper Mario - The Thousand-Year Door (USA).iso"
         description = "US TTYD .iso File"
 
     dolphin_path: DolphinPath = DolphinPath(None)
@@ -72,7 +72,7 @@ class TTYDWorld(World):
     In the game, when Mario and Princess Peach get involved in the search for a mystic treasure that holds great fortune, Peach is kidnapped by an alien group called the X-Nauts; 
     Mario sets out to find the treasure and save the princess.
     """
-    game = "Paper Mario The Thousand Year Door"
+    game = "Paper Mario: The Thousand-Year Door"
     author: str = "jamesbrq"
     web = TTYDWebWorld()
 
@@ -167,8 +167,8 @@ class TTYDWorld(World):
             self.lock_item("Shadow Queen", "Victory")
         if self.options.limit_chapter_eight:
             for location in [location for location in palace + riddle_tower if "Palace Key" in location.name]:
-                if "Palace Key (Riddle Tower)" in location.name:
-                    self.lock_item(location.name, "Palace Key (Riddle Tower)")
+                if "Palace Key (Tower)" in location.name:
+                    self.lock_item(location.name, "Palace Key (Tower)")
                 elif "Palace Key" in location.name:
                     self.lock_item(location.name, "Palace Key")
             self.lock_item("Palace of Shadow Gloomtail Room: Star Key", "Star Key")
@@ -223,11 +223,11 @@ class TTYDWorld(World):
                 freq = item_frequencies.get(item.itemName, 1)
                 required_items += [item.itemName for _ in range(freq)]
         for itemName in required_items:
-            if itemName in ["Star Key", "Palace Key", "Palace Key (Riddle Tower)"] and self.options.palace_skip:
+            if itemName in ["Star Key", "Palace Key", "Palace Key (Tower)"] and self.options.palace_skip:
                 continue
             item = self.create_item(itemName)
             if itemName in self.limited_item_names:
-                if itemName not in ["Star Key", "Palace Key", "Palace Key (Riddle Tower)"]:
+                if itemName not in ["Star Key", "Palace Key", "Palace Key (Tower)"]:
                     self.limited_items.append(item)
                     added_items += 1
             else:
@@ -307,7 +307,8 @@ class TTYDWorld(World):
 
     def create_item(self, name: str) -> TTYDItem:
         item = item_table.get(name, ItemData(None, name, ItemClassification.progression))
-        return TTYDItem(item.itemName, item.progression, item.code, self.player)
+        progression = (ItemClassification.useful if item.itemName == "Goombella" and not self.options.tattlesanity else item.progression)
+        return TTYDItem(item.itemName, progression, item.code, self.player)
 
     def lock_item(self, location: str, item_name: str):
         item = self.create_item(item_name)

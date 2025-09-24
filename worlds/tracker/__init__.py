@@ -20,7 +20,7 @@ def launch_client(*args):
     from .TrackerClient import launch as TCMain
     launch(TCMain, name="Universal Tracker client", args=args)
 
-UT_VERSION = "v0.2.18"
+UT_VERSION = "v0.2.20"
 
 class CurrentTrackerState(NamedTuple):
     all_items: Counter
@@ -119,6 +119,9 @@ class UTMapTabData:
     poptracker_name_mapping: dict[str, int]
     """Mapping from [poptracker name : datapackage location id] """
 
+    poptracker_entrance_mapping: dict[str, str]
+    """Mapping from [poptracker name : ap entrance name] used for entrance tracking"""
+
     location_setting_key: str
     """Data storage key used to determine where to place the location indicator"""
 
@@ -131,7 +134,8 @@ class UTMapTabData:
             map_page_index: Callable[[Any], int] | None = None, external_pack_key: str = "",
             poptracker_name_mapping: dict[str, int] | None = None,
             location_setting_key: str|None = None,
-            location_icon_coords: Callable[[int, Any], tuple[int,int]|None]= None, **kwargs):
+            location_icon_coords: Callable[[int, Any], tuple[int,int]]|None= None,
+            poptracker_entrance_mapping: dict[str, str]|None = None, **kwargs):
         self.map_page_folder = map_page_folder
         if isinstance(map_page_maps, str):
             self.map_page_maps = [map_page_maps]
@@ -152,6 +156,10 @@ class UTMapTabData:
             self.poptracker_name_mapping = poptracker_name_mapping
         else:
             self.poptracker_name_mapping = {}
+        if poptracker_entrance_mapping:
+            self.poptracker_entrance_mapping = poptracker_entrance_mapping
+        else:
+            self.poptracker_entrance_mapping = {}
         self.external_pack_key = external_pack_key
         self.location_setting_key = location_setting_key
         if isinstance(self.location_setting_key, str):
