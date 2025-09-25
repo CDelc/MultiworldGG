@@ -5,7 +5,7 @@ import weakref
 from enum import Enum, auto
 from typing import Optional, Callable, List, Iterable, Tuple
 
-from Utils import local_path, open_filename, is_frozen
+from Utils import local_path, open_filename, is_frozen, instance_name
 
 try:
     from Utils import instance_name as apname
