@@ -96,7 +96,7 @@ class SimpsonsHitAndRunWorld(World):
         location_game_complete.place_locked_item(
             SimpsonsHitAndRunItem("__Victory__", ItemClassification.progression, None, player=self.player))
 
-        cards_data = json.loads(pkgutil.get_data(__name__, "data\\cards.json").decode())
+        cards_data = json.loads(pkgutil.get_data(__name__, "data/cards.json").decode())
         after_create_regions(self, self.multiworld, self.player, cards_data)
 
     def create_items(self):
