@@ -273,6 +273,7 @@ if baseclasses_loaded:
         """
 
         game: str = "Donkey Kong 64"
+        author: str = "2dos, Killklli, & Ballaam"
         options_dataclass = DK64Options
         options: DK64Options
         topology_present = False
