@@ -76,10 +76,14 @@ def after_create_regions(world: World, multiworld: MultiWorld, player: int, card
     card_table.sort(key=lambda c: (int(c["level"].split()[-1]), c["id"]))
 
 
-    locationNamesToRemove = [
-        loc["name"] for loc in world.location_table
-        if "CARD" in loc["name"] and loc["name"] not in all_chosen_card_names
-    ]
+    if not hasattr(multiworld, "generation_is_fake"):
+        print("FAKE GENERATION")
+        locationNamesToRemove = [
+            loc["name"] for loc in world.location_table
+            if "CARD" in loc["name"] and loc["name"] not in all_chosen_card_names
+        ]
+    else:
+        locationNamesToRemove = []
 
     for region in multiworld.regions:
         if region.player == player:

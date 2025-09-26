@@ -49,7 +49,8 @@ class LethalCompanyWeb(WebWorld):
             options.MaxMoneyCheck,
             options.ModifyScrapSpawns,
             options.ExcludeShotguns,
-            options.ExcludeHive
+            options.ExcludeHive,
+            options.ExcludeEgg
         ], True),
         OptionGroup("Weights", [
             options.MoneyWeight,
@@ -106,7 +107,7 @@ class LethalCompanyWorld(World):
     }
 
     data_version = 7
-    required_client_version = (0, 5, 0)
+    required_client_version = (0, 6, 2)
     web = LethalCompanyWeb()
     initial_world: string
     scrap_map = {}
@@ -119,6 +120,7 @@ class LethalCompanyWorld(World):
     bestiary_names = []
     scrap_names = []
     spoiler_text = ""
+    location_count = 0
 
     def __init__(self, multiworld, player: int):
         super().__init__(multiworld, player)
@@ -131,7 +133,7 @@ class LethalCompanyWorld(World):
 
         self.imported_data = GetImportedData()
 
-        generate_locations(self)
+        self.location_count = len(generate_locations(self))
 
         self.moons = self.slot_item_data.moons
 
@@ -167,10 +169,8 @@ class LethalCompanyWorld(World):
                 if not name == self.initial_world:
                     itempool.append(name)
 
-        total_locations = len(generate_locations(self))
-
         # Fill remaining items with randomly generated junk
-        while len(itempool) < total_locations:
+        while len(itempool) < self.location_count:
             itempool.append(self.get_filler_item_name())
 
         # Convert itempool into real items

@@ -85,7 +85,6 @@ if os.path.exists(config_file):
                     __version__ = new_version
                     version_tuple = tuplize_version(__version__)
                     version = Version(*version_tuple)
-                    
     except Exception as e:
         logging.warning("Failed to load configuration from %s: %s", config_file, e)
 

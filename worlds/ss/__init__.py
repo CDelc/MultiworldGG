@@ -94,7 +94,6 @@ class SSContainer(APPlayerContainer, metaclass=AutoPatchRegister):
     """
 
     game: str = "Skyward Sword"
-    author: str = "bcats"
     patch_file_ending: str = ".apssr"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -128,6 +127,7 @@ class SSWorld(World):
     options: SSOptions
        
     game: ClassVar[str] = "Skyward Sword"
+    author: str = "bcats"
     topology_present: bool = True
     web = SSWeb()
     required_client_version: tuple[int, int, int] = (0, 5, 1)
