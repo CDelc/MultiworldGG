@@ -17,6 +17,7 @@ from .Regions import sims4_careers, sims4_aspiration_milestones, sims4_skill_dep
     sims4_regions
 from .Rules import set_rules as ts4_set_rules
 from .Groups import location_name_groups, item_name_groups
+from .Version import VERSION, Sims4Version
 
 def run_client():
     from .Client import main
@@ -55,7 +56,7 @@ class Sims4World(World):
     """
 
     game = "The Sims 4"
-    author: str = "bennydreamly & itsmisscactus & mrsummer360"
+    author: str = "bennydreamly, itsmisscactus & mrsummer360"
     topology_present = False
     web = Sims4Web()
 
@@ -171,7 +172,8 @@ class Sims4World(World):
             "game_packs": self.options.game_packs.value,
             "stuff_packs": self.options.stuff_packs.value,
             "cas_kits": self.options.cas_kits.value,
-            "build_kits": self.options.build_kits.value
+            "build_kits": self.options.build_kits.value,
+            "version": Sims4Version.tuple_to_str(VERSION),
         }
         return slot_data
 

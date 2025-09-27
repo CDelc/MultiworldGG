@@ -57,8 +57,9 @@
                 {{ world.web.display_name | default(game_name) }}
                 <span class="star-icon" data-game="{{ game_name }}" title="Add to favorites">★</span>
             </summary>
-            {% if world.author %}
-            <div class="author_credit">created by {{ world.author }}</div>
+            {% set authors = get_world_authors(world) %}
+            {% if authors %}
+            <div class="author_credit">created by {{ authors }}</div>
             {% endif %}
             {{ world.__doc__ | default("No description provided.", true) }}<br />
             <a href="{{ url_for("game_info", game=game_name, lang="en") }}">Game Page</a>
