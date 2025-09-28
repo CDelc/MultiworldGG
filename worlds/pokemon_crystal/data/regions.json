@@ -4124,7 +4124,6 @@
     "johto": false,
     "exits": [
       "REGION_PEWTER_CITY",
-      "REGION_ROUTE_4",
       "REGION_MOUNT_MOON"
     ],
     "trainers": [
@@ -4683,7 +4682,6 @@
   "REGION_ROUTE_4": {
     "johto": false,
     "exits": [
-      "REGION_ROUTE_3",
       "REGION_CERULEAN_CITY",
       "REGION_MOUNT_MOON"
     ],
