@@ -4,47 +4,6 @@ from BaseClasses import CollectionState
 from worlds.generic.Rules import set_rule
 
 from .constants import *
-from .logic_helpers import has_ability, has_sword
-
-if TYPE_CHECKING:
-    from . import TunicWorld
-
-
-class TunicLocationData(NamedTuple):
-    loc_group: str
-    er_region: str
-
-
-fuse_location_table: dict[str, TunicLocationData] = {
-    "Overworld - [Southeast] Activate Fuse": TunicLocationData("Overworld", "Overworld"),
-    "Swamp - [Central] Activate Fuse": TunicLocationData("Swamp", "Swamp Mid"),
-    "Swamp - [Outside Cathedral] Activate Fuse": TunicLocationData("Swamp", "Swamp Mid"),
-    "Cathedral - Activate Fuse": TunicLocationData("Cathedral", "Cathedral Main"),
-    "West Furnace - Activate Fuse": TunicLocationData("West Furnace", "Furnace Fuse"),
-    "West Garden - [South Highlands] Activate Fuse": TunicLocationData("West Garden", "West Garden South Checkpoint"),
-    "Ruined Atoll - [Northwest] Activate Fuse": TunicLocationData("Ruined Atoll", "Ruined Atoll"),
-    "Ruined Atoll - [Northeast] Activate Fuse": TunicLocationData("Ruined Atoll", "Ruined Atoll"),
-    "Ruined Atoll - [Southeast] Activate Fuse": TunicLocationData("Ruined Atoll", "Ruined Atoll Ladder Tops"),
-    "Ruined Atoll - [Southwest] Activate Fuse": TunicLocationData("Ruined Atoll", "Ruined Atoll"),
-    "Library Lab - Activate Fuse": TunicLocationData("Library Lab", "Library Lab"),
-    "Fortress Courtyard - [From Overworld] Activate Fuse": TunicLocationData("Fortress Courtyard", "Fortress Exterior from Overworld"),
-    "Fortress Courtyard - [Near Cave] Activate Fuse": TunicLocationData("Fortress Courtyard", "Fortress Exterior from Overworld"),
-    "Fortress Courtyard - [Upper] Activate Fuse": TunicLocationData("Fortress Courtyard", "Fortress Courtyard Upper"),
-    "Fortress Courtyard - [Central] Activate Fuse": TunicLocationData("Fortress Courtyard", "Fortress Courtyard"),
-    "Beneath the Fortress - Activate Fuse": TunicLocationData("Beneath the Fortress", "Beneath the Vault Back"),
-    "Eastern Vault Fortress - [Candle Room] Activate Fuse": TunicLocationData("Eastern Vault Fortress", "Eastern Vault Fortress"),
-    "Eastern Vault Fortress - [Left of Door] Activate Fuse": TunicLocationData("Eastern Vault Fortress", "Eastern Vault Fortress"),
-    "Eastern Vault Fortress - [Right of Door] Activate Fuse": TunicLocationData("Eastern Vault Fortress", "Eastern Vault Fortress"),
-    "Quarry Entryway - Activate Fuse": TunicLocationData("Quarry Connector", "Quarry Connector"),
-    "Quarry - Activate Fuse": TunicLocationData("Quarry", "Quarry Entry"),
-    "Rooted Ziggurat Lower - [Miniboss] Activate Fuse": TunicLocationData("Rooted Ziggurat Lower", "Rooted Ziggurat Lower Miniboss Platform"),
-    "Rooted Ziggurat Lower - [Before Boss] Activate Fuse": TunicLocationData("Rooted Ziggurat Lower", "Rooted Ziggurat Lower Back"),
-}
-
-from BaseClasses import CollectionState
-from worlds.generic.Rules import set_rule
-
-from .constants import *
 from .logic_helpers import has_ability, has_sword, fuse_activation_reqs
 
 if TYPE_CHECKING:
@@ -90,14 +49,6 @@ fuse_location_groups: dict[str, set[str]] = {}
 for location_name, location_data in fuse_location_table.items():
     fuse_location_groups.setdefault(location_data.loc_group, set()).add(location_name)
     fuse_location_groups.setdefault("Fuses", set()).add(location_name)
-
-
-def has_fuses(fuse_event: str, state: CollectionState, world: "TunicWorld") -> bool:
-    player = world.player
-    if world.options.shuffle_fuses:
-        return state.has_all(fuse_activation_reqs[fuse_event], player)
-
-    return state.has(fuse_event, player)
 
 
 # to be deduplicated in the big refactor

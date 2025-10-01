@@ -2,7 +2,7 @@ from dataclasses import fields
 from logging import warning
 from typing import Any, TypedDict, ClassVar, TextIO
 
-from BaseClasses import Location, Item, Tutorial, ItemClassification, MultiWorld, CollectionState
+from BaseClasses import Location, Item, Tutorial, ItemClassification, MultiWorld, CollectionState, Entrance, Region
 from Options import PlandoConnection, OptionError, PerGameCommonOptions, Range, Removed
 from settings import Group, Bool, FilePath
 from worlds.AutoWorld import WebWorld, World
@@ -46,7 +46,7 @@ class TunicWeb(WebWorld):
     tutorials = [
         Tutorial(
             tutorial_name="Multiworld Setup Guide",
-            description="A guide to setting up the TUNIC Randomizer for MultiworldGG multiworld games.",
+            description="A guide to setting up the TUNIC Randomizer for Archipelago multiworld games.",
             language="English",
             file_name="setup_en.md",
             link="setup/en",
@@ -71,7 +71,7 @@ class SeedGroup(TypedDict):
     laurels_zips: bool  # laurels_zips value
     ice_grappling: int  # ice_grappling value
     ladder_storage: int  # ls value
-    laurels_at_10_fairies: bool  # laurels location value
+    laurels_at_10_fairies: bool  # whether laurels location is set to 10 fairies
     entrance_layout: int  # entrance layout value
     has_decoupled_enabled: bool  # for checking that players don't have conflicting options
     plando: list[PlandoConnection]  # consolidated plando connections for the seed group
@@ -93,6 +93,8 @@ class TunicWorld(World):
     options_dataclass = TunicOptions
     settings: ClassVar[TunicSettings]
     item_name_groups = item_name_groups
+    # grass, breakables, fuses, and bells are separated out into their own files
+    # this makes for easier organization, at the cost of stuff like what's directly below here
     location_name_groups = location_name_groups
     for group_name, members in grass_location_name_groups.items():
         location_name_groups.setdefault(group_name, set()).update(members)
@@ -134,8 +136,11 @@ class TunicWorld(World):
     passthrough: dict[str, Any]
     ut_can_gen_without_yaml = True  # class var that tells it to ignore the player yaml
     tracker_world: ClassVar = ut_stuff.tracker_world
+    disconnected_entrances: dict[Entrance, Region]
+    found_entrances_datastorage_key: list[str]
 
     def generate_early(self) -> None:
+        # if you have multiple APWorlds, we want it to fail here instead of at the end of gen
         try:
             int(self.settings.disable_local_spoiler)
         except AttributeError:
@@ -143,6 +148,7 @@ class TunicWorld(World):
                             "This would cause an error at the end of generation.\n"
                             "Please remove one of them, most likely the one in lib/worlds.")
 
+        # hidden option for me to do multi-slot test gens with random options more easily
         if self.options.all_random:
             for option_name in (attr.name for attr in fields(TunicOptions)
                                 if attr not in fields(PerGameCommonOptions)):
@@ -159,8 +165,10 @@ class TunicWorld(World):
 
         check_options(self)
         self.er_regions = tunic_er_regions.copy()
+        # empty plando connections if ER is off
         if self.options.plando_connections and not self.options.entrance_rando:
             self.options.plando_connections.value = ()
+        # modify direction and order of plando connections for more consistency later on
         if self.options.plando_connections:
             def replace_connection(old_cxn: PlandoConnection, new_cxn: PlandoConnection, index: int) -> None:
                 self.options.plando_connections.value.remove(old_cxn)
@@ -192,6 +200,7 @@ class TunicWorld(World):
 
         self.player_location_table = standard_location_name_to_id.copy()
 
+        # setup our defaults for the local_fill option
         if self.options.local_fill == -1:
             if self.options.grass_randomizer:
                 if self.options.breakable_shuffle:
@@ -202,6 +211,10 @@ class TunicWorld(World):
                 self.options.local_fill.value = 40
             else:
                 self.options.local_fill.value = 0
+
+        if self.options.local_fill > 0 and self.settings.limit_grass_rando:
+            # discard grass from non_local if it's meant to be limited
+            self.options.non_local_items.value.discard("Grass")
 
         if self.options.grass_randomizer:
             if self.settings.limit_grass_rando and self.options.local_fill < 95 and self.multiworld.players > 1:
@@ -492,10 +505,6 @@ class TunicWorld(World):
         # pull out the filler so that we can place it manually during pre_fill
         self.fill_items = []
         if self.options.local_fill > 0 and self.multiworld.players > 1:
-            # skip items marked local or non-local, let fill deal with them in its own way
-            # discard grass from non_local if it's meant to be limited
-            if self.settings.limit_grass_rando:
-                self.options.non_local_items.value.discard("Grass")
             all_filler: list[TunicItem] = []
             non_filler: list[TunicItem] = []
             for tunic_item in tunic_items:
@@ -631,6 +640,18 @@ class TunicWorld(World):
 
     def set_rules(self) -> None:
         set_er_location_rules(self)
+
+    def connect_entrances(self) -> None:
+        if (self.options.entrance_rando and self.using_ut
+                and self.multiworld.enforce_deferred_connections in ("on", "default")):
+            ut_stuff.disconnect_entrances(self)
+            ut_stuff.setup_found_entrances_datastorage(self)
+
+    def reconnect_found_entrances(self, key: str, value: Any) -> None:
+        if not value:
+            return
+        else:
+            ut_stuff.reconnect_found_entrance(self, key.split(":")[-1])
 
     def get_filler_item_name(self) -> str:
         return self.random.choice(filler_items)

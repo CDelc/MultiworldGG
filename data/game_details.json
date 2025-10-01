@@ -2502,6 +2502,25 @@
         ],
         "release_date": 2022
     },
+    "Madou Monogatari Hanamaru Daiyouchienji": {
+        "igdb_id": "110397",
+        "world_name": "Madou Monogatari: Hanamaru Daiyouchienji",
+        "igdb_name": "Madou Monogatari: Hanamaru Daiyouchienji",
+        "us_rating": [
+        ],
+        "player_perspectives": [
+            "Third person",
+            "Side view"
+        ],
+        "genres": [
+            "Role-playing (RPG)"
+        ],
+        "themes": [
+            "Fantasy"
+        ],
+        "keywords": ["japan only"],
+        "release_date": 1996
+    },
     "Meritous": {
         "igdb_id": "78479",
         "world_name": "Meritous",
