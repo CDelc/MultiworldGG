@@ -45,7 +45,7 @@ class SimpsonsHitAndRunWorld(World):
     options_dataclass = SimpsonsHitAndRunOptions
     data_version = 2
     required_client_version = (0, 5, 0)
-    apworld_version = "0.3.2"
+    apworld_version = "0.3.3"
     # These properties are set from the imports of the same name above.
     item_table = item_table
     location_table = location_table # this is likely imported from Data instead of Locations because the Game Complete location should not be in here, but is used for lookups
@@ -96,7 +96,8 @@ class SimpsonsHitAndRunWorld(World):
         location_game_complete.place_locked_item(
             SimpsonsHitAndRunItem("__Victory__", ItemClassification.progression, None, player=self.player))
 
-        cards_data = json.loads(pkgutil.get_data(__name__, "data/cards.json").decode())
+        cards_data = json.loads(pkgutil.get_data(__name__, "data\\cards.json").decode())
+
         after_create_regions(self, self.multiworld, self.player, cards_data)
 
     def create_items(self):

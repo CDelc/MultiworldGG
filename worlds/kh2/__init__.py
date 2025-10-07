@@ -3,7 +3,7 @@ from typing import List
 
 from BaseClasses import Tutorial, ItemClassification
 from Fill import fast_fill
-from worlds.LauncherComponents import Component, components, Type, launch as launch_component
+from worlds.LauncherComponents import Component, components, icon_paths, Type, launch as launch_component
 from worlds.AutoWorld import World, WebWorld
 from .Items import *
 from .Locations import *
@@ -20,7 +20,9 @@ def launch_client():
     launch_component(launch, name="KH2Client")
 
 
-components.append(Component("KH2 Client", func=launch_client, component_type=Type.CLIENT))
+icon_paths['kh2apicon'] = f"ap:{__name__}/data/khapicon.png"
+components.append(Component("KH2 Client", func=launch_client, component_type=Type.CLIENT, icon='kh2apicon'))
+
 
 class KingdomHearts2Web(WebWorld):
     tutorials = [Tutorial(

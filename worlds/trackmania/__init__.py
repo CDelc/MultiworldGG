@@ -9,6 +9,10 @@ from worlds.AutoWorld import World, WebWorld
 from worlds.LauncherComponents import Component, components, icon_paths, launch_subprocess, Type
 from Utils import local_path
 from BaseClasses import Item, Tutorial
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from BaseClasses import MultiWorld
 
 def launch_client():
     from .client import launch
@@ -41,7 +45,7 @@ class TrackmaniaWorld(World):
     """Trackmania is a mechanically deep arcade racing game that is easy to pick up and addicting to master!
     Zoom through hundreds of thousands of user-made tracks as fast as you can!"""
     game = "Trackmania"  # name of the game/world
-    author: str = "SerialBoxes"
+    author: str = "SerialBoxes & Kaito Kid"
     options_dataclass = TrackmaniaOptions  # options the player can set
     options: TrackmaniaOptions  # typing hints for option results
     web = Webmania()

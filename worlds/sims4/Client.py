@@ -166,7 +166,7 @@ class SimsContext(SuperContext):
                     return
             else:
                 # Older APWorlds don't have the version string
-                self.output("Warning: slot data has no version information; compatibility not checked.")
+                self.command_processor.output("Warning: slot data has no version information; compatibility not checked.")
 
 
             url = urllib.parse.urlparse(self.server_address)

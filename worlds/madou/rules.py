@@ -93,6 +93,7 @@ class MadouRules:
         }
 
         self.location_rules = {
+            MagicTown.magic_bracelet: lambda state: self.can_fight_generic_at_level(state, 1, self.world.options),
             SatanVilla.satan: lambda state: state.has(Special.secret_stone, self.player, 3),
             ForestOfLight.sukiyapodes_2: lambda state: state.has(Special.light_orb, self.player),
             Spell.thunder_dark_forest: lambda state: state.has(Tool.ribbit_boots, self.player),
@@ -101,7 +102,7 @@ class MadouRules:
             DarkForest.dark_flower: lambda state: state.has(Special.dark_orb, self.player),
             LightGarden.purple_orb: lambda state: state.has(Tool.toy_elephant, self.player),
             LightGarden.bouquet: lambda state: state.has(Special.leaf, self.player) and state.has(Special.dark_flower, self.player) and state.has(EventItem.unpetrify,
-                                                                                                                                                  self.player),
+                                                                                                                                      self.player),
             ShadyWell.lofu: lambda state: state.has(Tool.toy_elephant, self.player),
             SageMountain.cyan_orb: lambda state: state.has(Tool.toy_elephant, self.player) and state.has(Tool.ribbit_boots, self.player),
             DarkForest.rele: lambda state: state.has(Tool.toy_elephant, self.player),
@@ -116,7 +117,7 @@ class MadouRules:
             Spell.thunder_library: lambda state: self.has_gems(state) and state.has(Tool.magical_dictionary, self.player),
             Spell.diacute_library: lambda state: self.has_gems(state) and state.has(Tool.magical_dictionary, self.player),
             #  Combat Rules
-            ForestOfLight.orb: lambda state: self.can_fight_generic_at_level(state, 1, self.world.options),
+            ForestOfLight.orb: lambda state: self.can_fight_generic_at_level(state, 1, self.world.options) and state.has(Tool.ribbit_boots, self.player),
             ForestOfLight.ribbit_boots: lambda state: self.can_fight_generic_at_level(state, 1, self.world.options),
             ForestOfLight.sukiyapodes_1: lambda state: self.can_fight_generic_at_level(state, 1, self.world.options),
             AncientRuins.zoh_daimaoh: lambda state: self.can_fight_generic_at_level(state, 1, self.world.options),
@@ -152,9 +153,11 @@ class MadouRules:
         return self.has_all(Gem.gems, state)
 
     def can_fight_generic_at_level(self, state: CollectionState, level: int, options: MadouOptions):
+        total_combat_spell_items = state.count_from_list(SpellItem.combat_spells, self.player)
+        if total_combat_spell_items == 0:
+            return False
         stun_rule = True
         diacute_count = max(0, level - 1)
-        total_combat_spell_items = state.count_from_list(SpellItem.combat_spells, self.player)
         starting_spells = options.starting_magic.value
         if "Fire" in starting_spells:
             total_combat_spell_items += 1
