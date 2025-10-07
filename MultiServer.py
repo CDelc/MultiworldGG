@@ -312,7 +312,7 @@ class Context:
             for location_name, location_id in game_package["location_name_to_id"].items():
                 self.location_names[game_name][location_id] = location_name
             self.all_item_and_group_names[game_name] = \
-                set(game_package["item_name_to_id"]) | set(self.item_name_groups[game_name])
+                set(game_package["item_name_to_id"]) | set(self.item_name_groups.get(game_name, {}))
             self.all_location_and_group_names[game_name] = \
                 set(game_package["location_name_to_id"]) | set(self.location_name_groups.get(game_name, []))
 
