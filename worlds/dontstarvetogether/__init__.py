@@ -39,7 +39,6 @@ class DSTWorld(World):
     structures and farms to help you protect yourself, survive, and most importantly, not starve.
     """
     game = "Don't Starve Together"
-    author: str = "Dragon Wolf Leo"
     item_name_to_id = item_name_to_id
     location_name_to_id = location_name_to_id
 

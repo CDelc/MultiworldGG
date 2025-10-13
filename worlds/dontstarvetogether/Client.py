@@ -142,7 +142,7 @@ class DSTContext(CommonContext):
     #         self.send_hints_to_dst()
     #         async_start(self.send_msgs([{"cmd": "Sync"}]))
     #     else:
-    #         self.logger.info("Waiting to connect to MultiworldGG.")
+    #         self.logger.info("Waiting to connect to Archipelago.")
     
     def on_dst_reader_connected(self):
         "Counterpart of on_dst_handler_connected. When the reader checks that DST data folder exists."
@@ -152,7 +152,7 @@ class DSTContext(CommonContext):
             self.send_hints_to_dst()
             async_start(self.send_msgs([{"cmd": "Sync"}]))
         else:
-            self.logger.info("Waiting to connect to MultiworldGG.")
+            self.logger.info(f"Waiting to connect to {apname}.")
 
     def on_package(self, cmd: str, args: Dict):
         # print("on_package", cmd)
@@ -753,8 +753,7 @@ class DSTHandler():
 
         # Identify all data folders. There could potentially be multiple if there's multiple user profiles(?)
         profile_dirs:List[Path] = []
-        if os.path.isdir(base_dir / "client_save"):
-            profile_dirs.append(base_dir)
+        profile_dirs.append(base_dir) # Always check base dir because dedicated servers are usually set up here
         
         dirs = [str(filename) for filename in os.listdir(base_dir) if os.path.isdir(base_dir / filename)]
         for dirname in dirs:
@@ -868,9 +867,9 @@ async def main(args):
 def launch():
     import colorama
 
-    parser = get_base_parser(description="DST MultiworldGG Client for interfacing with Don't Starve Together.")
+    parser = get_base_parser(description=f"DST {apname} Client for interfacing with Don't Starve Together.")
     parser.add_argument("--name", default=None, help="Slot Name to connect as.")
-    parser.add_argument("url", nargs="?", help="MultiworldGG connection url")
+    parser.add_argument("url", nargs="?", help=f"{apname} connection url")
     args = parser.parse_args()
 
     if args.url:

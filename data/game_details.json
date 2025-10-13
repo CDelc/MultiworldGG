@@ -1459,6 +1459,42 @@
         ],
         "release_date": 2005
     },
+    "Dredge": {
+        "igdb_id": "164867",
+        "world_name": "Dredge",
+        "igdb_name": "Dredge",
+        "us_rating": [
+            "T"
+        ],
+        "player_perspectives": [
+            "Bird view / Isometric"
+        ],
+        "genres": [
+            "Role-playing (RPG)",
+            "Adventure",
+            "Simulator"
+        ],
+        "themes": [
+            "Action",
+            "Horror",
+            "Open world",
+            "Mystery"
+        ],
+        "keywords": [
+            "exploration",
+            "psychological horror",
+            "3d",
+            "fishing",
+            "stylized",
+            "lovecraftian",
+            "sailing",
+            "psychological",
+            "story rich",
+            "boat",
+            "trawling"
+        ],
+        "release_date": 2023
+    },
     "EarthBound": {
         "igdb_id": "78559",
         "world_name": "EarthBound",

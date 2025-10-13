@@ -37,7 +37,6 @@ class SpireWorld(World):
     options_dataclass = SpireOptions
     options: SpireOptions
     game = "Slay the Spire"
-    author: str = "KonoTyran & Platano Bailando"
     topology_present = False
     web = SpireWeb()
     required_client_version = (0, 6, 1)
