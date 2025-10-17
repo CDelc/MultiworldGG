@@ -2093,7 +2093,7 @@ def Fill(spoiler: Spoiler) -> None:
             placed_types.append(Types.Snide)
             bigListOfItemsToPlace.extend(ItemPool.SnideItems())
         # If we have Snide rewards, Blueprints become much more logically important and need to be placed in the big fill so as to not bias towards those locations, especially if there's a large cap
-        if Types.BlueprintBanana in spoiler.settings.shuffled_location_types:
+        if Types.BlueprintBanana in spoiler.settings.shuffled_location_types and Types.Blueprint in spoiler.settings.shuffled_location_types:
             placed_types.append(Types.Blueprint)
             bigListOfItemsToPlace.extend(ItemPool.Blueprints().copy())
         for item in preplaced_items:
@@ -4039,6 +4039,9 @@ def CheckForIncompatibleSettings(settings: Settings) -> None:
         settings.trap_weight_icefloor,
         settings.trap_weight_paper,
         settings.trap_weight_slip,
+        settings.trap_weight_animal,
+        settings.trap_weight_rockfall,
+        settings.trap_weight_disabletag,
     ]
     if IsDDMSSelected(settings.filler_items_selected, ItemRandoFiller.icetraps) and not settings.archipelago:
         if settings.ice_trap_count == 0:

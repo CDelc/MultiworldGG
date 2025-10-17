@@ -241,7 +241,8 @@ def set_rules(world: "MM3World") -> None:
                 # we are out of weapons that can actually damage the boss
                 # so find the weapon that has the most uses, and apply that as an additional weakness
                 # it should be impossible to be out of energy
-                wp, max_uses = max((weapon, weapon_energy[weapon] // weapon_costs[weapon]) for weapon in weapon_weight
+                max_uses, wp = max((weapon_energy[weapon] // weapon_costs[weapon], weapon)
+                                   for weapon in weapon_weight
                                    if weapon != 0)
                 world.weapon_damage[wp][boss] = minimum_weakness_requirement[wp]
                 used = min(int(weapon_energy[wp] // weapon_costs[wp]),
@@ -297,14 +298,14 @@ def set_rules(world: "MM3World") -> None:
             if i in (20, 21):
                 # multi-phase fights, get all potential weaknesses
                 # we should probably do this smarter, but this works for now
-                add_rule(world.multiworld.get_location(location, world.player),
+                add_rule(world.get_location(location),
                          lambda state, weps=tuple(weapons): state.has_all(weps, world.player))
             else:
-                add_rule(world.multiworld.get_location(location, world.player),
+                add_rule(world.get_location(location),
                          lambda state, weps=tuple(weapons): state.has_any(weps, world.player))
 
     # Need to defeat x amount of robot masters for Wily 4
-    add_rule(world.multiworld.get_location(names.wily_stage_4, world.player),
+    add_rule(world.get_location(names.wily_stage_4),
              lambda state: can_defeat_enough_rbms(state, world.player, world.options.wily_4_requirement.value,
                                                   world.wily_4_weapons))
 

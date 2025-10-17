@@ -39,6 +39,7 @@ class Goal(Choice):
     - bonuses: Complete a certain number of Bonus Barrels to win. Automatically disables auto_complete_bonus_barrels if set. See goal_quantity option for more info.
     - treasure_hurry: Run down the timer by collecting treasure! You win when the timer reaches 0.
     - krools_challenge: K. Rool's ship does not spawn until you collect All keys, Defeat All bosses, Play all Bonus Barrels, and collect All Blueprints.
+    - kill_the_rabbit: Kill the rabbit in Chunky's igloo in Caves. Turn it to Ash. Simple as that.
     """
 
     display_name = "Goal"
@@ -60,6 +61,7 @@ class Goal(Choice):
     option_bonuses = 15
     option_treasure_hurry = 16
     option_krools_challenge = 17
+    option_kill_the_rabbit = 18
     default = 0
 
 
@@ -962,6 +964,8 @@ class EnableCutscenes(Toggle):
 class SnideMaximum(Range):
     """Determines the maximum reward for Snide Turnins to have progression."""
 
+    display_name = "Snide Maximum"
+
     range_start = 0
     range_end = 40
     default = 20
@@ -971,6 +975,40 @@ class SharedShops(Toggle):
     """If enabled, makes 10 random shops shared removing 20 locations from the pool."""
 
     display_name = "Shared Shops"
+
+
+class FillerItems(DefaultOnToggle):
+    """If enabled, Filler Items will fill the world depending on Chaos B. Lockers being enabled.
+
+    Chaos B. Lockers enabled will replace "Junk Item (Melon Slice)" with a combination of GBs, Crowns, Fairies, Medals, Pearls, and Rainbow Coins.
+    Without Chaos B. Lockers, Junk Items will be replaced with a combination of GBs, Fairies, Medals, and Pearls.
+    """
+
+    display_name = "Filler Items"
+
+
+class AnimalTrapWeight(BaseTrapWeight):
+    """Likelihood of receiving a trap which transforms you into an Animal Buddy for a short time."""
+
+    display_name = "Animal Trap Weight"
+
+
+class RockfallTrapWeight(BaseTrapWeight):
+    """Likelihood of receiving a trap which spawns falling stalactites for a short time."""
+
+    display_name = "Rockfall Trap Weight"
+
+
+class DisableTagTrapWeight(BaseTrapWeight):
+    """Likelihood of receiving a trap which slips a kong on a banana peel."""
+
+    display_name = "Disable Tag Trap Weight"
+
+
+class AlternateMinecartMayhem(Toggle):
+    """If enabled, Minecart Mayhem will be a coin based bonus barrel and the timer will be removed."""
+
+    display_name = "Alternate Minecart Mayhem"
 
 
 @dataclass
@@ -1053,6 +1091,11 @@ class DK64Options(PerGameCommonOptions):
     enable_cutscenes: EnableCutscenes
     maximum_snide: SnideMaximum
     enable_shared_shops: SharedShops
+    enable_filler_items: FillerItems
+    animal_trap_weight: AnimalTrapWeight
+    rockfall_trap_weight: RockfallTrapWeight
+    disabletag_trap_weight: DisableTagTrapWeight
+    alternate_minecart_mayhem: AlternateMinecartMayhem
 
 
 dk64_option_groups: List[OptionGroup] = [
@@ -1101,6 +1144,7 @@ dk64_option_groups: List[OptionGroup] = [
             SmallerShops,
             SharedShops,
             SnideMaximum,
+            FillerItems,
         ],
     ),
     OptionGroup(
@@ -1133,6 +1177,7 @@ dk64_option_groups: List[OptionGroup] = [
             HardMinigames,
             AutoCompleteBonusBarrels,
             HelmRoomBonusCount,
+            AlternateMinecartMayhem,
         ],
     ),
     OptionGroup(
@@ -1169,6 +1214,9 @@ dk64_option_groups: List[OptionGroup] = [
             IceFloorWeight,
             PaperTrapWeight,
             SlipTrapWeight,
+            AnimalTrapWeight,
+            RockfallTrapWeight,
+            DisableTagTrapWeight,
         ],
     ),
     OptionGroup(

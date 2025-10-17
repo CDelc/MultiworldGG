@@ -148,6 +148,7 @@ class LMWorld(World):
     """
 
     game: ClassVar[str] = "Luigi's Mansion"
+    author: ClassVar[str] = "BootsinSoots"
     options_dataclass = LuigiOptions.LMOptions
     options: LuigiOptions.LMOptions
 

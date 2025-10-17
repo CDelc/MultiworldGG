@@ -23,6 +23,13 @@ all necessary dependencies as well.
 
 Click on the `Start modded` button in the top left in `r2modman` to start the game with the Archipelago mod installed.
 
+### Troubleshooting
+
+* The mod doesn't show up in game!
+  * `r2modman` looks for the game at its default directory. If you have the game installed somewhere else, 
+    you can update `r2modman` by going to `Settings > Change Risk of Rain 2 folder`
+    and selecting the correct directory.
+
 ## Configuring your YAML File
 ### What is a YAML and why do I need one?
 You can see the [basic multiworld setup guide](/tutorial/Archipelago/setup/en) here on the Archipelago website to learn 

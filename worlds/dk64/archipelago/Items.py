@@ -11,7 +11,7 @@ from archipelago.Options import Goal
 from randomizer.Enums.Levels import Levels
 from randomizer.Lists import Item as DK64RItem
 from randomizer.Enums.Items import Items as DK64RItems
-from randomizer.Enums.Settings import WinConditionComplex
+from randomizer.Enums.Settings import WinConditionComplex, ItemRandoFiller
 from randomizer.Enums.Types import Types as DK64RTypes, BarrierItems
 import randomizer.ItemPool as DK64RItemPoolUtility
 import copy
@@ -280,11 +280,30 @@ def setup_items(world: World) -> typing.List[DK64Item]:
     trap_weights += [DK64RItems.IceTrapIceFloorGB] * world.options.ice_floor_weight.value
     trap_weights += [DK64RItems.IceTrapPaperGB] * world.options.paper_weight.value
     trap_weights += [DK64RItems.IceTrapSlipGB] * world.options.slip_weight.value
+    trap_weights += [DK64RItems.IceTrapAnimalGB] * world.options.animal_trap_weight.value
+    trap_weights += [DK64RItems.IceTrapRockfallGB] * world.options.rockfall_trap_weight.value
+    trap_weights += [DK64RItems.IceTrapDisableTagGB] * world.options.disabletag_trap_weight.value
 
     trap_count = 0 if (len(trap_weights) == 0) else math.ceil(filler_item_count * (world.options.trap_fill_percentage.value / 100.0))
     filler_item_count -= trap_count
 
-    possible_junk = [DK64RItems.JunkMelon]
+    filler_mapping = {
+        ItemRandoFiller.junkitem: [DK64RItems.JunkMelon],
+        ItemRandoFiller.banana: [DK64RItems.FillerBanana],
+        ItemRandoFiller.crown: [DK64RItems.FillerCrown],
+        ItemRandoFiller.fairy: [DK64RItems.FillerFairy],
+        ItemRandoFiller.medal: [DK64RItems.FillerMedal],
+        ItemRandoFiller.pearl: [DK64RItems.FillerPearl],
+        ItemRandoFiller.rainbowcoin: [DK64RItems.FillerRainbowCoin],
+    }
+
+    possible_junk = []
+    for filler_type in world.spoiler.settings.filler_items_selected:
+        if filler_type in filler_mapping:
+            possible_junk.extend(filler_mapping[filler_type])
+
+    if not possible_junk:
+        possible_junk = [DK64RItems.JunkMelon]
 
     for _ in range(filler_item_count):
         junk_enum = world.random.choice(possible_junk)
