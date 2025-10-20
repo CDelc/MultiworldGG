@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from io import StringIO
 import itertools
-from typing import Iterable, List, SupportsIndex, Union, overload
-
-from .data import data_path
+import pkgutil
+from typing import Iterable, SupportsIndex, overload
 
 
 char_table = {}
@@ -87,7 +86,7 @@ character_widths = [
 
 
 def _get_charmap():
-    char_data = data_path("charmap.txt").decode("utf-8")
+    char_data = pkgutil.get_data(__name__, "data/charmap.txt").decode("utf-8")
     with StringIO(char_data) as stream:
         for line in stream:
             splits = line.rsplit("=", 1)
@@ -110,6 +109,7 @@ _get_charmap()
 
 LINE_WIDTH = 224
 
+NEWLINE = 0xFE00
 TERMINATOR_CHAR = 0xFF00
 
 
@@ -128,7 +128,7 @@ def get_width_of_encoded_character(char: int):
 
 
 class Message:
-    buffer: List[int]
+    buffer: list[int]
 
     @overload
     def __init__(self, string: str):
@@ -138,7 +138,7 @@ class Message:
     def __init__(self, characters: Iterable[int]):
         ...
 
-    def __init__(self, value: Union[str, Iterable[int]]):
+    def __init__(self, value: str | Iterable[int]):
         if isinstance(value, str):
             self.buffer = list(char_table.get(c, char_table[" "]) for c in value)
         else:
@@ -167,8 +167,10 @@ class Message:
         return sum(get_width_of_encoded_character(c) for c in self)
 
     def trim_to_max_width(self, max_width: int = LINE_WIDTH):
+        if len(self.buffer) == 0:
+            return self
         total_width = 0
-        buffer: List[int] = []
+        buffer: list[int] = []
         for char in self:
             next_width = total_width + get_width_of_encoded_character(char)
             if next_width > max_width:
@@ -180,11 +182,15 @@ class Message:
         self.buffer = buffer
         return self
 
+    def center_align(self, line_width: int = LINE_WIDTH):
+        pad = ((line_width - self.display_width()) // 2) & 0xFF
+        return self.insert(0, 0x8000 | pad)
+
     def to_bytes(self):
         return bytes(itertools.chain.from_iterable(c.to_bytes(2, "little") for c in self))
 
     def __add__(self, other: Message):
-        return Message(self.buffer[:-1] + other.buffer[:-1])
+        return Message(self.buffer + other.buffer)
 
     def __iadd__(self, other: Message):
         self.buffer += other.buffer
@@ -210,3 +216,11 @@ class Message:
 
     def __contains__(self, item: int):
         return item in self.buffer
+
+
+def make_item_message(first: str, second: str) -> Message:
+    first_msg = Message(first).trim_to_max_width().insert(0, 0x8105).center_align()
+    first_msg.append(NEWLINE)
+    second_msg = Message(second).trim_to_max_width().center_align()
+    second_msg.append(TERMINATOR_CHAR)
+    return first_msg + second_msg

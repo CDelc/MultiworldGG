@@ -61,6 +61,7 @@ Currently, the following games are supported:
 * Doom (1993)
 * Doom II
 * Doronko Wanko
+* Dredge
 * EarthBound
 * Ender Lilies
 * Factorio (+SAWS)
