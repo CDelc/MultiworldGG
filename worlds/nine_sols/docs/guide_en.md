@@ -60,7 +60,7 @@ Press F1 in-game to bring up the settings menu for all of your Nine Sols mods, i
 
 Universal Tracker is fully supported by nine_sols.apworld, including yaml-less support, Map Pages, and auto-switching between Map Pages as you move between in-game areas.
 
-![UniversalTrackerShowcase](UniversalTrackerShowcase.png)
+![UniversalTrackerShowcase](/static/generated/docs/Nine_Sols/UniversalTrackerShowcase.png)
 
 For now, UT is also the only supported tracker, so it's very highly recommended. See the pinned messages [in its Discord thread](https://discord.com/channels/731205301247803413/1170094879142051912) for details.
 
