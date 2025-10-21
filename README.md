@@ -114,6 +114,7 @@ Currently, the following games are supported:
 * Momodora: Moonlit Farewell
 * Monster Sanctuary
 * Muse Dash
+* Nine Sols
 * Noita
 * Old School RuneScape
 * Open Rollercoaster Tycoon 2
