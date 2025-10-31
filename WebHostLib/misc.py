@@ -182,6 +182,10 @@ def tutorial_landing():
         current_world = tutorials[world_name] = {}
         if hasattr(world_type.web, 'tutorials'):
             for tutorial in world_type.web.tutorials:
+                # Skip if tutorial is not a Tutorial object (e.g., if it's a string)
+                if not hasattr(tutorial, 'tutorial_name'):
+                    continue
+                
                 current_tutorial = current_world.setdefault(tutorial.tutorial_name, {
                     "description": tutorial.description, "files": {}})
                 
