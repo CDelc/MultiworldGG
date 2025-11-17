@@ -40,27 +40,23 @@ def is_room_active(room: Room) -> bool:
     return time_since_activity <= timedelta(seconds=room.timeout + 5)
 
 
-def get_per_game_last_activity(room: Room) -> Dict[str, Optional[float]]:
-    """Get the most recent activity timestamp for each game in a room.
-    Returns a dict mapping game name to the most recent activity timestamp (or None if no activity)."""
-    game_activity: Dict[str, Optional[float]] = {}
+def get_per_player_last_activity(room: Room) -> Dict[int, Optional[float]]:
+    """Get the activity timestamp for each player in a room.
+    Returns a dict mapping player_id to the activity timestamp (or None if no activity)."""
+    player_activity: Dict[int, Optional[float]] = {}
     
     if not room.multisave:
         for slot in room.seed.slots:
-            if slot.game not in game_activity:
-                game_activity[slot.game] = None
-        return game_activity
+            player_activity[slot.player_id] = None
+        return player_activity
     
     try:
         multisave = restricted_loads(room.multisave)
         client_activity_timers = multisave.get("client_activity_timers", [])
         
-        # Map player_id to game name (player_id in slots matches the player index in activity timers)
-        player_to_game: Dict[int, str] = {}
+        # Initialize all players to None
         for slot in room.seed.slots:
-            player_to_game[slot.player_id] = slot.game
-            if slot.game not in game_activity:
-                game_activity[slot.game] = None
+            player_activity[slot.player_id] = None
         
         # client_activity_timers is stored as tuple of ((team, player), timestamp) pairs
         # Handle both tuple and list formats
@@ -68,16 +64,14 @@ def get_per_game_last_activity(room: Room) -> Dict[str, Optional[float]]:
             for entry in client_activity_timers:
                 if isinstance(entry, (tuple, list)) and len(entry) == 2:
                     (team, player_id), timestamp = entry
-                    game = player_to_game.get(player_id)
-                    if game:
-                        if game_activity[game] is None or timestamp > game_activity[game]:
-                            game_activity[game] = timestamp
+                    if player_id in player_activity:
+                        if player_activity[player_id] is None or timestamp > player_activity[player_id]:
+                            player_activity[player_id] = timestamp
     except Exception:
         for slot in room.seed.slots:
-            if slot.game not in game_activity:
-                game_activity[slot.game] = None
+            player_activity[slot.player_id] = None
     
-    return game_activity
+    return player_activity
 
 
 @api_endpoints.route('/monitoring/rooms')
@@ -94,25 +88,24 @@ def monitoring_rooms() -> Dict[str, Any]:
         active_rooms = []
         for room in rooms:
             if is_room_active(room):
-                games = [slot.game for slot in room.seed.slots]
-                game_activity = get_per_game_last_activity(room)
-                games_with_activity = [
-                    {
-                        "game": game,
-                        "last_activity_timestamp": activity if activity else None,
-                    }
-                    for game, activity in game_activity.items()
-                ]
+                player_activity = get_per_player_last_activity(room)
+                games = []
+                for slot in room.seed.slots:
+                    activity_timestamp = player_activity.get(slot.player_id)
+                    games.append({
+                        "game": slot.game,
+                        "player_id": slot.player_id,
+                        "player_name": slot.player_name,
+                        "last_activity_timestamp": datetime.fromtimestamp(activity_timestamp, tz=datetime.timezone.utc).isoformat() if activity_timestamp else None,
+                    })
                 
                 active_rooms.append({
                     "room_id": str(room.id),
                     "room_id_short": to_url(room.id),
                     "port": room.last_port,
-                    "last_activity": room.last_activity.isoformat(),
-                    "last_activity_timestamp": room.last_activity.timestamp(),
-                    "time_until_timeout": (room.timeout - (now - room.last_activity).total_seconds()),
+                    "last_activity_timestamp": room.last_activity.isoformat(),
+                    "time_until_timeout": int(room.timeout - (now - room.last_activity).total_seconds()),
                     "games": games,
-                    "games_with_activity": games_with_activity,
                     "player_count": len(room.seed.slots),
                     "creation_time": room.creation_time.isoformat(),
                 })
@@ -141,25 +134,24 @@ def monitoring_games() -> Dict[str, Any]:
             if not is_room_active(room):
                 continue
 
-            game_activity = get_per_game_last_activity(room)
+            player_activity = get_per_player_last_activity(room)
             
             for slot in room.seed.slots:
                 game = slot.game
                 if game not in games_dict:
                     games_dict[game] = []
                 
-                game_last_activity = game_activity.get(game)
+                activity_timestamp = player_activity.get(slot.player_id)
                 
                 games_dict[game].append({
                     "room_id": str(room.id),
                     "room_id_short": to_url(room.id),
                     "port": room.last_port,
-                    "last_activity": room.last_activity.isoformat(),
-                    "last_activity_timestamp": room.last_activity.timestamp(),
-                    "game_last_activity_timestamp": game_last_activity if game_last_activity else None,
+                    "last_activity_timestamp": room.last_activity.isoformat(),
+                    "game_last_activity_timestamp": datetime.fromtimestamp(activity_timestamp, tz=datetime.timezone.utc).isoformat() if activity_timestamp else None,
                     "player_name": slot.player_name,
                     "player_id": slot.player_id,
-                    "time_until_timeout": (room.timeout - (now - room.last_activity).total_seconds()),
+                    "time_until_timeout": int(room.timeout - (now - room.last_activity).total_seconds()),
                 })
         
         games_list = [
