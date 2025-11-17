@@ -40,10 +40,10 @@ def is_room_active(room: Room) -> bool:
     return time_since_activity <= timedelta(seconds=room.timeout + 5)
 
 
-def get_per_game_last_activity(room: Room) -> Dict[str, Optional[datetime]]:
+def get_per_game_last_activity(room: Room) -> Dict[str, Optional[float]]:
     """Get the most recent activity timestamp for each game in a room.
-    Returns a dict mapping game name to the most recent activity datetime (or None if no activity)."""
-    game_activity: Dict[str, Optional[datetime]] = {}
+    Returns a dict mapping game name to the most recent activity timestamp (or None if no activity)."""
+    game_activity: Dict[str, Optional[float]] = {}
     
     if not room.multisave:
         for slot in room.seed.slots:
@@ -55,20 +55,23 @@ def get_per_game_last_activity(room: Room) -> Dict[str, Optional[datetime]]:
         multisave = restricted_loads(room.multisave)
         client_activity_timers = multisave.get("client_activity_timers", [])
         
-        # Map player_id to game name
+        # Map player_id to game name (player_id in slots matches the player index in activity timers)
         player_to_game: Dict[int, str] = {}
         for slot in room.seed.slots:
             player_to_game[slot.player_id] = slot.game
             if slot.game not in game_activity:
                 game_activity[slot.game] = None
         
-        # Find most recent activity for each game
-        for (team, player_id), timestamp in client_activity_timers:
-            game = player_to_game.get(player_id)
-            if game:
-                activity_time = datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
-                if game_activity[game] is None or activity_time > game_activity[game]:
-                    game_activity[game] = activity_time
+        # client_activity_timers is stored as tuple of ((team, player), timestamp) pairs
+        # Handle both tuple and list formats
+        if isinstance(client_activity_timers, (tuple, list)):
+            for entry in client_activity_timers:
+                if isinstance(entry, (tuple, list)) and len(entry) == 2:
+                    (team, player_id), timestamp = entry
+                    game = player_to_game.get(player_id)
+                    if game:
+                        if game_activity[game] is None or timestamp > game_activity[game]:
+                            game_activity[game] = timestamp
     except Exception:
         for slot in room.seed.slots:
             if slot.game not in game_activity:
@@ -96,8 +99,7 @@ def monitoring_rooms() -> Dict[str, Any]:
                 games_with_activity = [
                     {
                         "game": game,
-                        "last_activity": activity.isoformat() if activity else None,
-                        "last_activity_timestamp": activity.timestamp() if activity else None,
+                        "last_activity_timestamp": activity if activity else None,
                     }
                     for game, activity in game_activity.items()
                 ]
@@ -154,8 +156,7 @@ def monitoring_games() -> Dict[str, Any]:
                     "port": room.last_port,
                     "last_activity": room.last_activity.isoformat(),
                     "last_activity_timestamp": room.last_activity.timestamp(),
-                    "game_last_activity": game_last_activity.isoformat() if game_last_activity else None,
-                    "game_last_activity_timestamp": game_last_activity.timestamp() if game_last_activity else None,
+                    "game_last_activity_timestamp": game_last_activity if game_last_activity else None,
                     "player_name": slot.player_name,
                     "player_id": slot.player_id,
                     "time_until_timeout": (room.timeout - (now - room.last_activity).total_seconds()),

@@ -587,8 +587,7 @@ Returns a dict with:
     - `games`: List of game names in this room
     - `games_with_activity`: List of games with their per-game last activity timestamps (most recent activity for each game)
       - `game`: Game name
-      - `last_activity`: ISO format timestamp of most recent activity for this game (or null if no activity)
-      - `last_activity_timestamp`: Unix timestamp of most recent activity (or null if no activity)
+      - `last_activity_timestamp`: Unix timestamp of most recent activity for this game (or null if no activity)
     - `player_count`: Number of players in the room
     - `creation_time`: ISO format timestamp of room creation
 - `total_active_rooms`: Total count of active rooms
@@ -641,7 +640,6 @@ Returns a dict with:
         - `port`: The port number the room is running on
         - `last_activity`: ISO format timestamp of last activity (room-level)
         - `last_activity_timestamp`: Unix timestamp of last activity (room-level)
-        - `game_last_activity`: ISO format timestamp of most recent activity for this specific game (or null if no activity)
         - `game_last_activity_timestamp`: Unix timestamp of most recent activity for this specific game (or null if no activity)
         - `player_name`: Name of the player slot
         - `player_id`: ID of the player slot
