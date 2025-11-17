@@ -1,5 +1,5 @@
 """Monitoring API endpoints for active rooms and games."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -96,7 +96,7 @@ def monitoring_rooms() -> Dict[str, Any]:
                         "game": slot.game,
                         "player_id": slot.player_id,
                         "player_name": slot.player_name,
-                        "last_activity_timestamp": datetime.fromtimestamp(activity_timestamp, tz=datetime.timezone.utc).isoformat() if activity_timestamp else None,
+                        "last_activity_timestamp": datetime.fromtimestamp(activity_timestamp, tz=timezone.utc).isoformat() if activity_timestamp else None,
                     })
                 
                 active_rooms.append({
@@ -148,7 +148,7 @@ def monitoring_games() -> Dict[str, Any]:
                     "room_id_short": to_url(room.id),
                     "port": room.last_port,
                     "last_activity_timestamp": room.last_activity.isoformat(),
-                    "game_last_activity_timestamp": datetime.fromtimestamp(activity_timestamp, tz=datetime.timezone.utc).isoformat() if activity_timestamp else None,
+                    "game_last_activity_timestamp": datetime.fromtimestamp(activity_timestamp, tz=timezone.utc).isoformat() if activity_timestamp else None,
                     "player_name": slot.player_name,
                     "player_id": slot.player_id,
                     "time_until_timeout": int(room.timeout - (now - room.last_activity).total_seconds()),
