@@ -8,7 +8,9 @@ from pony.orm import db_session, select
 
 from Utils import restricted_loads
 from WebHostLib import app, to_url
-from ..models import Room, Slot
+
+from ..models import Room, Command
+
 
 from . import api_endpoints
 
@@ -171,4 +173,46 @@ def monitoring_games() -> Dict[str, Any]:
         })
 
 
-
+@api_endpoints.route('/monitoring/broadcast', methods=['POST'])
+def broadcast() -> Dict[str, Any]:
+    """Send a message to all active rooms (or specific ones)."""
+    require_admin_token()
+    
+    data = request.get_json()
+    if not data or "message" not in data:
+        abort(400, description="Message is required")
+        
+    message = data["message"]
+    room_ids = data.get("rooms") # optional
+    
+    with db_session:
+        now = datetime.utcnow()
+        
+        if room_ids:
+            try:
+                room_uuids = [UUID(rid) for rid in room_ids]
+            except ValueError:
+                abort(400, description="Invalid room ID format")
+                
+            rooms = select(
+                room for room in Room if room.id in room_uuids
+            )
+        else:
+            # Default to all active rooms
+            # Same criteria as monitoring_rooms + is_room_active check
+            candidates = select(
+                room for room in Room if
+                room.last_activity >= now - timedelta(days=3)
+            )
+            rooms = [r for r in candidates if is_room_active(r)]
+            
+        count = 0
+        for room in rooms:
+            Command(room=room, commandtext=message)
+            count += 1
+            
+        return jsonify({
+            "message": f"Broadcast sent to {count} rooms",
+            "count": count,
+            "timestamp": now.isoformat(),
+        })
