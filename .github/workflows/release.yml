@@ -204,6 +204,7 @@ jobs:
         run: |
           wget -nv https://github.com/Ijwu/Enemizer/releases/download/$ENEMIZER_VERSION/osx.10.12-x64.zip
           unzip -d EnemizerCLI osx.10.12-x64.zip
+          rm osx.10.12-x64.zip
 
       - name: Build
         run: |
@@ -215,6 +216,10 @@ jobs:
           APP_BINARY=$(ls build/ | grep ".app" | head -n 1 || echo "")
           echo "release: $APP_BINARY"
           echo "MACOS_APP=$APP_BINARY" >> $GITHUB_ENV
+          # Cleanup to save space for dmgbuild
+          rm -rf EnemizerCLI
+          rm -rf SNI
+          rm -rf build/exe.*
 
       - name: Attest Build
         uses: actions/attest-build-provenance@v2
