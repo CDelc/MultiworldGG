@@ -30,7 +30,7 @@ class KH1Web(WebWorld):
     theme = "ocean"
     tutorials = [Tutorial(
             "Multiworld Setup Guide",
-            "A guide to setting up the Kingdom Hearts Randomizer software on your computer. "
+            "A guide to setting up the Kingdom Hearts Randomizer software on your computer."
             "This guide covers single-player, multiworld, and related software.",
             "English",
             "kh1_en.md",
@@ -336,6 +336,7 @@ class KH1World(World):
                     "scaling_spell_potency": bool(self.options.scaling_spell_potency),
                     "seed": self.multiworld.seed_name,
                     "shorten_go_mode": bool(self.options.shorten_go_mode),
+                    "slot_name": self.multiworld.get_player_name(self.player),
                     "slot_2_level_checks": int(self.options.slot_2_level_checks.value),
                     "spell_mp_cost_max": int(self.options.spell_mp_cost_max.value),
                     "spell_mp_cost_min": int(self.options.spell_mp_cost_min.value),
