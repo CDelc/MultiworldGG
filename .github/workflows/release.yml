@@ -238,6 +238,8 @@ jobs:
           rm -rf EnemizerCLI
           rm -rf SNI
           rm -rf build/exe.*
+          rm -rf worlds
+          rm -rf data
           # Remove venv after build (dmgbuild doesn't need it)
           deactivate || true
           rm -rf venv
