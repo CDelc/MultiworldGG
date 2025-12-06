@@ -270,10 +270,18 @@ jobs:
 
       - name: Install dmgbuild
         run: |
+          python3 -m venv venv
+          source venv/bin/activate
           python3 -m pip install dmgbuild
 
       - name: Create DMG with dmgbuild
         run: |
+          source venv/bin/activate
+          # Ensure executable permissions are preserved/restored
+          chmod +x "build/${{ env.MACOS_APP }}/Contents/MacOS/"*
+          # Remove extended attributes to prevent "App is damaged" error
+          xattr -cr "build/${{ env.MACOS_APP }}"
+          
           dmgbuild -s .github/dmg_settings.py \
             "MultiworldGG v${{ env.RELEASE_VERSION }}" \
             "build/MultiworldGG_${{ env.RELEASE_VERSION }}.dmg"
