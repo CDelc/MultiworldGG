@@ -8,7 +8,7 @@ import bsdiff4
 
 import Utils
 from BaseClasses import ItemClassification
-from worlds.Files import APDeltaPatch, APProcedurePatch, APTokenMixin, APPatchExtension
+from worlds.Files import APProcedurePatch, APTokenMixin, APPatchExtension
 
 NA10CHECKSUM = 'd9a1631d5c32d35594b9484862a26cba'
 NES2HEADER = bytes([ 0x4E, 0x45, 0x53, 0x1A, 0x08, 0x00, 0x12, 0x08, 0x00, 0x00, 0x70, 0x07, 0x00, 0x00, 0x00, 0x01])
