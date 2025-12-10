@@ -20,7 +20,7 @@ from .Locations import location_table, level_locations, major_locations, shop_lo
 from .Options import TlozOptions
 from .Rom import TLOZProcedurePatch
 from .Rules import set_rules
-from .EntranceRandoRules import create_entrance_randomizer_set
+from .Client import TLOZClient
 from worlds.AutoWorld import World, WebWorld
 from worlds.generic.Rules import add_rule
 

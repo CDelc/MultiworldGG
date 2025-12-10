@@ -181,6 +181,11 @@ Root: HKCR; Subkey: "{#MyAppName}cvcotmpatch";                     ValueData: "M
 Root: HKCR; Subkey: "{#MyAppName}cvcotmpatch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                                          ValueType: string; ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}cvcotmpatch\shell\open\command";  ValueData: """{app}\MultiworldGGBizHawkClient.exe"" ""%1""";                                 ValueType: string; ValueName: "";
 
+Root: HKCR; Subkey: ".apcvdos";                                 ValueData: "{#MyAppName}cvdospatch";                               Flags: uninsdeletevalue; ValueType: string; ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}cvdospatch";                     ValueData: "MultiworldGG Castlevania Dawn of Sorrow Patch";                    Flags: uninsdeletekey;   ValueType: string; ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}cvdospatch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                                          ValueType: string; ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}cvdospatch\shell\open\command";  ValueData: """{app}\MultiworldGGBizHawkClient.exe"" ""%1""";                                 ValueType: string; ValueName: "";
+
 Root: HKCR; Subkey: ".apmm2";                                   ValueData: "{#MyAppName}mm2patch";                               Flags: uninsdeletevalue; ValueType: string; ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}mm2patch";                     ValueData: "MultiworldGG Mega Man 2 Patch";                    Flags: uninsdeletekey;   ValueType: string; ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}mm2patch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                                          ValueType: string; ValueName: "";
@@ -208,8 +213,8 @@ Root: HKCR; Subkey: "{#MyAppName}ladxbpatch\shell\open\command";  ValueData: """
 
 Root: HKCR; Subkey: ".aptloz";                                   ValueData: "{#MyAppName}tlozpatch";        Flags: uninsdeletevalue; ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}tlozpatch";                     ValueData: "MultiworldGG The Legend of Zelda Patch"; Flags: uninsdeletekey;   ValueType: string;  ValueName: "";
-Root: HKCR; Subkey: "{#MyAppName}tlozpatch\DefaultIcon";         ValueData: "{app}\MultiworldGGLauncher.exe,0";                           ValueType: string;  ValueName: "";
-Root: HKCR; Subkey: "{#MyAppName}tlozpatch\shell\open\command";  ValueData: """{app}\MultiworldGGLauncher.exe"" ""%1""";                  ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}tlozpatch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                          ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}tlozpatch\shell\open\command";  ValueData: """{app}\MultiworldGGBizHawkClient.exe"" ""%1""";                     ValueType: string;  ValueName: "";
 
 Root: HKCR; Subkey: ".apadvn";                                   ValueData: "{#MyAppName}advnpatch";        Flags: uninsdeletevalue; ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}advnpatch";                     ValueData: "MultiworldGG Adventure Patch";  Flags: uninsdeletekey;   ValueType: string;  ValueName: "";

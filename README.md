@@ -32,6 +32,7 @@ Currently, the following games are supported:
 * Brotato
 * Bumper Stickers
 * Candy Box 2
+* Castlevania: Dawn of Sorrow
 * Cat Quest
 * Celeste (+ Open World)
 * Celeste 64
