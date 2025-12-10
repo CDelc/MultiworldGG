@@ -257,8 +257,7 @@ class TrickyShinesparks(Toggle):
 class LayoutPatches(Choice):
     """
     Slightly modify the layout of some rooms to reduce softlocks.
-    NOTE: You can warp to the starting room from any save station or Samus' ship by holding L+R while selecting "No"
-    when asked to save.
+    NOTE: You can warp to the starting room from anywhere by pressing L while on the map screen. This resets your progress to your last sav
     """
     display_name = "Layout Patches"
     option_false = 0
