@@ -6,13 +6,18 @@ import struct
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes, APPatchExtension
 from typing import Sequence
 from .in_game_data import (global_weapon_table, base_weapons, valid_random_starting_weapons, global_soul_table,
-                           base_check_address_table, easter_egg_table, warp_room_bits, world_version)
+                           base_check_address_table, easter_egg_table, warp_room_bits, world_version, global_item_table, common_filler_pool,
+                           boss_list, enemy_table)
+from .music_randomizer import area_music_randomizer, boss_music_randomizer
 from Options import OptionError
 from .Options import StartingWeapon, SoulRandomizer
 from .Items import soul_filler_table
 from BaseClasses import ItemClassification
 
 hash_us = "cc0f25b8783fb83cb4588d1c111bdc18"
+
+base_enemy_address = 0x7CCAC
+soul_check_table = 0x2F6DC50
 
 
 class LocalRom(object):
@@ -118,8 +123,13 @@ def patch_rom(world, rom, player: int, code_patch):
 
     if world.options.boost_speed:
         rom.write_bytes(0x15B2A9, bytearray([0x20]))
-        
-    soul_check_table = 0x2F6DC50
+
+    if world.options.death_link:
+        rom.write_bytes(0x2F6DD8D, bytearray([0x01]))
+
+    rom.write_bytes(0x2F6DD8E, struct.pack("H", world.options.experience_percentage))
+
+    rom.write_bytes(0x2F6DD90, struct.pack("H", world.options.soul_drop_percentage))
 
     if world.options.soul_randomizer == SoulRandomizer.option_shuffled:
         vanilla_souls = {"Skeleton Soul", "Axe Armor Soul", "Killer Clown Soul", "Ukoback Soul", "Skeleton Ape Soul", "Bone Ark Soul"}
@@ -132,6 +142,65 @@ def patch_rom(world, rom, player: int, code_patch):
         for soul in souls_output:
             soul_data = bytearray([global_soul_table.index(souls_output[soul]), 0x05])
             rom.write_bytes(soul_check_table + (global_soul_table.index(soul) * 2), soul_data)
+
+    elif world.options.soul_randomizer == SoulRandomizer.option_soulsanity:
+        # This is crashing when I enter the second room. I wonder why?
+        rom.write_bytes(0x2F6DD49, bytearray([0x01]))
+
+    if world.options.shop_randomizer:
+        shop_pool = common_filler_pool.copy()
+        for i in range(10):
+            # Shop pool 2
+            item = world.random.choice(shop_pool)
+            rom.write_bytes(0xA1F14 + i, bytearray([global_item_table.index(item) + 1]))
+            shop_pool.remove(item)
+
+        for i in range(18):
+            # Shop pool 1
+            item = world.random.choice(shop_pool)
+            rom.write_bytes(0xA1F38 + i, bytearray([global_item_table.index(item) + 1]))
+            shop_pool.remove(item)
+
+        for i in range(19):
+            # Starting shop
+            item = world.random.choice(shop_pool)
+            rom.write_bytes(0xA1F4F + i, bytearray([global_item_table.index(item) + 1]))
+            shop_pool.remove(item)
+
+        # Claymore should always be available for breakable walls
+        rom.write_bytes(0xA1F4E, bytearray([global_item_table.index("Claymore") + 1]))
+
+    if world.options.shuffle_enemy_drops:
+        drop_pool = common_filler_pool.copy()
+        for enemy in enemy_table:
+            if enemy in boss_list:  # We don't want to shuffle drops for bosses
+                continue
+
+            index = (base_enemy_address + (enemy_table.index(enemy) * 0x24))
+            common_drop_address = index + 8
+            rare_drop_address = index + 10
+            if world.random.randint(0, 99) < 45:
+                # Common drop
+                item = world.random.choice(drop_pool)
+                common_item = global_item_table.index(item) + 1
+            else:
+                common_item = 0
+
+            if world.random.randint(0, 99) < 29:
+                # Rare drop
+                item = world.random.choice(drop_pool)
+                rare_item = global_item_table.index(item) + 1
+            else:
+                rare_item = 0
+
+            rom.write_bytes(common_drop_address, bytearray([common_item]))
+            rom.write_bytes(rare_drop_address, bytearray([rare_item]))
+
+    if world.options.area_music_randomizer:
+        area_music_randomizer(world, rom)
+
+    if world.options.boss_music_randomizer:
+        boss_music_randomizer(world, rom)
 
     for location in world.multiworld.get_locations(player):
         item_type = 0
@@ -195,7 +264,8 @@ class DoSProcPatch(APProcedurePatch, APTokenMixin):
     procedure = [
         ("apply_bsdiff4", ["dos_base.bsdiff4"]),
         ("apply_tokens", ["token_patch.bin"]),
-        ("adjust_item_positions", [])
+        ("adjust_item_positions", []),
+        ("apply_modifiers", [])
     ]
 
     @classmethod
@@ -233,6 +303,32 @@ class DoSPatchExtensions(APPatchExtension):
                 rom.write_bytes(address + 2, struct.pack("H", y_pos))
 
         return rom.get_bytes()
+
+    @staticmethod
+    def apply_modifiers(caller: APProcedurePatch, rom: bytes) -> bytes:
+        rom = LocalRom(rom)
+        exp_multiplier = struct.unpack("H", rom.read_bytes(0x2F6DD8E, 2))[0]  # Read the multiplier
+        exp_multiplier = exp_multiplier / 100
+
+        soul_chance_multiplier = struct.unpack("H", rom.read_bytes(0x2F6DD90, 2))[0]
+        soul_chance_multiplier = soul_chance_multiplier / 100
+
+        for enemy in enemy_table:
+            address = (base_enemy_address + (enemy_table.index(enemy) * 0x24))
+            exp_address = address + 18  # Offset where EXP is stored
+            exp = rom.read_bytes(exp_address, 2)
+            exp = struct.unpack("H", exp)[0]
+            exp = int(exp * exp_multiplier)
+            rom.write_bytes(exp_address, struct.pack("H", exp))
+
+            soul_chance_address = address + 20
+            soul_chance = int.from_bytes(rom.read_bytes(soul_chance_address, 1))
+            if soul_chance:  # Only modify non-guaranteed Souls
+                soul_chance = int(min(0xFF, (soul_chance * soul_chance_multiplier)))
+                rom.write_bytes(soul_chance_address, bytearray([soul_chance]))
+
+        return rom.get_bytes()
+
 
 
 def get_base_rom_bytes(file_name: str = "") -> bytes:

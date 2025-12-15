@@ -41,17 +41,17 @@ def _collect_used_data(td: TrackerData) -> tuple[
                 if not checked:
                     continue
 
-                loc_map = td.get_player_locations(team, finder_slot) or {}
+                loc_map = td.get_player_locations(finder_slot) or {}
                 if not loc_map:
                     continue
 
-                finder_game = td.get_player_game(team, finder_slot)
+                finder_game = td.get_player_game(finder_slot)
 
                 for loc_id in set(sphere_loc_ids).intersection(checked):
                     if loc_id not in loc_map:
                         continue
                     item_id, receiver_slot, item_flags = loc_map[loc_id]
-                    receiver_game = td.get_player_game(team, receiver_slot)
+                    receiver_game = td.get_player_game(receiver_slot)
 
                     # >>> now we push a triplet (item_id, loc_id, item_flags)
                     finder_map = sphere_map.setdefault(finder_slot, {})
@@ -82,7 +82,7 @@ def _collect_player_games(td: TrackerData) -> dict[int, dict[int, str]]:
     for team, slots in (all_players or {}).items():
         team_map = out.setdefault(team, {})
         for slot in (slots or []):
-            team_map[slot] = td.get_player_game(team, slot)
+            team_map[slot] = td.get_player_game(slot)
     return out
 
 

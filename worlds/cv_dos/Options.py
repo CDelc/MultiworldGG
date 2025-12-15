@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from Options import (Toggle, Range, PerGameCommonOptions, StartInventoryPool,
-                     OptionGroup, DefaultOnToggle, Choice, TextChoice, OptionSet)
+from Options import (Toggle, PerGameCommonOptions, StartInventoryPool,
+                     OptionGroup, DefaultOnToggle, Choice, TextChoice, OptionSet, DeathLink, NamedRange)
 from .Items import soul_filler_table
 
 
@@ -81,10 +81,12 @@ class SoulsanityLevel(Choice):
     default = 0
 
 class GuaranteedSouls(OptionSet):
-    """The specified Souls will be guaranteed to have at least one copy in the item pool. Unspecified souls can still be randomly selected from the soul pool."""
-    display_name = "Goal Triggers"
+    """The specified Souls will be guaranteed to have at least one copy in the item pool. Unspecified souls can still be randomly selected from the soul pool.
+       You can also use Common, Uncommon, or Rare to add all souls of that rarity."""
+    display_name = "Guranteed Souls"
     default = {"Procel Soul", "Mud Demon Soul", "Black Panther Soul"}
-    valid_keys = soul_filler_table
+    valid_keys = {soul.casefold() for soul in set(soul_filler_table) | {"common", "uncommon", "rare"}}
+    valid_keys_casefold = True
 
 class RandomizeStartingWarp(Toggle):
     """Randomizes which Warp Room is unlocked by default."""
@@ -93,6 +95,48 @@ class RandomizeStartingWarp(Toggle):
 class OpenDrawbridge(Toggle):
     """If enabled, the drawbridge in Lost Village will start open instead of closed."""
     display_name = "Open Drawbridge"
+
+class ShopRandomizer(Toggle):
+    """Randomizes Hammer's shop items."""
+    display_name = "Shop Randomizer"
+
+class ShuffleDrops(Toggle):
+    """Randomizes items dropped by enemies"""
+    display_name = "Drop Shuffle"
+
+class ExperiencePercent(NamedRange):
+    """Percentage applied to an enemy's base chance of dropping their soul."""
+    display_name = "Experience Percentage"
+    range_start = 50
+    range_end = 500
+    default = 100
+    special_range_names = {
+        "half": 50,
+        "normal": 100,
+        "double": 200,
+        "quadruple": 400
+    }
+
+class SoulDropPercent(NamedRange):
+    """What percentage of EXP enemies give you. This is a percent of their original EXP amount."""
+    display_name = "Soul Drop Percentage"
+    range_start = 50
+    range_end = 500
+    default = 100
+    special_range_names = {
+        "half": 50,
+        "normal": 100,
+        "double": 200,
+        "triple": 300
+    }
+
+class AreaMusicShuffle(Toggle):
+    """Randomizes area music."""
+    display_name = "Area Music Randomizer"
+
+class BossMusicShuffle(Toggle):
+    """Randomizes boss music."""
+    display_name = "Boss Music Randomizer"
 
 @dataclass
 class DoSOptions(PerGameCommonOptions):
@@ -112,6 +156,14 @@ class DoSOptions(PerGameCommonOptions):
     guaranteed_souls: GuaranteedSouls
     shuffle_starting_warp_room: RandomizeStartingWarp
     open_drawbridge: OpenDrawbridge
+    shop_randomizer: ShopRandomizer
+    death_link: DeathLink
+    start_inventory_from_pool: StartInventoryPool
+    shuffle_enemy_drops: ShuffleDrops
+    experience_percentage: ExperiencePercent
+    soul_drop_percentage: SoulDropPercent
+    area_music_randomizer: AreaMusicShuffle
+    boss_music_randomizer: BossMusicShuffle
 
 dos_option_groups = [
     OptionGroup("Goal Options", [
@@ -123,19 +175,27 @@ dos_option_groups = [
     OptionGroup("Soul Settings", [
         SoulRandomizer,
         SoulsanityLevel,
-        GuaranteedSouls
+        GuaranteedSouls,
+        SoulDropPercent
 
     ]),
 
     OptionGroup("Item Options", [
         StartingWeapon,
-        EarlySeal1
+        EarlySeal1,
+        ShopRandomizer
 
     ]),
 
     OptionGroup("World Settings", [
         RandomizeStartingWarp,
         OpenDrawbridge
+
+    ]),
+
+    OptionGroup("Enemy Settings", [
+        ShuffleDrops,
+        ExperiencePercent
 
     ]),
 
@@ -147,5 +207,11 @@ dos_option_groups = [
         FixLuck,
         BoostSpeed,
         OneScreenMode
-    ])
+    ]),
+
+    OptionGroup("Music Randomizer", [
+        AreaMusicShuffle,
+        BossMusicShuffle
+
+    ]),
 ]
