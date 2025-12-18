@@ -485,7 +485,8 @@
 /worlds/spyro3/ @ArsonAssassin
 
 # Starcraft 2
-/worlds/sc2/ @Ziktofel
+# Note: @Ziktofel acts as a mentor
+/worlds/sc2/ @MatthewMarinets @Snarkie @SirChuckOfTheChuckles
 
 # Star Fox 64
 /worlds/star_fox_64/ @Auztin
