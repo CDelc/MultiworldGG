@@ -90,7 +90,7 @@ In the current implementation, the most severe traps could temporarily lock you 
 In Satisfactory, items which need to be sent to other worlds appear in the HUB and MAM as info cards
 in a similar manner to the base game's building and recipe unlocks.
 Info cards have the Archipelago icon
-and are color coded to indicate what Archipelago progression type they are.
+and are color coded to indicate what MultiworldGG progression type they are.
 
 Hover over them to read a description, since many Satisfactory UIs (such as the MAM) cut this information off.
 
@@ -140,11 +140,11 @@ You can find a list of Gifting compatible games on the
 ## How do Hard Drives work?
 
 All base game Hard Drive contents (alternate recipes) have been moved into the normal Archipelago pool.
-Instead, Hard Drives can contain Archipelago items from a dedicated "Hard Drive" pool.
+Instead, Hard Drives can contain MultiworldGG items from a dedicated "Hard Drive" pool.
 Scanning a drive presents a choice between 2 items from the pool,
 and the scan time has been reduced from 10 minutes to 3 seconds.
 
-Unlike the base game, Archipelago hard drive results have no hard progression requirements,
+Unlike the base game, MultiworldGG hard drive results have no hard progression requirements,
 other than access to the MAM itself.
 The random contents selection system prefers to pick items earlier in progression,
 but keeping unselected Hard Drives in the Hard Drive Library will force later progression items to be presented.
@@ -152,20 +152,20 @@ but keeping unselected Hard Drives in the Hard Drive Library will force later pr
 The "Hard Drive Progression Items" option controls how many Hard Drives contain progression items,
 the rest are filler or useful.
 
-## Where do I run Archipelago commands?
+## Where do I run MultiworldGG commands?
 
 You can use the game's built-in chat menu.
 Check the game's keybinding options to see how to open it.
 Run the `/help` command to list all available commands.
-Note that Archipelago commands are *not* prefixed with `!` inside of Satisfactory.
+Note that MultiworldGG commands are *not* prefixed with `!` inside of Satisfactory.
 
 Note that multiple base-game bugs affect the chat menu's functionality
-and Archipelago can put a lot of info into the chat.
-You may wish to launch the Archipelago Text Client and use it to run commands instead of the game's chat.
+and MultiworldGG can put a lot of info into the chat.
+You may wish to launch the MultiworldGG Text Client and use it to run commands instead of the game's chat.
 
 ### Hints
 
-Archipelago's hint system is available within Satisfactory via the `/hint` command.
+MultiworldGG's hint system is available within Satisfactory via the `/hint` command.
 Most multiworld item names have a prefix to distinguish recipes from bundles.
 For example, to hint for the Assembler, run `/hint Building: Assembler`.
 
@@ -175,12 +175,12 @@ For example, hinting `Smart Plating` will return the logically first Smart Plati
 but hinting `Recipe: Smart Plating` or `Recipe: Plastic Smart Plating` will hint that specific recipe for Smart Plating,
 which may or may not be in logic.
 
-Exact Archipelago Item names (for hints/starting inventory/etc.) can be found
+Exact MultiworldGG Item names (for hints/starting inventory/etc.) can be found
 [on the mod's GitHub](https://github.com/Jarno458/Archipelago/blob/Satisfactory/worlds/satisfactory/Items.py).
 
 ## Multiplayer and Dedicated Servers
 
-It is possible to host a Satisfactory Archipelago Slot using the game's built in multiplayer,
+It is possible to host a Satisfactory MultiworldGG Slot using the game's built in multiplayer,
 allowing other Satisfactory players to join in constructing your factory.
 This experience is wonderful - but there are few things not yet properly working for multiplayer:
 
@@ -188,7 +188,7 @@ This experience is wonderful - but there are few things not yet properly working
 - Starting inventory for clients is missing
 
 Remember that client players must have the same mods installed as the host player to join,
-however, they do not need to configure Archipelago connection settings.
+however, they do not need to configure MultiworldGG connection settings.
 
 Dedicated server support is only working for Windows at the moment.
 
@@ -205,4 +205,4 @@ to adjust other mods to work with your slot settings,
 but doing so is out of the scope of this guide.
 
 [The Satisfactory Archipelago mod GitHub](https://github.com/Jarno458/SatisfactoryArchipelagoMod/blob/main/Docs/AdditionalMods.md)
-maintains a list of additional mods that have been tested with Archipelago to some extent.
+maintains a list of additional mods that have been tested with MultiworldGG to some extent.
