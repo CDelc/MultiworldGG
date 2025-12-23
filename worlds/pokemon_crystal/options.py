@@ -942,7 +942,7 @@ class ForceFullyEvolved(NamedRange):
     Only applies when trainer parties are randomized.
     """
     display_name = "Force Fully Evolved"
-    range_start = 1
+    range_start = 0
     range_end = 100
     default = 0
     special_range_names = {
@@ -1238,7 +1238,7 @@ class TMCompatibility(NamedRange):
     """
     display_name = "TM Compatibility"
     default = -1
-    range_start = 0
+    range_start = -1
     range_end = 100
     special_range_names = {
         "vanilla": -1,
@@ -1258,7 +1258,7 @@ class HMCompatibility(NamedRange):
     """
     display_name = "HM Compatibility"
     default = -1
-    range_start = 0
+    range_start = -1
     range_end = 100
     special_range_names = {
         "vanilla": -1,

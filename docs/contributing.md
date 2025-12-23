@@ -42,4 +42,4 @@ the [adding games documentation](/docs/adding%20games.md)
 which details what is required to implement support for a game, and has tips on to get started.
 
 For other questions, feel free to explore the [main documentation folder](/docs), and ask us questions in the
-#ap-world-dev channel of the [Discord](https://multiworld.gg/discord).
+#mwgg-discussion channel of the [Discord](https://multiworld.gg/discord).
