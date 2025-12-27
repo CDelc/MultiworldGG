@@ -20,12 +20,13 @@ from .setup_game import place_static_items, setup_game, place_static_souls
 
 
 class DoSWeb(WebWorld):
+    display_name: str = "Castlevania - Dawn of Sorrow"
     theme = "ocean"
 
     setup_en = Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up the Dawn of Sorrow randomizer"
-        "and connecting to an Archipelago server.",
+        "A guide to setting up the Dawn of Sorrow randomizer "
+        "and connecting to a MultiworldGG server.",
         "English",
         "setup_en.md",
         "setup/en",
