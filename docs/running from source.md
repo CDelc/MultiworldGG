@@ -7,10 +7,11 @@ use that version. These steps are for developers or platforms without compiled r
 ## General
 
 What you'll need:
- * [Python 3.12.7 or newer](https://www.python.org/downloads/), not the Windows Store version
+ * [Python 3.13.5 or newer](https://www.python.org/downloads/), not the Windows Store version
    * On Windows, please consider only using the latest supported version in production environments since security
      updates for older versions are not easily available.
    * Python 3.13.x is currently the newest supported version
+   * Python 3.12.7+ is also supported, but will fail on some apworlds which do required prebuild libraries.
  * pip: included in downloads from python.org, separate in many Linux distributions
  * Matching C compiler
    * possibly optional, read operating system specific sections

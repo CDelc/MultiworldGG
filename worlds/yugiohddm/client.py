@@ -68,7 +68,7 @@ class YGODDMClient(BizHawkClient):
 
     async def read_dice_collection(self, ctx: "BizHawkClientContext") -> bytes:
         return (await bizhawk.read(
-            ctx.bizhawk_ctx, [(Constants.DICE_COLLECTION_OFFSET, 200, COMBINED_WRAM)]
+            ctx.bizhawk_ctx, [(Constants.DICE_COLLECTION_OFFSET, 201, COMBINED_WRAM)]
         ))[0]
     
     async def read_duelist_collection(self, ctx: "BizHawkClientContext") -> typing.List[int]:
@@ -400,7 +400,7 @@ class YGODDMClient(BizHawkClient):
                     for dice_id, count in Counter(new_dice_ids).items():
                         await bizhawk.write(ctx.bizhawk_ctx, [(
                             Constants.DICE_COLLECTION_OFFSET + dice_id,
-                            (dice_collection_memory[dice_id - 1] + count).to_bytes(1, "little"),
+                            (dice_collection_memory[dice_id] + count).to_bytes(1, "little"),
                             COMBINED_WRAM
                         )])
 

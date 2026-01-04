@@ -1,3 +1,6 @@
+from .Utils import setup_lib
+setup_lib()
+
 import os
 import orjson
 from typing import Any, ClassVar, Dict, List, Optional, Sequence, Tuple
@@ -15,16 +18,7 @@ from .Locations import ALBWLocation, LocationData, LocationType, all_locations, 
 from .Options import ALBWOptions, CrackShuffle, InitialCrackState, Keysy, LogicMode, NiceItems, WeatherVanes, \
     create_randomizer_settings
 from .Patch import PatchInfo, PatchItemInfo, ALBWProcedurePatch
-from pathlib import Path
-import sys
-
-# Path to the lib directory
-lib_path = Path(__file__).parent / "lib"
-
-# Add the lib directory to sys.path
-sys.path.append(str(lib_path))
-
-from albwrandomizer import ArchipelagoInfo, PyRandomizable, SeedInfo, randomize_pre_fill
+from albwrandomizer import ArchipelagoInfo, Cracksanity, PyRandomizable, SeedInfo, randomize_pre_fill
 
 albw_base_id = 6242624000
 
@@ -60,11 +54,15 @@ class ALBWSettings(Group):
         """File name of your decrypted North American A Link Between Worlds ROM"""
         description = "A Link Between Worlds ROM File"
         
+        def browse(self, filetypes=None, **kwargs):
+            filetypes = [("3ds ROM File", [".3ds", ".cci"])]
+            return super().browse(filetypes=filetypes, **kwargs)
+
         @classmethod
         def validate(cls, path: str) -> None:
             pass #TODO add validation; hashing doesn't work for 3ds roms
 
-    rom_file: ALBWRomFile = ALBWRomFile("Legend of Zelda, The - A Link Between Worlds (USA) (En,Fr,Es).3ds")
+    rom_file: ALBWRomFile = ALBWRomFile("Legend of Zelda, The - A Link Between Worlds (USA) (En,Fr,Es).cci")
 
 class ALBWWorld(World):
     """
@@ -73,7 +71,6 @@ class ALBWWorld(World):
     discover magical items, and save the worlds of Hyrule and Lorule!
     """
     game: ClassVar[str] = "A Link Between Worlds"
-    author: ClassVar[str] = "randomsalience"
     options_dataclass = ALBWOptions
     options: ALBWOptions
     topology_present: ClassVar[bool] = False

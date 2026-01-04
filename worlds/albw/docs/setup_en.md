@@ -3,21 +3,23 @@
 ## Required Software
 
 - [MultiworldGG](https://github.com/MultiworldGG/MultiworldGG/releases).
-- A decrypted, North American A Link Between Worlds `.3ds` ROM. Instructions for dumping your ROM can be found [here](https://wiki.hacks.guide/wiki/3DS:Dump_titles_and_game_cartridges). **Make sure to select "decrypt" when dumping.**
-- [Lime3DS](https://github.com/Lime3DS/Lime3DS/releases) or [PabloMK7's Citra](https://github.com/PabloMK7/citra/releases).
+- A decrypted, North American A Link Between Worlds `.3ds` ROM. Instructions for dumping your ROM can be found [here](https://wiki.hacks.guide/wiki/3DS:Dump_titles_and_game_cartridges). **Make sure to select "decrypt" when dumping.** Note: for use with the Azahar emulator (below), rename the `.3ds` ROM to a `.cci` file. These files are identical, only the extension is different.
+- [Azahar](https://azahar-emu.org/pages/download/)
 - **The game must be played with the language set to English.**
 
 ## Installation
 
 1. Install the latest version of MultiworldGG.
-2. In the emulator, select `File > Open Lime3DS Folder` or `File > Open Citra Folder`. Create a `load` folder inside this folder, and inside the `load` folder create a `mods` folder.
+2. If you are using AP: Download `albw.apworld` and put it in your `Archipelago/custom_worlds/` folder.
+3. In the emulator, select `File > Open Azahar Folder`. Create a `load` folder inside this folder, and inside the `load` folder create a `mods` folder.
+4. Also in the emulator, select `Emulation > Configure`. Then, in the general section, on the top, select `Debug`. Finally, at the bottom, ensure that the `Enable RPC Server` option is enabled.
 
 ## Generating a Game
 
 1. Create your player options YAML file. A sample YAML is included.
 2. Gather the YAMLs of all players into the `MultiworldGG/Players` folder.
 3. Run the MultiworldGG Launcher and select Generate.
-4. A zip file will be created in the `MultiworldGG/output` folder. Upload this to [the MultiworldGG website](https://multiworld.gg/uploads) to host your game.
+4. A zip file will be created in the `MultiworldGG/output` folder. Upload this to [the MultiworldGG website](/uploads) to host your game.
 5. Inside the zip file is a `.apalbw` file. You will need this file to play the game.
 
 ## Playing a Game
@@ -31,6 +33,6 @@
 
 ## Resuming a Game
 
-1. Run the Archipelago Launcher and select the A Link Between Worlds client.
+1. Run the MultiworldGG Launcher and select the A Link Between Worlds client.
 2. Run A Link Between Worlds in the emulator. The client should automatically connect to the emulator.
 3. Enter the server URL into the client and press Connect.

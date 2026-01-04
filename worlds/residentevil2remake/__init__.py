@@ -55,14 +55,14 @@ class ResidentEvil2Remake(World):
 
     data_version = 2
     required_client_version = (0, 5, 0)
-    apworld_release_version = "0.2.7" # defined to show in spoiler log
+    apworld_release_version = "0.3.0" # defined to show in spoiler log
 
     item_id_to_name = { item['id']: item['name'] for item in Data.item_table }
     item_name_to_id = { item['name']: item['id'] for item in Data.item_table }
     item_name_to_item = { item['name']: item for item in Data.item_table }
-    location_id_to_name = { loc['id']: RE2RLocation.stack_names(loc['region'], loc['name']) for loc in Data.location_table }
-    location_name_to_id = { RE2RLocation.stack_names(loc['region'], loc['name']): loc['id'] for loc in Data.location_table }
-    location_name_to_location = { RE2RLocation.stack_names(loc['region'], loc['name']): loc for loc in Data.location_table }
+    location_id_to_name = { loc['id']: RE2RLocation.stack_names(loc['region'], loc['name']) for loc in Data.location_table + Data.enemy_table }
+    location_name_to_id = { RE2RLocation.stack_names(loc['region'], loc['name']): loc['id'] for loc in Data.location_table + Data.enemy_table }
+    location_name_to_location = { RE2RLocation.stack_names(loc['region'], loc['name']): loc for loc in Data.location_table + Data.enemy_table }
     source_locations = {} # this is used to seed the initial item pool from original items, and is indexed by player as lname:loc locations
 
     # de-dupe the item names for the item group name
@@ -77,12 +77,71 @@ class ResidentEvil2Remake(World):
     options: RE2ROptions
 
     def generate_early(self): # check weapon randomization before locations and items are processed, so we can swap non-randomized items as well
+        # check for option values that UT passed via storing from slot data, and set our options to match if present
+        for key, val in getattr(self.multiworld, 're_gen_passthrough', {}).get(self.game, {}).items():
+            # gets the int val from the string option value name, then sets
+            getattr(self.options, key).value = getattr(self.options, key).options[val]
+
+        # if the enemy kills as locations option is enabled for a scenario that doesn't support it yet, throw an error
+        if self._enemy_kill_rando() and not self._can_enemy_kill_rando():
+            raise RE2ROptionError("The Enemy Kills as Locations option is only currently supported for Leon's A (1st) scenario on Assisted / Standard difficulty.")
+            return
+
         # start with the normal locations per player for pool, then overwrite with weapon rando if needed
         self.source_locations[self.player] = self._get_locations_for_scenario(self._get_character(), self._get_scenario()) # id:loc combo
         self.source_locations[self.player] = { 
             RE2RLocation.stack_names(l['region'], l['name']): { **l, 'id': i } 
                 for i, l in self.source_locations[self.player].items() 
         } # turn it into name:loc instead
+
+        if self._enemy_kill_rando():
+            # since enemy kills don't give items themselves, create a drop table of 
+            # combat-related items to add to the pool for these locations
+            enemy_kill_items = self._format_option_text(self.options.enemy_kill_items).lower()
+
+            if enemy_kill_items == "Trash":
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if i.get('type', 'None') in ['Lore'] or 'Trophy' in i['name'] 
+                ]   
+            elif enemy_kill_items == "Healing":
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if i.get('type', 'None') in ['Recovery'] 
+                ]
+            elif enemy_kill_items == "Gunpowder":
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if 'Gunpowder' in i['name'] 
+                ]
+            elif enemy_kill_items == "Ammo":
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if i.get('type', 'None') in ['Ammo'] 
+                ]
+            elif enemy_kill_items == "Ammo Related":
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if i.get('type', 'None') in ['Ammo'] or 'Gunpowder' in i['name'] 
+                ]
+            elif enemy_kill_items == "All Weapon Related":
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if i.get('type', 'None') in ['Ammo', 'Subweapon'] or 'Gunpowder' in i['name'] 
+                ]
+            else: # == "Mixed"
+                enemy_kill_valid_drops = [
+                    i['name'] for i in Data.item_table if i.get('type', 'None') in ['Recovery', 'Ammo', 'Subweapon'] or 'Gunpowder' in i['name'] 
+                ]   
+
+            # get the list of viable items from the list of items currently on the scenario's locations
+            enemy_kill_drop_names = list(set([
+                l['original_item'] for l in self.source_locations[self.player].values() if l.get('original_item', 'None') in enemy_kill_valid_drops
+            ]))
+            enemy_kill_drops = []
+
+            for x in range(len(Data.enemy_table)):
+                drop_name = enemy_kill_drop_names[x % len(enemy_kill_drop_names)]
+                enemy_kill_drops.append(drop_name)
+
+            # replace placeholders for enemy kills with the chosen distribution of items
+            for name, loc in self.source_locations[self.player].items():
+                if loc.get('original_item') == "__Enemy Kill Drop Placeholder__":
+                    loc['original_item'] = enemy_kill_drops.pop(0)
 
         weapon_rando = self._format_option_text(self.options.cross_scenario_weapons).lower()
 
@@ -91,12 +150,21 @@ class ResidentEvil2Remake(World):
         if self._get_oops_all_options_flag():
             if weapon_rando != "none":
                 raise RE2ROptionError("Cannot apply 'Oops All' options alongside Cross Scenario Weapons. Please fix your yaml.")
+            
+            # also check for starting weapon option, which is incompatible with Oops! options
+            if self.options.starting_weapon.current_key != "default":
+                raise RE2ROptionError("Cannot apply 'Starting Weapon' options alongside 'Oops All' options. Please fix your yaml.")
+
             return
 
         weapon_rando = self._format_option_text(self.options.cross_scenario_weapons).lower()
 
         # if the user didn't pick any weapon randomization, skip all of this
         if weapon_rando == "none":
+            # if not using weapon rando (which handles its own starting weapon), set the starting weapon here
+            if self.options.starting_weapon.current_key != "default":
+                self.starting_weapon[self.player] = self.get_starting_weapon_name_from_option_value()
+
             return
 
         weapon_randomizer = WeaponRandomizer(self, self._get_character(), self._get_scenario())
@@ -208,7 +276,17 @@ class ResidentEvil2Remake(World):
             ]
         ]
 
+        # print([location['name'] + ' | ' + location.get('original_item', 'None') for _, location in scenario_locations.items()])
+
         pool = [item for item in pool if item is not None] # some of the locations might not have an original item, so might not create an item for the pool
+
+        # if there's a starting weapon option set, remove the starting weapon from the pool and replace it with its ammo
+        if self.options.starting_weapon.current_key != "default":
+            starting_weapon_name = self.get_starting_weapon_name_from_option_value()
+            starting_weapon_ammo = [item['ammo'] for item in self.item_name_to_item.values() if item['name'] == starting_weapon_name][0]
+
+            # replace every instance of the weapon we started with (in the item pool) with its ammo
+            pool = [item if item.name != starting_weapon_name else self.create_item(starting_weapon_ammo) for item in pool]
 
         # remove any already-placed items from the pool (forced items, etc.)
         for filled_location in self.multiworld.get_filled_locations(self.player):
@@ -377,10 +455,29 @@ class ResidentEvil2Remake(World):
             if oops_all_flag not in oops_items_map:
                 raise RE2ROptionError("Cannot apply multiple 'Oops All' options. Please fix your yaml.")
 
+            replacement_types = ['Weapon', 'Subweapon', 'Ammo']
+
+            if self._enemy_kill_rando(): # if enemy kill rando, just replace gunpowder with the Oops weapon; players will need more firepower
+                replacement_types.append('Gunpowder')
+            else: # otherwise, we don't want the player to have gunpowder for bullets to make Oops options more thematic, so we swap them to random filler
+                replacements = [
+                    ['Picture Block', 'Stuffed Doll', 'Pink Scissors', 'Gas Station Key'], # variety of filter items, exclusive to Oops for now
+                    ['Handgun Ammo', 'Flash Grenade'], # a few more useful replacements for the limited larges
+                    ['Green Herb', 'Blue Herb', 'Wooden Boards'] # some okay non-filler replacements for yellows/whites
+                ]
+
+                for from_item in [item for item in self.item_name_to_item.values() if item.get('type') == 'Gunpowder']:
+                    if "Yellow" in from_item['name'] or "White" in from_item['name']:
+                        pool = self._replace_pool_item_with(pool, from_item['name'], self.random.choice(replacements[2]))
+                    elif "Large" in from_item['name']:
+                        pool = self._replace_pool_item_with(pool, from_item['name'], self.random.choice(replacements[1]))
+                    else: # just plain Gunpowder
+                        pool = self._replace_pool_item_with(pool, from_item['name'], self.random.choice(replacements[0]))
+
             # Leave the Anti-Tank Rocket on Tyrant alone so the player can finish the fight
             items_to_replace = [
                 item for item in self.item_name_to_item.values() 
-                if 'type' in item and item['type'] in ['Weapon', 'Subweapon', 'Ammo'] and item['name'] != 'Anti-tank Rocket'
+                if item.get('type') in replacement_types and item['name'] != 'Anti-tank Rocket'
             ]
 
             for from_item in items_to_replace:
@@ -403,6 +500,10 @@ class ResidentEvil2Remake(World):
 
         # Make any items that result in a really quick BK either early or local items, so the BK time is reduced
         early_items = {}       
+
+        # hardcore no longer removes the main hall shutter, so force bolt cutters early to prevent softlock
+        if self._get_difficulty() == "hardcore":
+            early_items["Bolt Cutters"] = 1 
 
         for item_name, item_qty in early_items.items():
             if item_qty > 0:
@@ -431,6 +532,13 @@ class ResidentEvil2Remake(World):
 
             pool.remove(eligible_items[0])
 
+        # if enemy kills are added to the locations, remove all Wooden Boards so that players don't prevent themselves from killing window vaulting enemies
+        if self._enemy_kill_rando():
+            if self._get_oops_all_options_flag():
+                pool = self._replace_pool_item_with(pool, "Wooden Boards", "Blue Herb") # enemy kill rando removes all gunpowder with Oops, so use a different replacement
+            else:
+                pool = self._replace_pool_item_with(pool, "Wooden Boards", "Gunpowder")
+
         self.multiworld.itempool += pool
             
     def create_item(self, item_name: str) -> Item:
@@ -440,11 +548,11 @@ class ResidentEvil2Remake(World):
 
         if item.get('progression', False):
             classification = ItemClassification.progression
-        elif item.get('type', None) not in ['Lore', 'Trap']:
+        elif item.get('type', None) not in ['Lore', 'Filler', 'Trap']:
             classification = ItemClassification.useful
         elif item.get('type', None) == 'Trap':
             classification = ItemClassification.trap
-        else: # it's Lore
+        else: # it's Lore/Filler
             classification = ItemClassification.filler
 
         new_item = Item(item['name'], classification, item['id'], player=self.player)
@@ -468,6 +576,22 @@ class ResidentEvil2Remake(World):
 
         return slot_data
     
+    # called by UT to pass slot data into the world dupe it's trying to generate, so you can make the options match for gen
+    #     (if you return anything from this, UT will put it in self.multiworld.re_gen_passthrough[<game name>] for the single player that is running UT)
+    def interpret_slot_data(self, slot_data: dict[str, Any]):
+        if not slot_data:
+            return False
+
+        regen_values: dict[str, Any] = {}
+
+        # below are the only options that affect logic during generation
+        #    comparing and only sending what's different breaks with YAML random, so always just regen with the slot data
+        regen_values['character'] = slot_data.get('character') or self._get_character()
+        regen_values['scenario'] = slot_data.get('scenario') or self._get_scenario()
+        regen_values['difficulty'] = slot_data.get('difficulty') or self._get_difficulty()
+
+        return regen_values
+
     def write_spoiler_header(self, spoiler_handle: TextIO):
         spoiler_handle.write(f"RE2R_AP_World version: {self.apworld_release_version}\n")
 
@@ -510,6 +634,9 @@ class ResidentEvil2Remake(World):
                         spoiler_handle.write(f"\n{''.ljust(30, ' ')} -> {ammo} ({ammo_count})")
 
             spoiler_handle.write("\n\n(Ammo totals are for the whole campaign, not per swap/category.)")
+        elif self.options.starting_weapon.current_key != "default":
+            starting_weapon = self.starting_weapon[self.player]
+            spoiler_handle.write(f"\n\nStarting Weapon ({self.multiworld.player_name[self.player]}): {starting_weapon}\n")
 
     def _has_items(self, state: CollectionState, item_names: list) -> bool:
         # if there are no item requirements, this location is open, they "have the items needed"
@@ -550,9 +677,15 @@ class ResidentEvil2Remake(World):
     
     def _get_locations_for_scenario(self, character, scenario) -> dict:
         locations_pool = {
-            loc['id']: loc for _, loc in self.location_name_to_location.items()
+            loc['id']: loc for loc in Data.location_table
                 if loc['character'] == character and loc['scenario'] == scenario
         }
+
+        if self._enemy_kill_rando():
+            locations_pool.update({
+                enemy['id']: enemy for enemy in Data.enemy_table
+                    if enemy['character'] == character and enemy['scenario'] == scenario
+            })
 
         # if the player chose hardcore, take out any matching standard difficulty locations
         if self._format_option_text(self.options.difficulty) == 'Hardcore':
@@ -600,6 +733,24 @@ class ResidentEvil2Remake(World):
     
     def _get_starting_weapon(self) -> str:
         return self.starting_weapon[self.player] if self.player in self.starting_weapon else None
+
+    # not private because used by weapon rando file
+    def get_starting_weapon_name_from_option_value(self) -> str:
+        lookups: dict = {
+            "default": None,
+            "handgun_matilda": "Matilda",
+            "handgun_sls": "SLS 60",
+            "handgun_m19": "M19",
+            "handgun_quickdraw": "Quickdraw Army",
+            "handgun_hp3": "JMB Hp3",
+            "flamethrower": "Chemical Flamethrower",
+            "shotgun_w870": "W-870",
+            "grenadelauncher_gm79": "GM 79",
+            "lightninghawk": "Lightning Hawk",
+            "submachinegun_mq11": "MQ 11"
+        }
+
+        return lookups[self.options.starting_weapon.current_key]
     
     def _replace_pool_item_with(self, pool, from_item_name, to_item_name) -> list:
         items_to_remove = [item for item in pool if item.name == from_item_name]
@@ -625,6 +776,12 @@ class ResidentEvil2Remake(World):
             flag |= 0x08
         return flag
        
+    def _enemy_kill_rando(self) -> bool:
+        return self._format_option_text(self.options.add_enemy_kills_as_locations) != "None"
+
+    def _can_enemy_kill_rando(self) -> bool:
+        return self._get_character() == "leon" and self._get_scenario() == "a" and self._get_difficulty() in ["assisted", "standard"]
+
     # def _output_items_and_locations_as_text(self):
     #     my_locations = [
     #         {

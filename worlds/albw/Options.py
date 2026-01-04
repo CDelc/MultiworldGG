@@ -1,14 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict
 from Options import PerGameCommonOptions, Choice, Range, Toggle
-from pathlib import Path
-import sys
-
-# Path to the lib directory
-lib_path = Path(__file__).parent / "lib"
-
-# Add the lib directory to sys.path
-sys.path.append(str(lib_path))
 import albwrandomizer
 
 class LogicMode(Choice):
@@ -89,9 +81,8 @@ class InitialCrackState(Choice):
     option_open = 1
     default = 1
 
-#TODO implement
 class CrackShuffle(Choice):
-    """Choose how to shuffle Cracks (NOT YET IMPLEMENTED):
+    """Choose how to shuffle Cracks:
     off: Cracks are not shuffled.
     cross_world_pairs: Cracks are shuffled, but remain in Hyrule/Lorule pairs.
     any_world_pairs: Cracks are shuffled freely, and can lead to the same or opposite world.

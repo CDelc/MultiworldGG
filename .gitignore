@@ -71,6 +71,7 @@ Output Logs/
 /datapackage_export.json
 /custom_worlds
 /certs
+/temp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

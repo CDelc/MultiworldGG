@@ -251,11 +251,7 @@ class WaffleWorld(World):
         # Debug
         from Utils import visualize_regions
         state = CollectionState(self.multiworld)
-        #state.update_reachable_regions(self.player)
-        #state.collect(self.create_item(ItemName.mario_run))
-        #state.collect(self.create_item(ItemName.progressive_powerup))
-        #state.collect(self.create_item(ItemName.progressive_powerup))
-        #state.collect(self.create_item(ItemName.progressive_powerup))
+        state.update_reachable_regions(self.player)
         visualize_regions(self.get_region("Menu"), "my_world.puml", show_entrance_names=True,
                         regions_to_highlight=state.reachable_regions[self.player])
 
@@ -697,6 +693,8 @@ class WaffleWorld(World):
         slot_data["transition_pairs"] = self.transition_pairs
         slot_data["swapped_exits"] = self.swapped_exits
         slot_data["carryless_exits"] = self.carryless_exits
+        slot_data["required_egg_count"] = self.required_egg_count
+        slot_data["actual_egg_count"] = self.actual_egg_count
         slot_data["trap_weights"] = self.output_trap_weights()
 
         return slot_data

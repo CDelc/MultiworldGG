@@ -6,6 +6,8 @@ import asyncio, random, copy
 # AP related imports
 import Utils
 
+apname = Utils.instance_name if Utils.instance_name else "Archipelago"
+
 # Relative related imports
 from .universal_context import UniversalContext, UniversalCommandProcessor, logger
 from ..links.network_engine import ArchipelagoNetworkEngine
@@ -98,7 +100,7 @@ class BaseContext(UniversalContext):
             def build(self):
                 container = super().build()
 
-                self.base_title += " |  Archipelago"
+                self.base_title += f" | {apname}"
                 build_gui(self)
 
                 return container
