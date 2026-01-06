@@ -186,6 +186,7 @@ def gen_game(gen_options: dict, meta: dict[str, Any] | None = None, owner=None, 
                                      format_exception(e))
                     gen.meta = json.dumps(meta)
                     commit()
+        raise  # Re-raise so the pool callback handles this as a failure
     except (KeyboardInterrupt, SystemExit):
         # don't update db, retry next time
         raise

@@ -21,11 +21,11 @@ try:
 except ImportError:
     apname = "Archipelago"
 
-from client.common import DK64MemoryMap, create_task_log_exception, check_version, get_ap_version
-from client.emu_loader import EmuLoaderClient
-from client.items import item_ids, item_names_to_id, trap_name_to_index, trap_index_to_name
-from client.check_flag_locations import location_flag_to_name, location_name_to_flag
-from client.ap_check_ids import check_id_to_name, check_names_to_id
+from archipelago.client.common import DK64MemoryMap, create_task_log_exception, check_version, get_ap_version
+from archipelago.client.emu_loader import EmuLoaderClient
+from archipelago.client.items import item_ids, item_names_to_id, trap_name_to_index, trap_index_to_name
+from archipelago.client.check_flag_locations import location_flag_to_name, location_name_to_flag
+from archipelago.client.ap_check_ids import check_id_to_name, check_names_to_id
 from CommonClient import CommonContext, get_base_parser, gui_enabled, logger, server_loop, ClientCommandProcessor
 from NetUtils import ClientStatus
 from randomizer.Patching.ItemRando import normalize_location_name
@@ -310,6 +310,25 @@ class DK64Client:
         if not self.memory_pointer:
             self.memory_pointer = self.n64_client.read_u32(DK64MemoryMap.memory_pointer)
         self.n64_client.write_u8(self.memory_pointer + DK64MemoryMap.connection, 0xFF)
+        if self.n64_client.read_u8(DK64MemoryMap.eeprom_determined) == 1:
+            if self.n64_client.read_u32(DK64MemoryMap.save_type) != 2:
+                # Map emulator IDs to their setup guides
+                emulator_setup_guides = {
+                    "Project64": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-Project-64",
+                    "Project64_v4": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-Project-64",
+                    "RMG": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-Rosalies-Mupen-GUI",
+                    "ParallelLauncher": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-Parallel-Launcher",
+                    "RetroArch": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-RetroArch",
+                    "BizHawk": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-BizHawk-DK64-Edition",
+                    "Simple64": "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators:-Simple64",
+                }
+
+                emulator_id = self.n64_client.emulator_info.id.name
+                setup_guide = emulator_setup_guides.get(emulator_id, "https://dev.dk64randomizer.com/wiki/index.html?title=Consoles-and-Emulators")
+
+                logger.error(f"{self.n64_client.emulator_info.id.name} is not set up correctly! Please follow the appropriate setup guide to ensure the game works!")
+                logger.error(f"{setup_guide}")
+                raise Exception("Bad emulator setup")
 
     # ==================== MESSAGING METHODS ====================
 
@@ -1143,8 +1162,10 @@ class DK64Context(CommonContext):
 
     async def send_checks(self):
         """Send the checks to the server."""
-        message = [{"cmd": "LocationChecks", "locations": self.found_checks}]
-        await self.send_msgs(message)
+        if self.found_checks:
+            message = [{"cmd": "LocationChecks", "locations": self.found_checks}]
+            await self.send_msgs(message)
+            self.found_checks = []
 
     had_invalid_slot_data: typing.Optional[bool] = None
 

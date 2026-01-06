@@ -42,9 +42,9 @@ from .rando.MiscRando import shuffle_batreaux_counts
 from .logic.LogicParser import parse_expression
 from .logic.Logic import ALL_REQUIREMENTS
 
-AP_VERSION = [0, 6, 2]
-WORLD_VERSION = [0, 5, 3]
-RANDO_VERSION = [0, 5, 3]
+AP_VERSION = [0, 6, 5]
+WORLD_VERSION = [0, 5, 4]
+RANDO_VERSION = [0, 5, 4]
 
 
 def run_client() -> None:
@@ -127,7 +127,6 @@ class SSWorld(World):
     options: SSOptions
        
     game: ClassVar[str] = "Skyward Sword"
-    author: str = "bcats"
     topology_present: bool = True
     web = SSWeb()
     required_client_version: tuple[int, int, int] = (0, 5, 1)
@@ -727,4 +726,5 @@ class SSWorld(World):
         }
 
         return slot_data
+
 

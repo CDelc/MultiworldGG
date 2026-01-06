@@ -25,7 +25,34 @@ def stop() -> None:
     stop_event.set()
 
 
+# Track in-flight generations with their start time for stuck detection
+_in_flight_generations: dict[UUID, datetime] = {}
+_in_flight_lock = __import__('threading').Lock()
+
+
+def _mark_generation_complete(gen_id: UUID) -> None:
+    """Remove a generation from in-flight tracking when it completes."""
+    with _in_flight_lock:
+        _in_flight_generations.pop(gen_id, None)
+
+
+def _mark_generation_started(gen_id: UUID) -> None:
+    """Track when a generation starts for stuck detection."""
+    with _in_flight_lock:
+        _in_flight_generations[gen_id] = datetime.utcnow()
+
+
+def _get_stuck_generations(threshold: timedelta) -> list[UUID]:
+    """Return IDs of generations that have exceeded the stuck threshold."""
+    now = datetime.utcnow()
+    with _in_flight_lock:
+        return [gid for gid, start_time in _in_flight_generations.items()
+                if now - start_time > threshold]
+
+
 def handle_generation_success(seed_id):
+    if seed_id:
+        _mark_generation_complete(seed_id)
     logging.info(f"Generation finished for seed {seed_id}")
 
 
@@ -75,6 +102,7 @@ def launch_generator(pool: multiprocessing.pool.Pool, generation: Generation, ti
         logging.exception(e)
     else:
         generation.state = STATE_STARTED
+        _mark_generation_started(generation.id)
 
 
 def init_generator(config: dict[str, Any]) -> None:
@@ -150,6 +178,11 @@ def autogen(config: dict):
                 with multiprocessing.Pool(config["GENERATORS"], initializer=init_generator,
                                           initargs=(config,), maxtasksperchild=10) as generator_pool:
                     job_time = config["JOB_TIME"]
+                    # Grace period: JOB_TIME * 3
+                    # When worker is killed and neither the success nor error callback fires.
+                    stuck_threshold = timedelta(seconds=(job_time * 3))
+                    last_stuck_check = datetime.utcnow()
+
                     with db_session:
                         to_start = select(generation for generation in Generation if generation.state == STATE_STARTED)
 
@@ -167,6 +200,26 @@ def autogen(config: dict):
 
                     while not stop_event.wait(0.1):
                         try:
+                            now = datetime.utcnow()
+
+                            # Check for stuck generations every 2 mins
+                            if now - last_stuck_check > timedelta(seconds=120):
+                                last_stuck_check = now
+                                stuck_ids = _get_stuck_generations(stuck_threshold)
+                                if stuck_ids:
+                                    with db_session:
+                                        for gid in stuck_ids:
+                                            gen = Generation.get(id=gid)
+                                            if gen is not None and gen.state == STATE_STARTED:
+                                                # Worker died without completing - mark as error
+                                                logging.warning(f"Generation {gid} appears stuck (worker may have died), marking as error")
+                                                gen.state = STATE_ERROR
+                                                meta = json.loads(gen.meta)
+                                                meta["error"] = "Generation worker died unexpectedly. Please try again."
+                                                gen.meta = json.dumps(meta)
+                                            _mark_generation_complete(gid)
+                                        commit()
+
                             with db_session:
                                 # for update locks the database row(s) during transaction, preventing writes from elsewhere
                                 to_start = select(
@@ -243,6 +296,9 @@ class MultiworldInstance():
                     self.process.kill()
                     self.process.join(timeout=2)
             self.process = None
+            self.process_start_time = None
+            self.rooms_to_start = multiprocessing.Queue()
+            self.rooms_shutting_down = multiprocessing.Queue()
 
     def done(self):
         return self.process and not self.process.is_alive()
