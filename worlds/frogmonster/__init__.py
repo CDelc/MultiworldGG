@@ -1,5 +1,7 @@
 from typing import Any, TextIO
 from functools import partial
+import orjson
+import pkgutil
 
 from BaseClasses import Region, LocationProgressType, Tutorial
 from worlds.AutoWorld import World, WebWorld
@@ -31,12 +33,9 @@ class FrogmonsterWebWorld(WebWorld):
     tutorials = [setup_en]
 
 class FrogmonsterWorld(World):
-    """
-    Frogmonster is a metroidvania FPS Adventure where you explore a lively world filled with creatures, bugs, and beasts.
-    """
+    """Frogmonster is a first-person boss rush shooter adventure game where you play as the titular Frogmonster, slaying monsters, eating bugs, and saving the world from a mad bird god."""
 
     game = "Frogmonster"
-    author: str = "RoobyRoo"
     options: FrogmonsterOptions
     options_dataclass = FrogmonsterOptions
     location_name_to_id = location_id_table
@@ -46,7 +45,6 @@ class FrogmonsterWorld(World):
     item_name_groups = item_name_groups
     web = FrogmonsterWebWorld()
 
-    apworld_version = (0, 2, 1)
     shuffled_bug_effects: dict[int, int]
     starter_gun: FrogmonsterItem
     starter_spell: FrogmonsterItem
@@ -206,7 +204,8 @@ class FrogmonsterWorld(World):
     def fill_slot_data(self) -> dict[str, Any]:
         slot_data: dict[str, Any] = {}
 
-        slot_data["apworld_version"] = self.apworld_version
+        apworld_manifest = orjson.loads(pkgutil.get_data(__name__, "archipelago.json").decode("utf-8"))
+        slot_data["apworld_version"] = apworld_manifest["world_version"]
 
         # Handling option: Shuffle Bug-Eating Effects
         bug_effect_array: list[int] = []
