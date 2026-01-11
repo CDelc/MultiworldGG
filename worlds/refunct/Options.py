@@ -1,4 +1,4 @@
-from Options import OptionCounter, OptionDict, Range, Toggle
+from Options import DeathLink, OptionCounter, OptionDict, Range, Toggle
 from dataclasses import dataclass
 
 from Options import PerGameCommonOptions, Range, Choice, OptionSet, Removed, Visibility
@@ -8,7 +8,7 @@ from Options import OptionDict, OptionError
 
 class AmountOfGrass(Range):
     """In this randomizer, your goal is to collect enough grass and go to the final platform.
-    This option sets the total amount of grass in the game."""
+    This option sets the total amount of grass in the game. Remaining items become flower filler items."""
     display_name = "Amount Of Grass"
     default = 100
     range_start = 10
@@ -39,7 +39,19 @@ class FinalPlatform(Choice):
     option_random_known = 98
     option_random_unknown = 99
     default = 2
-    
+
+class Cubes(Choice):
+    """
+    Cubes are also location checks in the main gamemode! This option determines when you can collect cubes.
+    Always: cubes are always collectable.
+    Cubes Bag: [NOT IMPLEMENTED YET] you need to find the Cubes Bag item first to be able to collect cubes.
+    Never: there are no cubes at all in your game (and they are not location checks).
+    """
+    display_name = "Cubes"
+    option_always = 0
+    # option_cubes_bag = 1
+    option_never = 9
+    default = 0
 
 class NumberOfMinigames(Range):
     """
@@ -105,6 +117,21 @@ class MinigamesLikeliness(OptionCounter):
         "Button Galore Minigame": 1,
         "OG Randomizer Minigame": 3,
     }
+class Traps(Choice):
+    """
+    This option determines which traps are added to the game. 
+    Each trap is added twice and replaces a "flower" filler item, if there are enough flowers.
+    "none" adds no traps at all.
+    "pretty" adds pretty traps that visually change the game for 60 seconds:
+    Dark skies, No skylight, Disco sky, Starry sky, Red sky, Hurricane
+    "all" adds pretty traps and also adds gameplay affecting traps that last for 30 seconds:
+    Slo-mo, Fast-mo, Blurrrrgh.
+    """
+    display_name = "Traps"
+    option_none = 0
+    option_pretty = 1
+    option_all = 2
+    default = 1
 
     
 @dataclass
@@ -113,6 +140,9 @@ class RefunctOptions(PerGameCommonOptions):
     amount_of_grass: AmountOfGrass
     required_grass_percentage: RequiredGrassPercentage
     final_platform: FinalPlatform
+    cubes: Cubes
     number_of_minigames: NumberOfMinigames
     number_of_unlocks_per_minigame: NumberOfUnlocksPerMinigame
     minigames_likeliness: MinigamesLikeliness
+    traps: Traps
+    death_link: DeathLink

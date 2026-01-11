@@ -306,6 +306,11 @@ Root: HKCR; Subkey: "{#MyAppName}aplmpatch";                     ValueData: "Mul
 Root: HKCR; Subkey: "{#MyAppName}aplmpatch\DefaultIcon";         ValueData: "{app}\MultiworldGGLauncher.exe,0";                      ValueType: string; ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}aplmpatch\shell\open\command";  ValueData: """{app}\MultiworldGGLauncher.exe"" ""%1""";             ValueType: string; ValueName: "";
 
+Root: HKCR; Subkey: ".apmetfus";                                     ValueData: "{#MyAppName}apmetfuspatch";    Flags: uninsdeletevalue;   ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}apmetfuspatch";                     ValueData: "MultiworldGG Metroid Fusion Patch"; Flags: uninsdeletekey;   ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}apmetfuspatch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                      ValueType: string; ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}apmetfuspatch\shell\open\command";  ValueData: """{app}\MultiworldGGBizHawkClient.exe"" ""%1""";             ValueType: string; ValueName: "";
+
 Root: HKCR; Subkey: ".apmk64";                                     ValueData: "{#MyAppName}apmk64patch";    Flags: uninsdeletevalue;        ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}apmk64patch";                     ValueData: "MultiworldGG Mario Kart 64 Patch"; Flags: uninsdeletekey;    ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}apmk64patch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                      ValueType: string; ValueName: "";

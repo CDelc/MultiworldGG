@@ -26,7 +26,6 @@ class UltrakillWorld(World):
     """MANKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL."""
 
     game = "ULTRAKILL"
-    author: str = "TRPG"
     web = UltrakillWeb()
 
     item_name_to_id = {item.name: (base_id + index) for index, item in enumerate(item_list)}
@@ -445,7 +444,7 @@ class UltrakillWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         slot_data: Dict[str, Any] = {
-            "version": "3.2.6",
+            "version": "3.2.7",
             "locations": self.game_id_to_long,
             "start": self.start_level.short_name,
             "goal": self.goal_level.short_name,
@@ -480,6 +479,7 @@ class UltrakillWorld(World):
             "music": self.music,
             "cybergrind_hints": bool(self.options.cybergrind_hints),
             "death_link": bool(self.options.death_link),
+            "death_link_amnesty": self.options.death_link_amnesty.value
         }
         return slot_data
 
