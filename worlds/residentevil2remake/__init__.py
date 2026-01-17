@@ -4,7 +4,7 @@ import typing
 from typing import Dict, Any, TextIO
 from Utils import visualize_regions
 
-from BaseClasses import ItemClassification, Item, Location, Region, CollectionState, Tutorial
+from BaseClasses import ItemClassification, Item, Location, Region, CollectionState, LocationProgressType, Tutorial
 from worlds.AutoWorld import World, WebWorld
 from ..generic.Rules import set_rule
 from Fill import fill_restrictive
@@ -55,7 +55,7 @@ class ResidentEvil2Remake(World):
 
     data_version = 2
     required_client_version = (0, 5, 0)
-    apworld_release_version = "0.3.0" # defined to show in spoiler log
+    apworld_release_version = "0.3.1" # defined to show in spoiler log
 
     item_id_to_name = { item['id']: item['name'] for item in Data.item_table }
     item_name_to_id = { item['name']: item['id'] for item in Data.item_table }
@@ -199,6 +199,18 @@ class ResidentEvil2Remake(World):
         scenario_locations = { l['id']: l for _, l in self.source_locations[self.player].items() }
         scenario_regions = self._get_region_table_for_scenario(self._get_character(), self._get_scenario())
 
+        # used below if killsanity is on
+        has_fire_weapon = False
+        fire_weapons = ['GM 79', 'Chemical Flamethrower']
+
+        if self._format_option_text(self.options.oops_all_rockets) == 'True':
+            has_fire_weapon = True
+        else:
+            has_fire_weapon = len([
+                location['original_item'] 
+                    for _, location in scenario_locations.items() if location.get('original_item') in fire_weapons
+            ]) > 0
+
         regions = [
             Region(region['name'], self.player, self.multiworld) 
                 for region in scenario_regions
@@ -226,7 +238,14 @@ class ResidentEvil2Remake(World):
                 # we check for zone id > 3 because 3 is typically Sewers, and anything beyond that is Labs / endgame stuff
                 elif self._format_option_text(self.options.allow_progression_in_labs) == 'False' and region_data['zone_id'] > 3:
                     location.item_rule = lambda item: not item.advancement
+                elif self._format_option_text(self.options.allow_progression_in_labs) == 'True' and re.match('^Treatment Pool Room \(\w+?\) - Cable Car Table$', location.name):
+                    location.place_locked_item(self.create_item("Sewers Key"))
                 # END if
+
+                # if the player doesn't have a fire weapon or rocket launchers in their item pool, make all Ivy enemy drops give filler / be useless
+                if self._enemy_kill_rando() and "Ivy" in location.name and not has_fire_weapon:
+                    location.progress_type = LocationProgressType.EXCLUDED
+                    location.place_locked_item(self.create_item("Pink Scissors"))
 
                 if 'forbid_item' in location_data and location_data['forbid_item']:
                     current_item_rule = location.item_rule or None

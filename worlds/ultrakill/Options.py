@@ -1,6 +1,6 @@
 import typing, random
 from dataclasses import dataclass
-from Options import T, Choice, Range, OptionSet, Toggle, DefaultOnToggle, ItemDict, DeathLink, PerGameCommonOptions, Removed
+from Options import T, Choice, Range, OptionSet, Toggle, DefaultOnToggle, ItemDict, DeathLink, PerGameCommonOptions, StartInventoryPool, Removed
 from .Regions import Regions
 from .Items import item_groups
 
@@ -142,6 +142,29 @@ class UnlockType(Choice):
     option_levels = 0
     option_layers = 1
     default = 0
+
+
+class SecretUnlockType(Choice):
+    """
+    Choose if secret missions should be unlocked by using their secret exits, or by finding items in the multiworld.
+    """
+    display_name = "Secret Mission Unlock Type"
+    option_secret_exits = 1
+    option_items = 0
+    default = 1
+
+
+class SecretExitType(Choice):
+    """
+    Choose if using secret exits should count the current level as completed, or if secret exits should NOT count the 
+    current level as completed, and instead add rewards for using each secret exit.
+
+    Does not affect secret exits leading to prime sanctums.
+    """
+    display_name = "Secret Exit Behavior"
+    option_standard = 1
+    option_add_rewards = 0
+    default = 1
 
 
 class TrapPercent(Range):
@@ -457,6 +480,8 @@ class UltrakillOptions(PerGameCommonOptions):
     skipped_levels: SkipLevels
     auto_exclude_skipped_locations: AutoExcludeSkip
     unlock_type: UnlockType
+    secret_mission_unlock_type: SecretUnlockType
+    secret_exit_behavior: SecretExitType
     trap_percent: TrapPercent
     filler_weights: FillerWeights
     trap_weights: TrapWeights
@@ -489,6 +514,8 @@ class UltrakillOptions(PerGameCommonOptions):
     cybergrind_hints: CybergrindHints
     death_link: UltrakillDeathLink
     death_link_amnesty: DeathLinkAmnesty
+
+    start_inventory_from_pool: StartInventoryPool
 
     goal: Removed
     include_secret_mission_completion: Removed

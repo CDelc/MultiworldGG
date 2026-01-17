@@ -12,8 +12,6 @@ def setup_options_from_slot_data(world: "LunacidWorld"):
             world.options.starting_class.value = world.passthrough["starting_class"]
             world.options.starting_area.value = world.passthrough["starting_area"]
             world.options.entrance_randomization.value = world.passthrough["entrance_randomization"]
-            world.options.experience.value = world.passthrough["experience"]
-            world.options.weapon_experience.value = world.passthrough["weapon_experience"]
             world.options.random_elements.value = world.passthrough["random_elements"]
             world.options.enemy_randomization.value = world.passthrough["enemy_randomization"]
             world.options.required_strange_coin.value = world.passthrough["required_strange_coin"]
@@ -26,7 +24,6 @@ def setup_options_from_slot_data(world: "LunacidWorld"):
             world.options.levelsanity.value = world.passthrough["levelsanity"]
             world.options.grasssanity.value = world.passthrough["grasssanity"]
             world.options.breakables.value = world.passthrough["breakables"]
-            world.options.normalized_drops.value = world.passthrough["normalized_drops"]
             world.options.secret_door_lock.value = world.passthrough["secret_door_lock"]
             world.options.switch_locks.value = world.passthrough["switch_locks"]
             world.options.door_locks.value = world.passthrough["door_locks"]
@@ -487,7 +484,7 @@ def map_page_index(data: Any) -> int:
 
 TRACKER_WORLD = {
     "map_page_folder": "tracker",
-    "map_page_maps": "maps/maps.json",
+    "map_page_maps": ["maps/maps.json"],
     "map_page_locations": ["locations/locations.json", "locations/Accursed Tomb.json", "locations/A Holy Battlefield.json", "locations/Boiling Grotto.json",
                            "locations/Castle Le Fanu.json", "locations/Chamber of Fate.json", "locations/Forbidden Archives.json", "locations/Forest Canopy.json",
                            "locations/Forlorn Arena.json", "locations/Great Well Surface.json", "locations/Hollow Basin.json", "locations/Labyrinth of Ash.json",
@@ -497,5 +494,6 @@ TRACKER_WORLD = {
                            "locations/misc/Etna's Pupil.json", ],
     "map_page_setting_key": "Slot:{player}:currentScene",
     "map_page_index": map_page_index,
+    #"external_pack_key": "ut_poptracker_path",
     "poptracker_name_mapping": poptracker_data
 }

@@ -72,6 +72,7 @@ Currently, the following games are supported:
 * Final Fantasy IV: Free Enterprise
 * Final Fantasy Mystic Quest
 * Final Fantasy Tactics Advance
+* Final Fantasy V (Career Day)
 * Flipwitch
 * Frogmonster
 * Getting Over It
@@ -145,6 +146,7 @@ Currently, the following games are supported:
 * Rabi-Ribi
 * Raft
 * Ratchet & Clank 2
+* Ratched & Clank 3: Up Your Arsenal
 * Refunct
 * Resident Evil 2 Remake
 * Resident Evil 3 Remake

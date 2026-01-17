@@ -276,6 +276,11 @@ Root: HKCR; Subkey: "{#MyAppName}apff4fepatch";                     ValueData: "
 Root: HKCR; Subkey: "{#MyAppName}apff4fepatch\DefaultIcon";         ValueData: "{app}\MultiworldGGSNIClient.exe,0";                           ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}apff4fepatch\shell\open\command";  ValueData: """{app}\MultiworldGGSNIClient.exe"" ""%1""";                  ValueType: string;  ValueName: "";
 
+Root: HKCR; Subkey: ".apffvcd";                                     ValueData: "{#MyAppName}apffvcdpatch";        Flags: uninsdeletevalue;     ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}apffvcdpatch";                     ValueData: "MultiworldGG Final Fantasy 5 CD Patch"; Flags: uninsdeletekey;        ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}apffvcdpatch\DefaultIcon";         ValueData: "{app}\MultiworldGGSNIClient.exe,0";                           ValueType: string;  ValueName: "";
+Root: HKCR; Subkey: "{#MyAppName}apffvcdpatch\shell\open\command";  ValueData: """{app}\MultiworldGGSNIClient.exe"" ""%1""";                  ValueType: string;  ValueName: "";
+
 Root: HKCR; Subkey: ".apfirered";                                     ValueData: "{#MyAppName}apfireredpatch";    Flags: uninsdeletevalue;       ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}apfireredpatch";                     ValueData: "MultiworldGG Pkmn Firered Patch"; Flags: uninsdeletekey;       ValueType: string;  ValueName: "";
 Root: HKCR; Subkey: "{#MyAppName}apfireredpatch\DefaultIcon";         ValueData: "{app}\MultiworldGGBizHawkClient.exe,0";                        ValueType: string; ValueName: "";

@@ -91,6 +91,7 @@ class BaseLocation:
     yosei_room_defended_by_blood_plant = "YF: Room Defended by Blood Plant"
     yosei_patchouli_key = "YF: Patchouli's Canopy Offer"
     yosei_patchouli_quest = "YF: Patchouli's Reward"
+    yosei_rusted_sword = "YF: Remains Of Adventurer in Blood Plant's Insides"
 
     canopy_branch_edge = "FC: Branch Lower Edge"
     branch_cave = "FC: Branch Cave"

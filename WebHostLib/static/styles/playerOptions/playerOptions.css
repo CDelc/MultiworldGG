@@ -252,6 +252,7 @@ html {
   max-width: 1.5rem;
   max-height: 1rem;
   margin-left: 0.125rem;
+  margin-right: 0.125rem;
   text-align: center;
   /* Hide arrows on input[type=number] fields */
   -moz-appearance: textfield;

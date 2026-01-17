@@ -230,15 +230,14 @@
 
   {% set relevant_list = (option.valid_keys|sort if option.valid_keys|length > 0 else world.location_names|sort) %}
 
+  {% set filtered_location_groups = world.location_name_groups.items()|selectattr("0", "ne", "Everywhere")|list|sort(attribute="0") %}
   <div class="option-container multi-selector"
        data-option-name="{{ option_name }}"
        data-defaults='{{ option.default|list|tojson }}'
        data-names='{{ relevant_list|tojson }}'
        data-groups='{
-         {%- for g,members in world.location_name_groups.items()|sort(attribute="0") %}
-           {%- if g!="Everywhere" -%}
-             "{{ g }}": {{ members|list|sort|tojson }}{{ "," if not loop.last }}
-           {%- endif %}
+         {%- for g,members in filtered_location_groups %}
+           "{{ g }}": {{ members|list|sort|tojson }}{{ "," if not loop.last }}
          {%- endfor %}
        }'>
 
@@ -253,15 +252,14 @@
 
   {% set relevant_list = (option.valid_keys|sort if option.valid_keys|length > 0 else world.item_names|sort) %}
 
+  {% set filtered_item_groups = world.item_name_groups.items()|selectattr("0", "ne", "Everything")|list|sort(attribute="0") %}
   <div class="option-container multi-selector item-selector"
        data-option-name="{{ option_name }}"
        data-defaults='{{ option.default|list|tojson }}'
        data-names='{{ relevant_list|tojson }}'
        data-groups='{
-         {%- for g,members in world.item_name_groups.items()|sort(attribute="0") %}
-           {%- if g!="Everything" -%}
-             "{{ g }}": {{ members|list|sort|tojson }}{{ "," if not loop.last }}
-           {%- endif %}
+         {%- for g,members in filtered_item_groups %}
+           "{{ g }}": {{ members|list|sort|tojson }}{{ "," if not loop.last }}
          {%- endfor %}
        }'>
 

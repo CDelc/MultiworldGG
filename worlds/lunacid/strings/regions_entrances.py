@@ -237,6 +237,12 @@ class LunacidEntrance:
     castle_main_halls_to_queen_path = "Castle Main Halls Green Door (Front)"
     castle_queen_path_to_main_halls = "Castle Main Halls Green Door (Back)"
     castle_queen_path_to_throne_room = "Queen's Throne Door (Castle Le Fanu Side)"
+    rock_castle_le_fanu_upper_bridge = "Rock Bridge to Upper Castle Le Fanu"
+    rock_castle_le_fanu_past_door = "Rock Bridge Past Top Door"
+    rock_castle_le_fanu_queen_door = "Rock Bridge Past Queen Door"
+    rock_castle_le_fanu_spell_skip = "Rock Bridge Past Sealed Door"
+    rock_castle_le_fanu_cattle_deeper_skip = "Rock Bridge Past Blood Spells"
+    rock_castle_le_fanu_secret_skips = "Rock Bridge Past Blood Secrets"
 
     holy_battle_to_castle_entrance = "Climb Rope Out Of Battlefield"
 
