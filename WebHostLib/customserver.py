@@ -326,7 +326,7 @@ def run_server_process(name: str, ponyconfig: dict, static_server_data: dict,
 
             except (KeyboardInterrupt, SystemExit):
                 if ctx.saving:
-                    ctx._save()
+                    ctx._save(True)
                     setattr(asyncio.current_task(), "save", None)
             except Exception as e:
                 with db_session:
@@ -337,7 +337,7 @@ def run_server_process(name: str, ponyconfig: dict, static_server_data: dict,
                 raise
             else:
                 if ctx.saving:
-                    ctx._save()
+                    ctx._save(True)
                     setattr(asyncio.current_task(), "save", None)
             finally:
                 try:
