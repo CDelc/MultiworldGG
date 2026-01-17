@@ -146,7 +146,7 @@ Currently, the following games are supported:
 * Rabi-Ribi
 * Raft
 * Ratchet & Clank 2
-* Ratched & Clank 3: Up Your Arsenal
+* Ratchet & Clank 3: Up Your Arsenal
 * Refunct
 * Resident Evil 2 Remake
 * Resident Evil 3 Remake
