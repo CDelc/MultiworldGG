@@ -4,7 +4,6 @@ from typing import Optional, List
 from ..strings.locations import BaseLocation, ShopLocation, DropLocation, Quench, AlchemyLocation, SpookyLocation, CrimpusLocation, LevelLocation, LoreLocation, \
     GrassLocation, BreakLocation
 from ..strings.regions_entrances import LunacidRegion
-from ...adventure import base_location_id
 
 
 @dataclass(frozen=True)

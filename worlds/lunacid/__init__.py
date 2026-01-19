@@ -3,11 +3,9 @@ from random import Random
 from time import strftime
 from typing import Dict, Any, Iterable, TextIO, List, Tuple, ClassVar
 import logging
-from BaseClasses import Region, Entrance, Location, Item, Tutorial, ItemClassification, CollectionState, MultiWorld, \
-    Group
+from BaseClasses import Region, Entrance, Location, Item, Tutorial, ItemClassification, CollectionState, MultiWorld
 from Fill import fill_restrictive
 from Utils import visualize_regions
-from settings import FilePath
 from worlds.AutoWorld import World, WebWorld
 from . import Options
 from .OptionGroups import lunacid_option_groups
