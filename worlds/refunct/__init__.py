@@ -43,7 +43,7 @@ class RefunctWorld(World):
 
     location_name_to_id = {name: data.id for name, data in location_table.items()}
 
-    ap_world_version = "0.6.0"        
+    ap_world_version = "0.6.1"        
         
     def get_filler_item_name(self) -> str:
         return ":)"
@@ -248,7 +248,8 @@ class RefunctWorld(World):
     def set_og_randomizer_order(self):
         # OG Randomizer Minigame info
         dependences = {}
-        dependences[13] = [3, 11, 14, 15, 23, 24, 27]
+        dependences[13] = [3, 11, 14, 15, # 23, 
+                           24, 27]
         dependences[16] = [2, 17, 28]
         dependences[18] = [8]
         dependences[22] = [3, 11, 12, 20, 30]

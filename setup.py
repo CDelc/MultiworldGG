@@ -395,7 +395,9 @@ class BuildExeCommand(cx_Freeze.command.build_exe.build_exe):
                 apworld.manifest_path = f"{file_name}/archipelago.json"
                 with zipfile.ZipFile(zip_path, "x", zipfile.ZIP_DEFLATED,
                                      compresslevel=9) as zf:
-                    for path in world_directory.rglob("*.*"):
+                    for path in world_directory.rglob("*"):
+                        if not path.is_file():
+                            continue
                         relative_path = os.path.join(*path.parts[path.parts.index("worlds")+1:])
                         if not relative_path.endswith("archipelago.json"):
                             zf.write(path, relative_path)

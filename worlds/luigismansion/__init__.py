@@ -177,8 +177,7 @@ class LMWorld(World):
         self.ghost_affected_regions: dict[str, str] = copy.deepcopy(GHOST_TO_ROOM)
         self.open_doors: dict[int, int] = copy.deepcopy(vanilla_door_state)
         self.origin_region_name: str = "Foyer"
-        self.finished_hints = threading.Event()
-        self.finished_boo_scaling = threading.Event()
+        self.finished_post_generation = threading.Event() # option if hints for items in other peoples worlds is enabled
         self.boo_spheres: dict[str, int] = {}
         self.hints: dict[str, dict[str, str]] = {}
         self.spawn_full_locked: bool = False
@@ -522,7 +521,7 @@ class LMWorld(World):
             spawn_doors = copy.deepcopy(spawn_locations[self.origin_region_name]["door_ids"])
             if spawn_doors:
                 for door in spawn_locations[self.origin_region_name]["door_ids"]:
-                    if self.open_doors[door] == 1:
+                    if self.open_doors[door] == 0:
                         spawn_doors.remove(door)
                 if not spawn_doors:
                     self.spawn_full_locked: bool = True
@@ -719,34 +718,47 @@ class LMWorld(World):
     @classmethod # output_directory is required even though we don't use it
     def stage_generate_output(cls, multiworld: MultiWorld, output_directory: str):
         # Filter for any Luigi's Mansion worlds that need hints or have boo health by sphere turned on
-        hint_worlds = {world.player for world in multiworld.get_game_worlds(cls.game)
-                       if (world.options.hint_distribution.value != 5 and world.options.hint_distribution.value != 1)}
-        boo_worlds = {world.player for world in multiworld.get_game_worlds(cls.game) if world.options.boo_health_option == 2}
-        if not boo_worlds and not hint_worlds:
-            return
-        # Produce hints for LM games that need them
-        if hint_worlds:
-            get_hints_by_option(multiworld, hint_worlds)
-        if not boo_worlds:
-            return
+        hint_worlds = { world.player for world in multiworld.get_game_worlds(cls.game)
+            if (world.options.hint_distribution.value != 5 and world.options.hint_distribution.value != 1) }
+        boo_worlds = { world.player for world in multiworld.get_game_worlds(cls.game)
+            if world.options.boo_health_option.value == 2 }
 
-        # Produce values for boo health for worlds the need them
-        def check_boo_players_done() -> None:
-            done_players = set()
-            for player in boo_worlds:
-                player_world = multiworld.worlds[player]
-                if len(player_world.boo_spheres.keys()) == len(ROOM_BOO_LOCATION_TABLE.keys()):
-                    player_world.finished_boo_scaling.set()
-                    done_players.add(player)
-            boo_worlds.difference_update(done_players)
-        for sphere_num, sphere in enumerate(multiworld.get_spheres(), 1):
-            for loc in sphere:
-                if loc.player in boo_worlds and loc.name in ROOM_BOO_LOCATION_TABLE.keys():
-                    player_world = multiworld.worlds[loc.player]
-                    player_world.boo_spheres.update({loc.name: sphere_num})
-            check_boo_players_done()
+        # Even if no worlds have any hints/boo worlds, always set the thread anyway as it won't hurt anything.
+        try:
+            if not boo_worlds and not hint_worlds:
+                return
+
+            if hint_worlds:
+                # Produce hints for LM games that need them
+                get_hints_by_option(multiworld, hint_worlds)
+
             if not boo_worlds:
                 return
+
+            # Produce values for boo health for worlds the need them
+            def check_boo_players_done() -> None:
+                done_players = set()
+                for player in boo_worlds:
+                    player_lm_world = multiworld.worlds[player]
+                    if len(player_lm_world.boo_spheres.keys()) == len(ROOM_BOO_LOCATION_TABLE.keys()):
+                        done_players.add(player)
+                boo_worlds.difference_update(done_players)
+
+            for sphere_num, sphere in enumerate(multiworld.get_spheres(), 1):
+                for loc in sphere:
+                    if loc.player in boo_worlds and loc.name in ROOM_BOO_LOCATION_TABLE.keys():
+                        player_world = multiworld.worlds[loc.player]
+                        player_world.boo_spheres.update({loc.name: sphere_num})
+                    check_boo_players_done()
+
+                if not boo_worlds:
+                    return
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            raise
+        finally:
+            _set_gen_thread_finished(multiworld, cls.game)
 
 
     # Output options, locations and doors for patcher
@@ -779,14 +791,14 @@ class LMWorld(World):
         # Output randomized Ghost info
         output_data["Room Enemies"] = self.ghost_affected_regions
 
-        # Output hints for patching
-        if self.options.hint_distribution != 5 and self.options.hint_distribution != 1:
-            self.finished_hints.wait()
-            output_data["Hints"] = self.hints
+        # Wait for output thread to finish first.
+        if ((self.options.hint_distribution != 5 and self.options.hint_distribution != 1) or
+            self.options.boo_health_option.value == 2):
+            self.finished_post_generation.wait()
 
-        # Output boo spheres for relevant worlds
-        if self.options.boo_health_option.value == 2:
-            self.finished_boo_scaling.wait()
+        # If current world required hint distribution, update the output hint dict
+        if self.options.hint_distribution != 5 and self.options.hint_distribution != 1:
+            output_data["Hints"] = self.hints
 
         # Output which item has been placed at each location
         locations = self.get_locations()
@@ -886,11 +898,14 @@ class LMWorld(World):
             "enable_trap_client_msg": self.options.enable_trap_client_msg.value,
         }
 
+    # Intentionally used to prevent issues in multi-data updates that occur when multi-data is being modifed,
+    # but gen output has not completed itself yet. Namely in write_multidata:
+    #     multidata[key] = convert_to_base_types(multidata[key])
     def modify_multidata(self, multidata: "MultiData") -> None:
-        if self.options.hint_distribution != 5 and self.options.hint_distribution != 1:
-            self.finished_hints.wait()
-        if self.options.boo_health_option.value == 2:
-            self.finished_boo_scaling.wait()
+        # Wait for output thread to finish first.
+        if ((self.options.hint_distribution != 5 and self.options.hint_distribution != 1) or
+            self.options.boo_health_option.value == 2):
+            self.finished_post_generation.wait()
 
 def _get_disabled_traps(options: LuigiOptions.LMOptions) -> int:
     """
@@ -927,3 +942,7 @@ def _get_disabled_traps(options: LuigiOptions.LMOptions) -> int:
         trap_flags += TrapLinkType.GHOST.value
 
     return trap_flags
+
+def _set_gen_thread_finished(multiworld: MultiWorld, game_name: str):
+    for world in multiworld.get_game_worlds(game_name):
+        world.finished_post_generation.set()
