@@ -295,7 +295,7 @@ Sent by the client to initiate a connection to a MultiworldGG game session.
 | password       | str                               | If the game session requires a password, it should be passed here.                           |
 | game           | str                               | The name of the game the client is playing. Example: `A Link to the Past`                    |
 | name           | str                               | The player name for this client.                                                             |
-| uuid           | str                               | Unique identifier for player. Cached in the user cache \Archipelago\Cache\common.json        |
+| uuid           | str                               | Unique identifier for player. Cached in the user cache \MultiworldGG\Cache\common.json        |
 | version        | [NetworkVersion](#NetworkVersion) | An object representing the MultiworldGG version this client supports.                         |
 | items_handling | int                               | Flags configuring which items should be sent by the server. Read below for individual flags. |
 | tags           | list\[str\]                       | Denotes special features or capabilities that the sender is capable of. [Tags](#Tags)        |
@@ -647,7 +647,7 @@ class Version(NamedTuple):
     build: int
 ```
 
-If constructing version information as a dict for a custom client rather than as a NamedTuple built into the CommonClient, you must add the `class` key to allow Archipelago to compare version support.
+If constructing version information as a dict for a custom client rather than as a NamedTuple built into the CommonClient, you must add the `class` key to allow MultiworldGG to compare version support.
 ```
 "version": {
       "class": "Version",

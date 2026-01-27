@@ -9,7 +9,7 @@ Adding a new game to MultiworldGG has two major parts:
 * MultiworldGG Generation and Server integration plugin (hereafter referred to as "world")
 
 This document will attempt to illustrate the bare minimum requirements and expectations of both parts of a new world
-integration. As game modification wildly varies by system and engine, and has no bearing on the MultiworldGG protocol,
+integration. As game modification wildly varies by system and engine, and has no bearing on the MultiworldGG/AP protocol,
 it will not be detailed here.
 
 ## Client
@@ -18,7 +18,7 @@ The client is an intermediary program between the game and the MultiworldGG serv
 modification to the game, an external program, or both. This can be implemented in nearly any modern language, but it
 must fulfill a few requirements in order to function as expected. Libraries for most modern languages and the spec for 
 various packets can be found in the [network protocol](/docs/network%20protocol.md) API reference document. Additional help with specific game
-engines and rom formats can be found in the #ap-modding-help channel in the [Discord](https://archipelago.gg/discord).
+engines and rom formats can be found in the #ap-modding-help channel in the [AP Discord](https://archipelago.gg/discord).
 
 ### Hard Requirements
 
@@ -65,7 +65,7 @@ if possible.
 
 ### Launcher Integration
 
-If you have a python client or want to utilize the integration features of the Archipelago Launcher (ex. Slot links in
+If you have a python client or want to utilize the integration features of the MultiworldGG Launcher (ex. Slot links in
 webhost) you can define a Component to be a part of the Launcher. `LauncherComponents.components` can be appended to
 with additional Components in order to automatically add them to the Launcher. Most Components only need a
 `display_name` and `func`, but `supports_uri` and `game_name` can be defined to support launching by webhost links,
@@ -91,9 +91,7 @@ repository and creating a new world package in `/worlds/`.
 
 The base World class can be found in [AutoWorld](/worlds/AutoWorld.py). Methods available for your world to call 
 during generation can be found in [BaseClasses](/BaseClasses.py) and [Fill](/Fill.py). Some examples and documentation 
-regarding the API can be found in the [world api doc](/docs/world%20api.md). Before publishing, make sure to also 
-check out [world maintainer.md](/docs/world%20maintainer.md).
-
+regarding the API can be found in the [world api doc](/docs/world%20api.md).
 ### Hard Requirements
 
 A bare minimum world implementation must satisfy the following requirements:

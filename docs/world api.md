@@ -326,7 +326,7 @@ reject the placement of an item there.
 An event item or location is one that only exists during multiworld generation; the server is never made aware of them.
 Event locations can never be checked by the player, and event items cannot be received during play.
 
-Events are used to represent in-game actions (that aren't regular Archipelago locations) when either:
+Events are used to represent in-game actions (that aren't regular MultiworldGG locations) when either:
 
 * We want to show in the spoiler log when the player is expected to perform the in-game action.
 * It's the cleanest way to represent how that in-game action impacts logic.
