@@ -1,6 +1,6 @@
 from .Options import InscryptionOptions, EnableAct1, EnableAct2, EnableAct3, ActUnlocks, Goal, EpitaphPiecesRandomization, \
       PaintingChecksBalancing, RandomizeHammer, RandomizeShortcuts, RandomizeVesselUpgrades, StartingAct
-from .Items import act1_items, act2_items, act3_items, act2_3_items, act_items, filler_items, base_id, InscryptionItem, ItemDict
+from .Items import act1_items, act2_items, act3_items, act2_3_items, act_items, filler_items, trap_items, base_id, InscryptionItem, ItemDict
 from .Locations import act1_locations, act2_locations, act3_locations, regions_to_locations
 from .Regions import inscryption_regions_all
 from typing import Dict, Any
@@ -8,6 +8,7 @@ from . import Rules
 from BaseClasses import Region, Item, Tutorial, ItemClassification
 from Options import OptionError
 from worlds.AutoWorld import World, WebWorld
+import random
 
 
 class InscrypWeb(WebWorld):
@@ -46,7 +47,7 @@ class InscryptionWorld(World):
     web = InscrypWeb()
     options_dataclass = InscryptionOptions
     options: InscryptionOptions
-    all_items = act1_items + act2_items + act3_items + act2_3_items + act_items + filler_items
+    all_items = act1_items + act2_items + act3_items + act2_3_items + act_items + filler_items + trap_items
     item_name_to_id = {item["name"]: i + base_id for i, item in enumerate(all_items)}
     all_locations = act1_locations + act2_locations + act3_locations
     location_name_to_id = {location: i + base_id for i, location in enumerate(all_locations)}
@@ -65,6 +66,10 @@ class InscryptionWorld(World):
                     if self.options.enable_act_2: possible_starts.append(StartingAct.option_act_2)
                     if self.options.enable_act_3: possible_starts.append(StartingAct.option_act_3)
                     self.options.starting_act = StartingAct(self.random.choice(possible_starts))
+        if not self.options.enable_act_1 and not self.options.enable_act_3:
+            self.options.trap_type_weights.value["Bleach Trap"] = 0
+        if not self.options.enable_act_2:
+            self.options.trap_type_weights.value["Deck Size Trap"] = 0
 
         self.all_items = [item.copy() for item in self.all_items]
 
@@ -102,6 +107,8 @@ class InscryptionWorld(World):
                 self.multiworld.push_precollected(self.create_item("Act 3"))
 
     def get_filler_item_name(self) -> str:
+        if self.options.trap_chance == 100 and any(v > 0 for v in self.options.trap_type_weights.values()):
+            return self.random.choice(trap_items)["name"]
         return self.random.choice(filler_items)["name"]
 
     def create_item(self, name: str) -> Item:
@@ -113,9 +120,10 @@ class InscryptionWorld(World):
         nb_items_added = 0
         useful_items = self.all_items.copy()
         included_locations = len(self.all_locations)
+        filler_trap_items = filler_items + trap_items
 
         useful_items = [item for item in useful_items
-                        if not any(filler_item["name"] == item["name"] for filler_item in filler_items)]
+                        if not any(filler_trap_item["name"] == item["name"] for filler_trap_item in filler_trap_items)]
         if self.options.act_unlocks == ActUnlocks.option_items:
             if not self.options.enable_act_3 or self.options.starting_act == StartingAct.option_act_3: 
                 useful_items.pop(len(act1_items) + len(act2_items) + len(act3_items) + 3)
@@ -167,6 +175,22 @@ class InscryptionWorld(World):
 
         filler_count = included_locations
         filler_count -= nb_items_added
+
+        trap_chance = (self.options.trap_chance / 100)
+        trap_weights = self.options.trap_type_weights
+        apply_trap_items = self.options.trap_chance > 0 and any(v > 0 for v in self.options.trap_type_weights.values())
+
+        if apply_trap_items:
+            trap_count = int(filler_count * trap_chance)
+            filler_count = filler_count - trap_count
+            trap_list = random.choices (
+                population = list(trap_weights.keys()),
+                weights = list(trap_weights.values()),
+                k = trap_count
+            )
+            for i in trap_list:
+                new_item = self.create_item(i)
+                self.multiworld.itempool.append(new_item)
 
         for i in range(filler_count):
             index = i % len(filler_items)

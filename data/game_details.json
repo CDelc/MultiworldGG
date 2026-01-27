@@ -3830,6 +3830,54 @@
         ],
         "release_date": 1996
     },
+    "Portal 2": {
+        "igdb_id": "72",
+        "world_name": "Portal 2",
+        "igdb_name": "Portal 2",
+        "us_rating": [],
+        "player_perspectives": [
+            "First person"
+        ],
+        "genres": [
+            "Platform",
+            "Puzzle",
+            "Adventure"
+        ],
+        "themes": [
+            "Action",
+            "Science fiction",
+            "Comedy"
+        ],
+        "keywords": [
+            "robots",
+            "elves",
+            "female protagonist",
+            "steam",
+            "fairy",
+            "achievements",
+            "artificial intelligence",
+            "sequel",
+            "steam achievements",
+            "digital distribution",
+            "anthropomorphism",
+            "alternate costumes",
+            "bink video",
+            "motion blur",
+            "young protagonist",
+            "a.i. companion",
+            "male antagonist",
+            "dimension travel",
+            "linear gameplay",
+            "ambient music",
+            "first-person platforming",
+            "monster capturing",
+            "developer commentary",
+            "a.i. construct",
+            "another world",
+            "renderware"
+        ],
+        "release_date": 2011
+    },
     "PowerWash Simulator": {
         "igdb_id": "138590",
         "world_name": "PowerWash Simulator",
@@ -4431,43 +4479,6 @@
             "robots"
         ],
         "release_date": null
-    },
-    "Sea of Thieves": {
-        "igdb_id": "11137",
-        "world_name": "Sea of Thieves",
-        "igdb_name": "Sea of Thieves",
-        "us_rating": [
-            "15+",
-            "12",
-            "12",
-            "12",
-            "PG",
-            "B",
-            "T"
-        ],
-        "player_perspectives": [
-            "First person"
-        ],
-        "genres": [
-            "Simulator",
-            "Adventure"
-        ],
-        "themes": [
-            "Action",
-            "Fantasy",
-            "Open world"
-        ],
-        "keywords": [
-            "pirates",
-            "exploration",
-            "grinding",
-            "crafting",
-            "action-adventure",
-            "digital distribution",
-            "skeletons",
-            "you can pet the dog"
-        ],
-        "release_date": 2018
     },
     "Secret of Evermore": {
         "igdb_id": "1359",

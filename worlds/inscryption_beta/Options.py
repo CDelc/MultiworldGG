@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from Options import Toggle, Choice, DeathLinkMixin, StartInventoryPool, PerGameCommonOptions, DefaultOnToggle, OptionSet
+from schema import Schema, Optional
+from Options import Toggle, Choice, DeathLinkMixin, StartInventoryPool, PerGameCommonOptions, DefaultOnToggle, Range, OptionCounter
 
 
 class Act1DeathLinkBehaviour(Choice):
@@ -107,8 +108,7 @@ class RandomizeSigils(Choice):
 class ExtraSigils(Toggle):
     """Allow extra sigils to show up in Act 1 and 3.
     These include sigils from other acts, Kaycee's Mod, or just new ones from the same act.
-    Some very strong sigils will not show up.
-    There may be an unusual lack of information given by these sigils."""
+    Some very strong sigils will not show up."""
     display_name = "Extra Sigils"
 
 
@@ -213,6 +213,38 @@ class PaintingChecksBalancing(Choice):
     default = 1
 
 
+class TrapChance(Range):
+    """The probability for each filler item to be replaced with a trap item.
+    If you don't want any traps, set this to 0."""
+    display_name = "Trap Chance"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+
+class TrapTypeWeights(OptionCounter):
+    """When a filler item is replaced with a trap, these weights determine the
+    odds for each trap type to be selected.
+    If you don't want a specific trap type, omit it or set its weight to 0.
+    Setting all weights to 0 is the same as setting trap_chance to 0.
+    
+    Bleach Trap doesn't work in Act 2, and Deck Size Trap is exclusive to Act 2,
+    so those won't be generated if relevant acts are disabled."""
+    schema = Schema({
+        Optional("Bleach Trap"): lambda n: n >= 0,
+        Optional("Trash Trap"): lambda n: n >= 0,
+        Optional("Deck Size Trap"): lambda n: n >= 0,
+        Optional("Reinforcements Trap"): lambda n: n >= 0,
+    })
+    display_name = "Trap Type Weights"
+    default = {
+        "Bleach Trap": 2,
+        "Trash Trap": 1,
+        "Deck Size Trap": 1,
+        "Reinforcements Trap": 2
+    }
+
+
 @dataclass
 class InscryptionOptions(DeathLinkMixin, PerGameCommonOptions):
     start_inventory_from_pool: StartInventoryPool
@@ -235,3 +267,5 @@ class InscryptionOptions(DeathLinkMixin, PerGameCommonOptions):
     skip_epilogue: SkipEpilogue
     epitaph_pieces_randomization: EpitaphPiecesRandomization
     painting_checks_balancing: PaintingChecksBalancing
+    trap_chance: TrapChance
+    trap_type_weights: TrapTypeWeights

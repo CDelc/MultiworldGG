@@ -1,3 +1,5 @@
+from itertools import count
+
 from BaseClasses import CollectionState
 from Options import Accessibility
 from ..Constants import *
@@ -307,6 +309,12 @@ def oos_can_beat_required_golden_beasts(state: CollectionState, player: int):
     GOLDEN_BEAST_EVENTS = ["_beat_golden_darknut", "_beat_golden_lynel", "_beat_golden_moblin", "_beat_golden_octorok"]
     beast_count = [state.has(beast, player) for beast in GOLDEN_BEAST_EVENTS].count(True)
     return beast_count >= state.multiworld.worlds[player].options.golden_beasts_requirement.value
+
+
+def oos_can_complete_d11_puzzle(state: CollectionState, player: int) -> bool:
+    if not state.multiworld.worlds[player].options.shuffle_dungeons:
+        return True
+    return [state.can_reach(f"enter d{i}", player=player) for i in range(1, 9)].count(True) >= 7  # Can deduce the last one once 7 are known
 
 
 # Various item predicates ###########################################
@@ -752,7 +760,7 @@ def oos_can_break_flowers(state: CollectionState, player: int, can_summon_compan
                 ]),
                 all([
                     allow_bombchus,
-                    oos_has_bombchus(state, player, 5)
+                    oos_has_bombchus(state, player, 4)
                 ])
             ])
         ]),
@@ -770,7 +778,7 @@ def oos_can_break_crystal(state: CollectionState, player: int):
         ]),
         all([
             oos_option_medium_logic(state, player),
-            oos_has_bombchus(state, player, 5)
+            oos_has_bombchus(state, player, 4)
         ]),
     ])
 
@@ -1132,7 +1140,7 @@ def oos_can_remove_rockslide(state: CollectionState, player: int, can_summon_com
         oos_has_bombs(state, player),
         all([
             oos_option_medium_logic(state, player),
-            oos_has_bombchus(state, player, 5)
+            oos_has_bombchus(state, player, 4)
         ]),
         all([
             can_summon_companion,
@@ -1302,6 +1310,7 @@ def oos_self_locking_small_key(state: CollectionState, player: int, region_name:
 
 
 # Rooster adventure logic  ######################################################
+
 def oos_roosters(state: CollectionState, player: int):
     if state.tloz_oos_available_cuccos[player] is None:
         # This computes cuccos for the whole game then caches it (total, top, bottom)

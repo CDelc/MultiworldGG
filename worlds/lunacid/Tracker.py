@@ -1,7 +1,13 @@
-from typing import Any, TYPE_CHECKING
+import logging
+from typing import Any, TYPE_CHECKING, List
+
+from .strings.regions_entrances import LunacidEntrance
 
 if TYPE_CHECKING:
     from . import LunacidWorld
+
+
+logger = logging.getLogger("Client")
 
 
 def setup_options_from_slot_data(world: "LunacidWorld"):
@@ -451,6 +457,32 @@ poptracker_data: dict[str, int] = {
     "Etna's Pupil/Alchemize Unstable Stone": 665,
     "Etna's Pupil/Alchemize Simple Life": 666,
 }
+
+
+def disconnect_entrances(world: "LunacidWorld") -> None:
+    world.disconnected_entrances = {}
+    randoable_entrances = LunacidEntrance.randoable_entrances
+    for entrance in world.get_entrances():
+        if entrance.name in randoable_entrances:
+            world.disconnected_entrances[entrance] = entrance.connected_region
+            entrance.connected_region = None
+
+
+def reconnect_found_entrance(world: "LunacidWorld", value: Any) -> None:
+    entrance_connected = False
+    traversed_entrances = {entry["Key"]: entry["Value"] for entry in value}
+    for entrance, region in world.disconnected_entrances.items():
+        if entrance.name in traversed_entrances:
+                entrance.connect(region)
+                entrance_connected = True
+                if entrance.name != "Move to Starting Area":
+                    reverse_entrance_name = traversed_entrances[entrance.name]
+                    reverse_entrance = world.get_entrance(reverse_entrance_name)
+                    reverse_region = world.disconnected_entrances[reverse_entrance]
+                    reverse_entrance.connect(reverse_region)
+    if not entrance_connected:
+        raise Exception(f"Some entrance in {traversed_entrances} not found for reconnect_found_entrance method.")
+
 
 
 def map_page_index(data: Any) -> int:

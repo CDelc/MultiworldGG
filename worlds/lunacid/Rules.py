@@ -258,9 +258,9 @@ class LunacidRules:
             BaseLocation.temple_blood_altar: self.has_blood_spell_access,
             BaseLocation.temple_sewer_puzzle: lambda state: state.has(UniqueItem.vhs_tape, self.player) and
                                                             state.can_reach_region(LunacidRegion.vampire_tomb_tape_room, self.player),
-            BaseLocation.archives_daedalus_one: lambda state: self.has_black_book_count(self.world.options, state, 1),
-            BaseLocation.archives_daedalus_two: lambda state: self.has_black_book_count(self.world.options, state, 2),
-            BaseLocation.archives_daedalus_third: lambda state: self.has_black_book_count(self.world.options, state, 3),
+            BaseLocation.archives_daedalus_one: lambda state: state.has(UniqueItem.black_book, self.player, 1),
+            BaseLocation.archives_daedalus_two: lambda state: state.has(UniqueItem.black_book, self.player, 2),
+            BaseLocation.archives_daedalus_third: lambda state: state.has(UniqueItem.black_book, self.player, 3),
             BaseLocation.sea_pillar: lambda state: state.has_any({Spell.icarian_flight, Spell.rock_bridge}, self.player),
             BaseLocation.chasm_hidden_chest: lambda state: self.has_crystal_orb(state, self.world.options),
             BaseLocation.chasm_invisible_cliffside: lambda state: state.has_any([Spell.coffin, Spell.icarian_flight], self.player),
@@ -806,20 +806,6 @@ class LunacidRules:
 
     def has_coins_for_door(self, options: LunacidOptions, state: CollectionState) -> bool:
         return state.has(Coins.strange_coin, self.player, options.required_strange_coin.value)
-
-    def has_black_book_count(self, options: LunacidOptions, state: CollectionState, amount: int) -> bool:
-        if not options.dropsanity:
-            can_reach_battle = state.can_reach_region(LunacidRegion.holy_battleground, self.player)
-            if amount == 1:
-                return can_reach_battle or state.has(UniqueItem.black_book, self.player)
-            if amount == 2:
-                split_case = can_reach_battle and state.has(UniqueItem.black_book, self.player)
-                return split_case or state.has(UniqueItem.black_book, self.player, 2)
-            if amount == 3:
-                return can_reach_battle and state.has(UniqueItem.black_book, self.player, 2)
-            return False
-        else:
-            return state.has(UniqueItem.black_book, self.player, amount)
 
     def can_buy_jotunn(self, options: LunacidOptions, state: CollectionState) -> bool:
         if options.shopsanity:

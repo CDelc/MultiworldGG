@@ -189,3 +189,18 @@ filler_items: List[ItemDict] = [
      'count': 1,
      'classification': ItemClassification.filler}
 ]
+
+trap_items: List[ItemDict] = [
+    {'name': "Bleach Trap",
+     'count': 1,
+     'classification': ItemClassification.trap},
+    {'name': "Trash Trap",
+     'count': 1,
+     'classification': ItemClassification.trap},
+    {'name': "Deck Size Trap",
+     'count': 1,
+     'classification': ItemClassification.trap},
+    {'name': "Reinforcements Trap",
+     'count': 1,
+     'classification': ItemClassification.trap}
+]

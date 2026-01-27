@@ -2,7 +2,7 @@
 
 ## Required Software
 
-- [MultiworldGG](https://github.com/MultiworldGG/MultiworldGG/releases). Make sure to check the box for `SNI Client - Super Metroid Patch Setup`
+- [MultiworldGG](https://github.com/MultiworldGG/MultiworldGG/releases). Make sure to check the box for `SNI Client`
   
   
 - Hardware or software capable of loading and playing SNES ROM files

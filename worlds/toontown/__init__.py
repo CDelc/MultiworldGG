@@ -145,7 +145,7 @@ class ToontownWorld(World):
 
         # Fishing settings to remove specific bounties
         # Non-species logic
-        if self.options.fish_checks.value in [1, 2]:
+        if self.options.fish_checks.value in [1, 2, 3]:
             for bounty in locations.FISH_SPECIES_BOUNTIES:
                 self.valid_bounties.remove(bounty)
         # Species logic
@@ -153,7 +153,7 @@ class ToontownWorld(World):
             for bounty in locations.FISH_ALBUM_BOUNTIES:
                 self.valid_bounties.remove(bounty)
         # No fishing
-        if self.options.fish_checks.value == 3:
+        if self.options.fish_checks.value == 4:
             for bounty in locations.ALL_FISH_BOUNTIES:
                 self.valid_bounties.remove(bounty)
 
@@ -232,6 +232,7 @@ class ToontownWorld(World):
         forbidden_location_types: set[ToontownLocationType] = self.get_disabled_location_types()
 
         # Now create locations.
+        warning_sent = False
         for i, location_data in enumerate(LOCATION_DEFINITIONS):
             # Do we skip this location generation?
             if location_data.type in forbidden_location_types:
@@ -256,6 +257,15 @@ class ToontownWorld(World):
 
             if not self.options.logical_maxed_cog_gallery.value:
                 if location_data.type == ToontownLocationType.GALLERY_MAX:
+                    location.progress_type = LocationProgressType.EXCLUDED
+
+            bosses_condition = "cog-bosses" in self.options.win_condition.value
+            if not bosses_condition and self.options.checks_per_boss.value == 0:
+                # Bosses aren't relevant to the seed, make the level 13 and 14 checks excluded
+                if not warning_sent:
+                    logging.warning(f"WARNING: [{self.multiworld.player_name[self.player]}] has nothing on bosses. Excluding Level 13 and Level 14 Cog checks.")
+                    warning_sent = True
+                if location_data.name in (ToontownLocationName.LEVEL_THIRTEEN_COG_DEFEATED, ToontownLocationName.LEVEL_FOURTEEN_COG_DEFEATED):
                     location.progress_type = LocationProgressType.EXCLUDED
 
         for location_data in EVENT_DEFINITIONS:
@@ -688,7 +698,7 @@ class ToontownWorld(World):
         return {
             "seed": self.multiworld.seed,
             "team": self.options.team.value,
-            "game_version": "v0.19.0",
+            "game_version": "v0.19.2",
             "seed_generation_type": self.options.seed_generation_type.value,
             "starting_laff": self.options.starting_laff.value,
             "max_laff": self.options.max_laff.value,
@@ -732,6 +742,7 @@ class ToontownWorld(World):
             "facility_locking": self.options.facility_locking.value,
             "death_link": self.options.death_link.value,
             "ring_link": self.options.ring_link.value,
+            "cog_dmg_rando": self.options.cog_dmg_rando.value,
             "slot_sync_jellybeans": self.options.slot_sync_jellybeans.value,
             "slot_sync_gag_experience": self.options.slot_sync_gag_experience.value,
             "pet_shop_display": self.options.pet_shop_display.value,

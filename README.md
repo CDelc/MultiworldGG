@@ -140,6 +140,7 @@ Currently, the following games are supported:
 * Pokémon FireRed/LeafGreen
 * Pokémon Mystery Dungeon: Explorers of Sky
 * Pokémon Red/Blue
+* Portal 2
 * Powerwash Simulator
 * Pseudoregalia
 * Quake 1
@@ -158,7 +159,6 @@ Currently, the following games are supported:
 * Satisfactory
 * Saving Princess
 * Secret of Evermore
-* Sea of Thieves
 * Shapez
 * Shivers
 * Slay the Spire

@@ -412,6 +412,9 @@
 # Pokemon Red and Blue
 /worlds/pokemon_rb/ @Alchav
 
+# Portal 2
+/worlds/portal2/ @GlassToadstool
+
 # Powerwash Simulator
 /worlds/powerwashsimulator/ @SWCreeperKing
 
@@ -462,9 +465,6 @@
 
 # Saving Princess
 /worlds/saving_princess/ @LeonarthCG
-
-# Sea of Thieves
-/worlds/seaofthieves/ @EthanSteidl
 
 # Shapez
 /worlds/shapez/ @BlastSlimey
