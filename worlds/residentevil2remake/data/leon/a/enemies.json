@@ -48,6 +48,17 @@
             "folder_path": "RopewayManagers/TemporaryObjects/Enemy"
     },
     {
+            "name": "Plaid Shirt Zombie",
+            "region": "Press Room",
+            "original_item": "",
+            "item_object": "emZombie_1FECorriderB",
+            "parent_object": "16-232-0-0-ID011",
+            "folder_path": "RopewayManagers/TemporaryObjects/Enemy",
+            "condition": {
+                "items": ["Film - Hiding Place"]
+            }
+    },
+    {
             "name": "Female Zombie from Operations Room Window",
             "region": "Southwest Hallway",
             "original_item": "",
@@ -237,7 +248,7 @@
             "name": "Licker outside STARS Office",
             "region": "STARS Office",
             "original_item": "",
-            "item_object": "FirstLickerReplace",
+            "item_object": "FirstLicker",
             "parent_object": "16-253-0-3-nil",
             "folder_path": "RopewayManagers/TemporaryObjects/Enemy",
             "condition": {
@@ -629,6 +640,39 @@
             }
     },
     {
+            "name": "White shirt Female Zombie",
+            "region": "Upper Waterway",
+            "original_item": "",
+            "item_object": "Zombie_Waste02_woman_01_01",
+            "parent_object": "17-429-0-1-ID002",
+            "folder_path": "RopewayManagers/TemporaryObjects/Enemy",
+            "condition": {
+                "items": ["T-Bar Handle"]
+            }
+    },
+    {
+            "name": "Dark shirt Female Zombie",
+            "region": "Upper Waterway",
+            "original_item": "",
+            "item_object": "Zombie_Waste02_woman",
+            "parent_object": "17-429-0-1-ID006",
+            "folder_path": "RopewayManagers/TemporaryObjects/Enemy",
+            "condition": {
+                "items": ["T-Bar Handle"]
+            }
+    },
+    {
+            "name": "Dark Jumpsuit Zombie",
+            "region": "Upper Waterway",
+            "original_item": "",
+            "item_object": "Zombie_Waste02_03_01",
+            "parent_object": "17-429-0-0-ID004",
+            "folder_path": "RopewayManagers/TemporaryObjects/Enemy",
+            "condition": {
+                "items": ["T-Bar Handle"]
+            }
+    },
+    {
             "name": "Blue Jumpsuit Zombie",
             "region": "Waterway Overpass",
             "original_item": "",
@@ -800,6 +844,17 @@
             "item_object": "ZombieNorth06",
             "parent_object": "3-129-0-0-ID305",
             "folder_path": "RopewayManagers/TemporaryObjects/Enemy"
+    },
+    {
+            "name": "Sleeping Zombie in bed",
+            "region": "Nap Room",
+            "original_item": "",
+            "item_object": "ZombieNorth01",
+            "parent_object": "3-131-0-0-ID934",
+            "folder_path": "RopewayManagers/TemporaryObjects/Enemy",
+            "condition": {
+                "items": ["Signal Modulator"]
+            }
     },
     {
             "name": "Zombie outside Nap Room",

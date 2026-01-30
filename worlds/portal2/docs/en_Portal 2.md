@@ -13,7 +13,7 @@ The [player options page for this game](../player-options) contains all the opti
 - [x]  Death Link
 - [x]  Traps
 - [x]  In game messages (reflecting client messages)
-- [ ]  Additional locations - Wheatley monitors, achievements, item gains
+- [x]  Additional locations - Wheatley monitors, item gains
 - [ ]  More to come...
 
 ## Acknowledgements

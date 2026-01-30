@@ -251,7 +251,7 @@ class TrackerCommandProcessor(ClientCommandProcessor):
 
     @mark_raw
     def _cmd_explain_more(self, argument:str=""):
-        """Asks the internal world to explain more, used to expland on /explain and /get_logical_path"""
+        """Asks the internal world to explain more, used to expand on /explain and /get_logical_path"""
         if not self.ctx.game:
             logger.info("Not yet loaded into a game")
             return
@@ -1323,7 +1323,8 @@ class TrackerGameContext(CommonContext):
                     if "list_maps" not in self.command_processor.commands or not self.command_processor.commands["list_maps"]:
                         self.command_processor.commands["list_maps"] = cmd_list_maps
                 self.defered_entrance_datastorage_keys = getattr(self.tracker_core.get_current_world(),"found_entrances_datastorage_key",None)
-                if self.defered_entrance_datastorage_keys:
+                from . import DeferredEntranceMode
+                if self.defered_entrance_datastorage_keys and self.tracker_core.enforce_deferred_connections != DeferredEntranceMode.disabled:
                     if isinstance(self.defered_entrance_datastorage_keys,str):
                         self.defered_entrance_datastorage_keys = [self.defered_entrance_datastorage_keys]
                     self.defered_entrance_datastorage_keys = [key.format(player=self.slot, team=self.team) for key in self.defered_entrance_datastorage_keys]

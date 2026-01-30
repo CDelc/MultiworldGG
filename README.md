@@ -251,7 +251,7 @@ path. Just because one person's name may be in a repository title does not mean 
 happen. We can't hope to perfectly cover every single contribution that lead up to MultiworldGG, but we hope to honor
 them fairly.
 
-### Path to the MultiworldGG
+## Path to MultiworldGG
 
 MultiworldGG was directly forked from Archipelago in 2024. 
 Originally, it was just used as a quick and easy access solution for a small group of friends. Some members who were less tech savvy wanted to jump in and needed easier setup and access, so we started doing our own thing with custom APWorlds.

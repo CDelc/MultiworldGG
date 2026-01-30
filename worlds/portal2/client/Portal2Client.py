@@ -9,9 +9,9 @@ from CommonClient import CommonContext, server_loop, gui_enabled, ClientCommandP
 from NetUtils import ClientStatus, JSONMessagePart, NetworkItem
 from Utils import async_start, init_logging
 
-from ..mod_helpers.ItemHandling import handle_item, handle_trap
+from ..mod_helpers.ItemHandling import handle_item, handle_map_start, handle_trap
 from ..mod_helpers.MapMenu import Menu
-from ..Locations import location_names_to_map_codes, map_codes_to_location_names, all_locations_table
+from ..Locations import location_names_to_map_codes, map_codes_to_location_names, wheatley_maps_to_monitor_names, all_locations_table
 from .. import Portal2World
 
 if __name__ == "__main__":
@@ -206,20 +206,43 @@ class Portal2Context(CommonContext):
 
     async def handle_message(self, message: str):
         if message.startswith("map_name:"):
-            logger.info(f"Map Joined {message.split(':', 1)[1]}")
+            map_name = message.split(':', 1)[1]
             # append the whole command string
             command_string = self.create_level_begin_command()
             self.command_queue.append(command_string)
+            self.command_queue += handle_map_start(map_name, self.item_list)
 
+        # For map complete checks
         elif message.startswith("map_complete:"):
             done_map = message.split(':', 1)[1]
             if done_map == self.goal_map_code:
                 await self.handle_goal_completion()
-            logger.info("Check made: " + done_map)
+            
             map_id = self.map_code_to_location_id(done_map)
             if map_id:
                 await self.check_locations([map_id])
                 self.update_menu(map_id)
+        
+        # For all other checks
+        elif message.startswith("item_collected:"):
+            item_collected = message.split(":", 1)[1]
+            check_id = all_locations_table[item_collected].id
+            await self.check_locations([check_id])
+            
+        elif message.startswith("monitor_break:"):
+            check_message = message.split(":", 1)[1]
+            map_name = check_message.split(" ", 1)[0]
+            check_name = ""
+            if "sp_a4_tb_catch" in map_name:
+                if check_message[-1] == "1":
+                    check_name = "Wheatley Monitor 5"
+                else:
+                    check_name = "Wheatley Monitor 6"
+            else:
+                check_name = wheatley_maps_to_monitor_names[map_name][0]
+                
+            check_id = all_locations_table[check_name].id
+            await self.check_locations([check_id])
         
         elif message.startswith("send_deathlink"):
             if self.death_link_active and time.time() - self.last_death_link > 10:

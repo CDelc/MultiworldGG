@@ -6,13 +6,13 @@ This guide is meant to help you get up and running with Ratchet and Clank 3 in y
 
 The following are required in order to play Ratchet and Clank 3 in MultiworldGG
 
-- Installed [MultiworldGG](https://github.com/MultiworldGG/MultiworldGG/releases) v0.5.0 or higher.\
+- Installed [MultiworldGG](https://github.com/MultiworldGG/MultiworldGG/releases) v0.7.100 or higher.\
   **Make sure to install the Generator if you intend to generate multiworlds.**
-- The latest version of the [Ratchet and Clank 3 apworld](https://github.com/Taoshix/Archipelago-RaC3/releases).
+- If you do not want to use MWGG: The latest version of the [Ratchet and Clank 3 apworld](https://github.com/Taoshix/Archipelago-RaC3/releases).
 - [PCSX2 Emulator](https://pcsx2.net/downloads/). Must be v1.7 or higher for the required PINE support.
 - A Ratchet and Clank 3 US ISO (`SCUS-97353`)
 
-## Unless you use MWGG: AP World Installation
+## If you do not want to use MWGG: AP World Installation
 
 1. Unzip the downloaded Ratchet and Clank 3 apworld zip file
 2. Double-click the `rac3.apworld` to install it to your local Archipelago instance
@@ -21,8 +21,10 @@ The following are required in order to play Ratchet and Clank 3 in MultiworldGG
 
 - Enable PINE in PCSX2
     - In PCSX2, Under Tools, **Check** Show Advanced Settings
-    - In PCSX2, System -> Settings -> Advanced tab -> PINE Settings,
+    - In PCSX2, System → Settings → Advanced tab → PINE Settings,
       **Check** Enable and ensure Slot is set to 28011
+
+Make sure you restart PCSX2 afterwards.
 
 ## Configuring your YAML file
 
@@ -40,10 +42,9 @@ the [Ratchet and Clank 3 Options Page](/games/Ratchet%20and%20Clank%203/player-o
 ### Connect to the MultiServer
 
 1. Launch PCSX2, boot your copy of RaC3
-    - Start a new file, watch/skip the intro cutscene and pause the game when you load in on Veldin
 
 2. Launch Ratchet and Clank 3 client in the MultiworldGG Launcher
     - Under address input your MultiworldGG connection address (ie: multiworld.gg:51780)
-    - PCSX2 must be open before the RaC3 client is opened, or it will give an error
+    - Start a new file, watch/skip the intro cutscene and reload the file to apply cosmetics
     - Items will begin being sent to the player before they are in their save file if the client is connected first
 
