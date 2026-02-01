@@ -160,13 +160,10 @@ class LunacidRules:
 
             LunacidEntrance.castle_upstairs_to_main_halls: lambda state: state.has(Progressives.vampiric_symbol, self.player, 2) or state.has(UniqueItem.vampiric_symbol_a, self.player),
             LunacidEntrance.castle_upstairs_to_tape_room: lambda state: self.has_crystal_orb(state, self.world.options),
-            LunacidEntrance.castle_upstairs_to_forbidden: lambda state: state.can_reach_region(LunacidRegion.castle_le_fanu_entrance, self.player) and (
+            LunacidEntrance.castle_upstairs_to_forbidden: lambda state: state.can_reach_region(LunacidRegion.castle_le_fanu_entrance, self.player) and
                     self.has_ranged_element_access(
                         [Elements.dark, Elements.dark_and_fire, Elements.dark_and_light, Elements.poison,
-                         Elements.ice_and_poison], state) or
-                    (self.has_element_access(
-                        [Elements.dark, Elements.dark_and_fire, Elements.dark_and_light, Elements.poison,
-                         Elements.ice_and_poison], state) and state.has(Spell.rock_bridge, self.player))),
+                         Elements.ice_and_poison], state),
             LunacidEntrance.castle_upstairs_to_queen_rest: lambda state: state.has(Progressives.vampiric_symbol, self.player, 3) or state.has(UniqueItem.vampiric_symbol_e, self.player),
 
             LunacidEntrance.castle_cattle_back_to_boiling_grotto: lambda state: self.has_door_key(Door.burning_key, state, self.world.options),
@@ -184,13 +181,10 @@ class LunacidRules:
             LunacidEntrance.throne_room_to_prison: lambda state: self.has_door_key(Door.prison_key, state, self.world.options),
             LunacidEntrance.throne_room_to_castle_queen_path: lambda state: self.has_door_key(Door.throne_key, state, self.world.options),
 
-            LunacidEntrance.castle_forbidden_to_upstairs: lambda state: state.can_reach_region(LunacidRegion.castle_le_fanu_entrance, self.player) and (
+            LunacidEntrance.castle_forbidden_to_upstairs: lambda state: state.can_reach_region(LunacidRegion.castle_le_fanu_entrance, self.player) and
                     self.has_ranged_element_access(
                         [Elements.dark, Elements.dark_and_fire, Elements.dark_and_light, Elements.poison,
-                         Elements.ice_and_poison], state) or
-                    (self.has_element_access(
-                        [Elements.dark, Elements.dark_and_fire, Elements.dark_and_light, Elements.poison,
-                         Elements.ice_and_poison], state) and state.has(Spell.rock_bridge, self.player))),
+                         Elements.ice_and_poison], state),
             LunacidEntrance.castle_forbidden_to_sealed_ballroom: lambda state: self.has_door_key(Door.ballroom_key, state, self.world.options),
 
             LunacidEntrance.sealed_ballroom_to_forbidden_entry: lambda state: self.has_door_key(Door.ballroom_key, state, self.world.options),
@@ -257,7 +251,8 @@ class LunacidRules:
                                                                                                                                                self.player),
             BaseLocation.temple_blood_altar: self.has_blood_spell_access,
             BaseLocation.temple_sewer_puzzle: lambda state: state.has(UniqueItem.vhs_tape, self.player) and
-                                                            state.can_reach_region(LunacidRegion.vampire_tomb_tape_room, self.player),
+                                                            state.can_reach_region(LunacidRegion.vampire_tomb_tape_room, self.player) and
+                                                            self.has_ranged_element_access(Elements.all_elements, state),
             BaseLocation.archives_daedalus_one: lambda state: state.has(UniqueItem.black_book, self.player, 1),
             BaseLocation.archives_daedalus_two: lambda state: state.has(UniqueItem.black_book, self.player, 2),
             BaseLocation.archives_daedalus_third: lambda state: state.has(UniqueItem.black_book, self.player, 3),

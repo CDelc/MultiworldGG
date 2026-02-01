@@ -1,4 +1,4 @@
-# Inscryption
+# Inscryption (Beta)
 
 ## Where is the options page?
 You can configure your player options with the Inscryption options page. [Click here](../player-options) to start configuring them to your liking.

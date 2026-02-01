@@ -11,7 +11,7 @@ from worlds.poe.poeClient import itemFilter
 import os
 import typing
 if typing.TYPE_CHECKING:
-    from worlds.poe.poeClient.vendor.pyttsx3 import pyttsx3, pythoncom
+    from worlds.poe.poeClient.vendor.pyttsx3 import pyttsx3
     from worlds.poe.Client import PathOfExileContext
 else:
     import pyttsx3

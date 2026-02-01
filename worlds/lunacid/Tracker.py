@@ -1,13 +1,9 @@
-import logging
 from typing import Any, TYPE_CHECKING, List
 
 from .strings.regions_entrances import LunacidEntrance
 
 if TYPE_CHECKING:
     from . import LunacidWorld
-
-
-logger = logging.getLogger("Client")
 
 
 def setup_options_from_slot_data(world: "LunacidWorld"):

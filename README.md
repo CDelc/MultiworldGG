@@ -77,7 +77,6 @@ Currently, the following games are supported:
 * Frogmonster
 * Getting Over It
 * Golden Sun: The Lost Age
-* GZDoom
 * Hades
 * Hatsune Miku: Project Diva Mega Mix+
 * Here comes Niko!

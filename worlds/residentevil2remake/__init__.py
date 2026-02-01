@@ -55,7 +55,7 @@ class ResidentEvil2Remake(World):
 
     data_version = 2
     required_client_version = (0, 5, 0)
-    apworld_release_version = "0.3.2" # defined to show in spoiler log
+    apworld_release_version = "0.3.3" # defined to show in spoiler log
 
     item_id_to_name = { item['id']: item['name'] for item in Data.item_table }
     item_name_to_id = { item['name']: item['id'] for item in Data.item_table }
@@ -434,20 +434,30 @@ class ResidentEvil2Remake(World):
         # add extras for Clock Tower items or Medallions, if configured
         # doing this before "oops all X" to make use of extra Handgun Ammo spots, too
         if self._format_option_text(self.options.extra_clock_tower_items) == 'True':
-            replaceables = [item for item in pool if 'Boards' in item.name or item.name == 'Handgun Ammo' or item.name == 'Large-Caliber Handgun Ammo']
+            replaceables = [
+                item for item in pool if 
+                    'Boards' in item.name or item.name == 'Handgun Ammo' or item.name == 'Large-Caliber Handgun Ammo' or item.name == "Gunpowder" or 
+                    item.name == "Damage Trap" or item.name == "Poison Trap"
+            ]
             
             for x in range(3):
-                pool.remove(replaceables[x])
+                if len(replaceables) == 0: break
+                pool.remove(replaceables.pop())
 
             pool.append(self.create_item('Mechanic Jack Handle'))
             pool.append(self.create_item('Small Gear'))
             pool.append(self.create_item('Large Gear'))
 
         if self._format_option_text(self.options.extra_medallions) == 'True':
-            replaceables = [item for item in pool if 'Boards' in item.name or item.name == 'Handgun Ammo' or item.name == 'Large-Caliber Handgun Ammo']
-            
+            replaceables = replaceables = [
+                item for item in pool if 
+                    'Boards' in item.name or item.name == 'Handgun Ammo' or item.name == 'Large-Caliber Handgun Ammo' or item.name == "Gunpowder" or 
+                    item.name == "Damage Trap" or item.name == "Poison Trap"
+            ]       
+
             for x in range(2):
-                pool.remove(replaceables[x])
+                if len(replaceables) == 0: break
+                pool.remove(replaceables.pop())
 
             pool.append(self.create_item('Lion Medallion'))
             pool.append(self.create_item('Unicorn Medallion'))
@@ -455,7 +465,9 @@ class ResidentEvil2Remake(World):
             # The A scenarios have Maiden forced to the Bolt Cutters vanilla location, which is guaranteed to be accessible.
             # B scenarios have it randomized, so add a second randomized Maiden.
             if self._get_scenario().lower() == 'b':
-                pool.remove(replaceables[2]) # remove the 3rd item to make room for a 3rd medallion
+                if len(replaceables) > 0:
+                    pool.remove(replaceables.pop()) # remove the 3rd item to make room for a 3rd medallion
+
                 pool.append(self.create_item('Maiden Medallion'))
 
         if self._format_option_text(self.options.early_medallions) == 'True':

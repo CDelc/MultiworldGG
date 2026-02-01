@@ -14,8 +14,8 @@ class Slot(db.Entity):
     player_id = Required(int)
     player_name = Required(str)
     data = Optional(bytes, lazy=True)
-    seed = Optional('Seed')
-    game = Required(str)
+    seed = Optional('Seed', index=True)
+    game = Required(str, index=True)
 
 
 class Room(db.Entity):

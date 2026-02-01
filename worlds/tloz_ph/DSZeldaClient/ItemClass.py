@@ -64,21 +64,16 @@ async def receive_normal(client: "DSZeldaClient", ctx: "BizHawkClientContext", i
 
     # Handle different writing operations
     if "incremental" in item.tags:
-        if type(item.value) is str:
+        value = item.value
+        if type(value) is str:
             value = await client.received_special_incremental(ctx, item)  # TODO: hook into this somehow?
-        else:
-            value = item.value
-
-            # Heal on heart container
-            if item.name == "Heart Container":
-                await client.full_heal(ctx)
 
         item_value = prev_value + value
         item_value = 0 if item_value <= 0 else item_value
         if "Rupee" in item.name:
             item_value = min(item_value, 9999)
-        if item.size > 1:
-            item_value = split_bits(item_value, item.size)
+        if item.address.size > 1:
+            item_value = split_bits(item_value, item.address.size)
         if hasattr(item, "max") and item_value > item.max:
             item_value = min(item.max, prev_value)
     elif hasattr(item, "progressive"):
@@ -86,12 +81,17 @@ async def receive_normal(client: "DSZeldaClient", ctx: "BizHawkClientContext", i
             item_value = item_value  # Bomb upgrades need to overwrite of everything breaks
         else:
             item_value = prev_value | item_value
+    elif "monotone_incremental" in item.tags:  # For incremental items you want to recalculate their count for each time.
+            item_value = item.value * client.item_count(ctx, item.name) + getattr(item, "base_count", 0)
+            # Heal on heart container
+            if item.name == "Heart Container":
+                await client.full_heal(ctx, 4)
     else:
         item_value = prev_value | item.value
 
-    item_values = item_value if type(item_value) is list else [item_value]
-    item_values = [min(255, i) for i in item_values]
-    res += item_address.get_write_list(item_values)
+    # item_values = item_value if isinstance(item_value, list) else split_bits(item_value, item_address.size)
+    # item_values = [min(255, i) for i in item_values]
+    res += item_address.get_write_list(item_value)
 
     # Handle special item conditions
     if hasattr(item, "give_ammo"):
@@ -125,12 +125,11 @@ async def remove_vanilla_progressive(client: "DSZeldaClient", ctx: "BizHawkClien
 async def remove_vanilla_normal(client: "DSZeldaClient", ctx: "BizHawkClientContext", item: "DSItem", num_received_items):
     address, value = item.address, item.value
 
+    prev_value = await address.read(ctx)
     # Catch vanilla rupees going over 9999
     if "Rupee" in item.name:
-        if client.prev_rupee_count + value > 9999:
-            value = 9999 - client.prev_rupee_count
-
-    prev_value = await address.read(ctx)
+        value = 9999 - prev_value if prev_value + value > 9999 else value
+        value = prev_value if prev_value-value < 0 else value
     if "incremental" in item.tags:
         value = prev_value - value
     else:
@@ -150,6 +149,7 @@ class DSItem:
     size: int or str
     progressive: list[tuple["Address", int]]
     domain: str
+    base_count: int  # If monotone_incremental, base amount of an item, ex. 12 for hearts
 
     # Ammo
     ammo_address: "Address"

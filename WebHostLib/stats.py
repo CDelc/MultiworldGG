@@ -12,25 +12,30 @@ from flask import render_template
 from pony.orm import select
 
 from . import app, cache
-from .models import Room
+from .models import Room, Slot
 
 PLOT_WIDTH = 600
 
 
 def get_db_data(known_games: set[str]) -> tuple[Counter[str], defaultdict[date, dict[str, int]]]:
-    """Get database data for stats - simple and working approach."""
+    """Get database data for stats using an efficient single query with JOINs."""
     games_played: defaultdict[date, dict[str, int]] = defaultdict(Counter)
     total_games: Counter[str] = Counter()
     cutoff = date.today() - timedelta(days=30)
-    room: Room
-    for room in select(room for room in Room if room.creation_time >= cutoff):
-        for slot in room.seed.slots:
-            if slot.game in known_games:
-                current_game = slot.game
-            else:
-                current_game = "Other"
-            total_games[current_game] += 1
-            games_played[room.creation_time.date()][current_game] += 1
+
+    # Single query with JOINs: Slot -> Seed -> Room, filtered by Room.creation_time - less round-trips
+    query = select(
+        (room.creation_time, slot.game)
+        for slot in Slot
+        for room in Room
+        if slot.seed == room.seed and room.creation_time >= cutoff
+    )
+
+    for creation_time, game in query:
+        current_game = game if game in known_games else "Other"
+        total_games[current_game] += 1
+        games_played[creation_time.date()][current_game] += 1
+
     return total_games, games_played
 
 

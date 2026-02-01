@@ -56,7 +56,7 @@ class LunacidWeb(WebWorld):
     theme = "partyTime"
     tutorials = [Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up the Lunacid randomizer connected to an Archipelago Multiworld",
+        "A guide to setting up the Lunacid randomizer connected to a MultiworldGG Multiworld",
         "English",
         "setup_en.md",
         "setup/en",
@@ -75,6 +75,7 @@ class LunacidWorld(World):
     """
 
     game = "Lunacid"
+    author: str = "Albrekka"
     topology_present = False
     item_name_to_id = {item.name: item.code for item in item_table}
     location_name_to_id = {location.name: location.location_id for location in location_table}
@@ -537,7 +538,7 @@ class LunacidWorld(World):
         slot_data = {
             "ut_seed": self.seed,
             "seed": self.random.randrange(1000000000),  # Seed should be max 9 digits
-            "client_version": "1.0.9",
+            "client_version": "1.0.13",
             "rolled_month": self.rolled_month,
             "starting_weapon": self.starting_weapon.name,
             "elements": self.weapon_elements,

@@ -30,6 +30,11 @@ class DSZeldaClient(BizHawkClient):
     watches: Dict[str, tuple[int, int, str]]
     item_data: dict[str, "DSItem"]
 
+    stage_address: "Address"
+    health_address: "Address"
+
+    treasure_tracker: dict["Address" or str, int]
+
     def __init__(self) -> None:
         super().__init__()
         self.item_id_to_name = build_item_id_to_name_dict()
@@ -62,7 +67,6 @@ class DSZeldaClient(BizHawkClient):
         self.was_alive_last_frame = False
         self.is_expecting_received_death = False
         self.is_dead = False  # Read from read_result
-        self.health_address: "Address" = addr_null
 
         self.save_slot = 0
         self.version_offset = 0
@@ -90,9 +94,7 @@ class DSZeldaClient(BizHawkClient):
         self.entering_dungeon = None
         self.current_entrance = None
 
-        self.stage_address: "Address" = addr_null  # Used for scene flags
         self.new_stage_loading = None
-
         self.getting_location_type = None
 
         self._entered_entrance = False
@@ -114,7 +116,6 @@ class DSZeldaClient(BizHawkClient):
         self.metal_count = 0
 
         self.last_dungeon_warp_target = None
-
         self.tried_short_cs = False
 
         self.precision_mode = None
@@ -271,6 +272,11 @@ class DSZeldaClient(BizHawkClient):
         :return:
         """
 
+    async def on_connect(self, ctx):
+        """
+        Called on connecting
+        """
+
     async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         if not ctx.server or not ctx.server.socket.open or ctx.server.socket.closed or ctx.slot is None or ctx.slot == 0:
             self._just_entered_game = True
@@ -309,6 +315,7 @@ class DSZeldaClient(BizHawkClient):
         # Get main read list before entering loop
         if not self._loaded_menu_read_list:
             await self.update_main_read_list(ctx, self.current_stage, in_game=False)
+            await self.on_connect(ctx)
             self._loaded_menu_read_list = True
 
         try:
@@ -424,7 +431,7 @@ class DSZeldaClient(BizHawkClient):
                 # Check if link is getting location
                 if self.getting_location and not self.receiving_location and self.locations_in_scene is not None:
                     self.receiving_location = True
-                    print("Receiving Item")
+                    print("Receiving Location")
                     if self.delay_reset > 1:
                         self.delay_reset = 0
                     await self._process_checked_locations(ctx, None, detection_type=self.getting_location_type)
@@ -478,6 +485,8 @@ class DSZeldaClient(BizHawkClient):
                     elif self.last_vanilla_item:
                         print("Item Received Successfully")
                         await self._remove_vanilla_item(ctx, num_received_items)
+
+                    await self.process_post_receive(ctx)
 
 
                 await self.detect_warp_to_start(ctx, read_result)
@@ -769,6 +778,11 @@ class DSZeldaClient(BizHawkClient):
         :return:
         """
 
+    async def process_post_receive(self, ctx):
+        """
+        Called after finished receiving item, after _remove_vanilla_item and delay_pickup
+        """
+
     async def store_visited_entrances(self, ctx, detect_data, exit_data, interaction=None):
         """
         store visited entrances as a set of ints to datastorage
@@ -1042,6 +1056,7 @@ class DSZeldaClient(BizHawkClient):
                 loc_bytes = self.location_name_to_id[loc_name]
 
                 if "address" in location or self.cancel_location_read(location):
+                    location = None
                     continue
 
                 print(f"Processing locs {loc_name}")
@@ -1104,9 +1119,8 @@ class DSZeldaClient(BizHawkClient):
     async def get_item_read(self, ctx, item_name: str) -> int:
         if "Small Key" in item_name:
             return await self.key_address.read(ctx)
-        else:
-            item = self.item_data[item_name]
-            return await item.address.read(ctx)
+        item = self.item_data[item_name]
+        return await item.address.read(ctx)
 
     async def _set_delay_pickup(self, ctx, loc_name, location):
         delay_locations = []
@@ -1130,14 +1144,18 @@ class DSZeldaClient(BizHawkClient):
     # Processes events defined in data\dynamic_flags.py
 
     async def _set_vanilla_item(self, ctx, location, vanilla_item: str | None = None):
-        item: str | list[str] = vanilla_item or location["vanilla_item"]
+        item: str | list[str] = vanilla_item or location.get("vanilla_item", None)
+        if item is None:
+            return
         if isinstance(item, str):
             item_data = self.item_data[item]
             print(f"Setting vanilla for {item_data}")
             if item is not None and not hasattr(item_data, "dummy"):
-                if ("incremental" in item_data.tags or hasattr(item_data, "progressive") or
-                        item_data.id not in [i.item for i in ctx.items_received] or
-                        "always_process" in item_data.tags):
+                if ("incremental" in item_data.tags
+                        or hasattr(item_data, "progressive")
+                        or item_data.id not in [i.item for i in ctx.items_received]
+                        or "always_process" in item_data.tags
+                        or "monotone_incremental" in item_data.tags):
                     self.last_vanilla_item.append(item)
 
                     await self.unset_special_vanilla_items(ctx, location, item)
@@ -1184,7 +1202,6 @@ class DSZeldaClient(BizHawkClient):
         if self.last_vanilla_item and item_name == self.last_vanilla_item[-1] and "always_process" not in item_data.tags:
             self.last_vanilla_item.pop()
             print(f"oops it's vanilla or dummy! {self.last_vanilla_item}")
-            write_list += await self.write_totok_keys_lol(ctx, item_name, item_data)  # TODO: Handle writing totok later
         else:
             write_list += await item_data.receive_item(self, ctx, num_received_items)
 
@@ -1205,16 +1222,6 @@ class DSZeldaClient(BizHawkClient):
         :param ctx:
         :param item_name:
         :param write_keys_to_storage: inner function that writes keys to storage based on key data
-        :return: write data
-        """
-        return []
-
-    async def write_totok_keys_lol(self, ctx, item_name, item_data) -> list:
-        """
-        if you get a key in TotOK, even in vanilla location, write to storage so that you get it again later
-        :param ctx:
-        :param item_name:
-        :param item_data:
         :return: write data
         """
         return []

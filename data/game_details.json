@@ -2015,23 +2015,6 @@
         ],
         "release_date": 2002
     },
-    "gzDoom": {
-        "igdb_id": "307741",
-        "world_name": "gzDoom",
-        "igdb_name": "GZDoom SM64",
-        "us_rating": [],
-        "player_perspectives": [
-            "Third person"
-        ],
-        "genres": [
-            "Platform"
-        ],
-        "themes": [
-            "Action"
-        ],
-        "keywords": [],
-        "release_date": null
-    },
     "Hades": {
         "igdb_id": "113112",
         "world_name": "Hades",

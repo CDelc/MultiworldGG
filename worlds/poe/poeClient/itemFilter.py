@@ -24,13 +24,17 @@ end_item_filter_block = "# </Base Item Hunt item>"
 DEFAULT_POE_DOC_PATH = Path.home() / "Documents" / "My Games" / "Path of Exile"
 
 if Utils.is_windows:
-    from win32com.shell import shell, shellcon
-    # Use modern SHGetKnownFolderPath for better compatibility
-    docs_path = Path(shell.SHGetKnownFolderPath(shellcon.FOLDERID_Documents, 0, None))
-    if docs_path.exists():
-        DEFAULT_POE_DOC_PATH = docs_path / "My Games" / "Path of Exile"
-    else:
-        logging.error("Windows Documents path not found, using hardcoded fallback.")
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                            r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders") as key:
+            docs_path = Path(winreg.QueryValueEx(key, "Personal")[0])
+            if docs_path.exists():
+                DEFAULT_POE_DOC_PATH = docs_path / "My Games" / "Path of Exile"
+            else:
+                logging.error("Windows Documents path not found, using hardcoded fallback.")
+    except OSError:
+        logging.error("Could not read Documents path from registry, using hardcoded fallback.")
 
 poe_doc_path = DEFAULT_POE_DOC_PATH
 
