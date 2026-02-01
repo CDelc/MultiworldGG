@@ -8,7 +8,7 @@ from bokeh.embed import components
 from bokeh.models import HoverTool
 from bokeh.plotting import figure, ColumnDataSource
 from bokeh.resources import INLINE
-from flask import render_template
+from flask import render_template, request
 from pony.orm import select
 
 from . import app, cache
@@ -23,12 +23,12 @@ def get_db_data(known_games: set[str]) -> tuple[Counter[str], defaultdict[date, 
     total_games: Counter[str] = Counter()
     cutoff = date.today() - timedelta(days=30)
 
-    # Query rooms first (filtered by date), then get slots through the seed relationship
+    # Explicit join: filter Room by date first, then join to Slot via shared seed
     query = select(
         (room.creation_time, slot.game)
         for room in Room
-        if room.creation_time >= cutoff
-        for slot in room.seed.slots
+        for slot in Slot
+        if room.creation_time >= cutoff and slot.seed == room.seed
     )
 
     for creation_time, game in query:
@@ -90,15 +90,16 @@ def create_game_played_figure(all_games_data: dict[date, dict[str, int]], game: 
     return plot
 
 
-@app.route('/stats')
-@cache.memoize(timeout=60 * 60) 
-def stats():
+@cache.memoize(timeout=60 * 60)
+def get_cached_stats_data() -> tuple[Counter[str], defaultdict[date, dict[str, int]]]:
+    """Cached wrapper for database query - cached at module level so it works properly."""
     from worlds import network_data_package
     known_games = set(network_data_package["games"])
-    @cache.memoize(timeout=60 * 60)
-    def get_cached_stats_data():
-        return get_db_data(known_games)
-    
+    return get_db_data(known_games)
+
+
+@app.route('/stats')
+def stats():
     total_games, games_played = get_cached_stats_data()
     
     plot = figure(title="Games Played Per Day", x_axis_type='datetime', x_axis_label="Date",
@@ -171,10 +172,20 @@ def stats():
               start_angle="start_angles", end_angle="end_angles", fill_color="colors",
               source=ColumnDataSource(data=data), legend_field="games")
 
-    per_game_charts = [create_game_played_figure(games_played, game, game_to_color[game]) for game in
-                       sorted(total_games, key=lambda game: total_games[game])
-                       if total_games[game] > 1]
+    # Paginate per-game charts (10 per page) to avoid memory exhaustion
+    GAMES_PER_PAGE = 10
+    eligible_games = [game for game, _ in total_games.most_common() if total_games[game] > 1]
+    total_pages = max(1, (len(eligible_games) + GAMES_PER_PAGE - 1) // GAMES_PER_PAGE)
+
+    page = request.args.get('page', 1, type=int)
+    page = max(1, min(page, total_pages))  # Clamp to valid range
+
+    start_idx = (page - 1) * GAMES_PER_PAGE
+    end_idx = start_idx + GAMES_PER_PAGE
+    page_games = eligible_games[start_idx:end_idx]
+
+    per_game_charts = [create_game_played_figure(games_played, game, game_to_color[game]) for game in page_games]
 
     script, charts = components((plot, pie, *per_game_charts))
     return render_template("stats.html", js_resources=INLINE.render_js(), css_resources=INLINE.render_css(),
-                           chart_data=script, charts=charts)
+                           chart_data=script, charts=charts, page=page, total_pages=total_pages)
