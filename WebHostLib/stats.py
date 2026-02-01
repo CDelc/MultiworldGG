@@ -23,12 +23,12 @@ def get_db_data(known_games: set[str]) -> tuple[Counter[str], defaultdict[date, 
     total_games: Counter[str] = Counter()
     cutoff = date.today() - timedelta(days=30)
 
-    # Single query with JOINs: Slot -> Seed -> Room, filtered by Room.creation_time - less round-trips
+    # Query rooms first (filtered by date), then get slots through the seed relationship
     query = select(
         (room.creation_time, slot.game)
-        for slot in Slot
         for room in Room
-        if slot.seed == room.seed and room.creation_time >= cutoff
+        if room.creation_time >= cutoff
+        for slot in room.seed.slots
     )
 
     for creation_time, game in query:
