@@ -72,6 +72,8 @@ Output Logs/
 /custom_worlds
 /certs
 /temp
+# stubgen output
+/out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
