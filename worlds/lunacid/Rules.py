@@ -18,7 +18,7 @@ from .strings.spells import Spell, MobSpell
 from .strings.items import UniqueItem, Progressives, Switch, Alchemy, Door, Coins, Voucher, SpookyItem, CustomItem
 from .strings.locations import BaseLocation, ShopLocation, all_drops_by_enemy, DropLocation, Quench, AlchemyLocation, SpookyLocation, LevelLocation, LoreLocation, \
     GrassLocation, BreakLocation
-from .strings.weapons import Weapon
+from .strings.weapons import Weapon, SpookyWeapon
 
 if TYPE_CHECKING:
     from . import LunacidWorld
@@ -161,9 +161,9 @@ class LunacidRules:
             LunacidEntrance.castle_upstairs_to_main_halls: lambda state: state.has(Progressives.vampiric_symbol, self.player, 2) or state.has(UniqueItem.vampiric_symbol_a, self.player),
             LunacidEntrance.castle_upstairs_to_tape_room: lambda state: self.has_crystal_orb(state, self.world.options),
             LunacidEntrance.castle_upstairs_to_forbidden: lambda state: state.can_reach_region(LunacidRegion.castle_le_fanu_entrance, self.player) and
-                    self.has_ranged_element_access(
+                                                                        (self.has_ranged_element_access(
                         [Elements.dark, Elements.dark_and_fire, Elements.dark_and_light, Elements.poison,
-                         Elements.ice_and_poison], state),
+                         Elements.ice_and_poison], state) or self.can_melee_window(state)),
             LunacidEntrance.castle_upstairs_to_queen_rest: lambda state: state.has(Progressives.vampiric_symbol, self.player, 3) or state.has(UniqueItem.vampiric_symbol_e, self.player),
 
             LunacidEntrance.castle_cattle_back_to_boiling_grotto: lambda state: self.has_door_key(Door.burning_key, state, self.world.options),
@@ -182,9 +182,9 @@ class LunacidRules:
             LunacidEntrance.throne_room_to_castle_queen_path: lambda state: self.has_door_key(Door.throne_key, state, self.world.options),
 
             LunacidEntrance.castle_forbidden_to_upstairs: lambda state: state.can_reach_region(LunacidRegion.castle_le_fanu_entrance, self.player) and
-                    self.has_ranged_element_access(
+                                                                        (self.has_ranged_element_access(
                         [Elements.dark, Elements.dark_and_fire, Elements.dark_and_light, Elements.poison,
-                         Elements.ice_and_poison], state),
+                         Elements.ice_and_poison], state) or self.can_melee_window(state)),
             LunacidEntrance.castle_forbidden_to_sealed_ballroom: lambda state: self.has_door_key(Door.ballroom_key, state, self.world.options),
 
             LunacidEntrance.sealed_ballroom_to_forbidden_entry: lambda state: self.has_door_key(Door.ballroom_key, state, self.world.options),
@@ -297,6 +297,7 @@ class LunacidRules:
                                                          self.world.multiworld.get_location(BaseLocation.fate_lucid_blade, self.player).item == Weapon.lucid_blade,
 
             # Shop Location Runes
+            ShopLocation.buy_enchanted_key: lambda state: state.has(Voucher.sheryl_initial_voucher, self.player),
             ShopLocation.buy_steel_needle: lambda state: state.has(Voucher.sheryl_initial_voucher, self.player),
             ShopLocation.buy_crossbow: lambda state: state.has(Voucher.sheryl_initial_voucher, self.player),
             ShopLocation.buy_rapier: lambda state: state.has(Voucher.sheryl_initial_voucher, self.player),
@@ -745,6 +746,23 @@ class LunacidRules:
             has_spells = has_spells and has_spell
         return has_spells
 
+    def can_melee_window(self, state):
+        if "Melee Window" not in self.world.options.tricks_and_glitches:
+            return False
+        for weapon in Weapon.long_weapons:
+            if self.elements[weapon] in Elements.poison_or_dark and state.has(weapon, self.player):
+                return state.has(Spell.rock_bridge, self.player)
+        for weapon in Weapon.long_quenchable_weapon:
+            if self.elements[weapon] in Elements.poison_or_dark and state.has(weapon, self.player):
+                return state.has(Spell.rock_bridge, self.player)
+        for spell in Spell.long_spells:
+            if self.elements[spell] in Elements.poison_or_dark and state.has(spell, self.player):
+                return state.has(Spell.rock_bridge, self.player)
+        if self.elements[SpookyWeapon.cavalry_saber] in Elements.poison_or_dark and state.has(SpookyWeapon.cavalry_saber, self.player):
+            return state.has(Spell.rock_bridge, self.player)
+        return False
+
+
     def has_every_spell(self, state: CollectionState, options: LunacidOptions, starting_weapon: str = None) -> bool:
         every_spell = []
         if options.dropsanity == options.dropsanity.option_off:
@@ -789,7 +807,7 @@ class LunacidRules:
         if isinstance(element, str):
             element = [element]
         element_options = [item for item in self.elements if self.elements[item] in element]
-        return state.has_any(element_options, self.player) or state.has(Weapon.wand_of_power, self.player)
+        return state.has_any(element_options, self.player) or state.has(Weapon.wand_of_power, self.player) or state.has(Spell.ignis_calor, self.player)
 
     def has_ranged_element_access(self, element: str | List[str], state: CollectionState) -> bool:
         if isinstance(element, str):
@@ -797,7 +815,7 @@ class LunacidRules:
         ranged_options = [item for item in ranged_weapons]
         ranged_options.extend([item for item in ranged_spells])
         element_options = [item for item in self.elements if self.elements[item] in element and item in ranged_options]
-        return state.has_any(element_options, self.player)
+        return state.has_any(element_options, self.player) or state.has(Weapon.wand_of_power, self.player)
 
     def has_coins_for_door(self, options: LunacidOptions, state: CollectionState) -> bool:
         return state.has(Coins.strange_coin, self.player, options.required_strange_coin.value)

@@ -1,3 +1,5 @@
+from typing import Mapping, Any
+
 import Utils
 import settings
 import base64
@@ -12,7 +14,11 @@ from .Items import item_table, item_groups, create_items, FFMQItem, fillers
 from .Output import generate_output
 from .Options import FFMQOptions
 from .Client import FFMQClient
-
+import zlib
+try:
+    import msgpack
+except ImportError:
+    msgpack = None
 
 # removed until lists are supported
 # class FFMQSettings(settings.Group):
@@ -72,11 +78,15 @@ class FFMQWorld(World):
     web = FFMQWebWorld()
     # settings: FFMQSettings
 
+    ut_can_gen_without_yaml = True
+    glitches_item_name = "ut_glitch"
+
     def __init__(self, world, player: int):
         self.rom_name_available_event = threading.Event()
         self.rom_name = None
         self.rooms = None
         self.hint_data = []
+        self.ut = False
         self.finished_hint_data_collection = threading.Event()
         super().__init__(world, player)
 
@@ -87,6 +97,19 @@ class FFMQWorld(World):
         if self.options.bosses_scaling_lower.value > self.options.bosses_scaling_upper.value:
             self.options.bosses_scaling_lower.value, self.options.bosses_scaling_upper.value = \
                 self.options.bosses_scaling_upper.value, self.options.bosses_scaling_lower.value
+        if hasattr(self.multiworld, "re_gen_passthrough") and self.game in self.multiworld.re_gen_passthrough:
+            self.ut = True
+            for key, value in self.multiworld.re_gen_passthrough[self.game].items():
+                if hasattr(self.options, key):
+                    getattr(self.options, key).value = value
+                elif key == "rooms":
+                    if type(value) is list:
+                        self.rooms = value
+                    else:
+                        if msgpack:
+                            self.rooms = msgpack.unpackb(zlib.decompress(base64.b64decode(value)), raw=False)
+                        else:
+                            raise Exception("Unable to unpack map shuffle data from server without msgpack installed")
 
     @classmethod
     def stage_generate_early(cls, multiworld):
@@ -105,6 +128,10 @@ class FFMQWorld(World):
         rooms_data = {}
 
         for world in multiworld.get_game_worlds("Final Fantasy Mystic Quest"):
+            if world.ut:
+                if not world.rooms:
+                    world.rooms = rooms
+                continue
             if (world.options.map_shuffle or world.options.crest_shuffle or world.options.shuffle_battlefield_rewards
                     or world.options.companions_locations or world.options.overworld_shuffle):
                 if world.options.map_shuffle_seed.value.isdigit():
@@ -121,7 +148,7 @@ class FFMQWorld(World):
                 kaeli_mom = world.options.kaelis_mom_fight_minotaur.current_key
                 overworld_shuffle = world.options.overworld_shuffle.current_key
 
-                query = f"s={seed}&m={map_shuffle}&c={crest_shuffle}&b={battlefield_shuffle}&cs={companion_shuffle}&km={kaeli_mom}&os={overworld_shuffle}"
+                query = f"s={seed}&m={map_shuffle}&c={crest_shuffle}&b={battlefield_shuffle}&cs={companion_shuffle}&km={kaeli_mom}&os={overworld_shuffle}&version=1.7"
 
                 if query in rooms_data:
                     world.rooms = rooms_data[query]
@@ -168,17 +195,15 @@ class FFMQWorld(World):
         if "Progressive" in item.name:
             i = item.code - 256
             if remove:
-                if state.has(self.item_id_to_name[i+2], self.player):
-                    return self.item_id_to_name[i+2]
                 if state.has(self.item_id_to_name[i+1], self.player):
+                    if state.has(self.item_id_to_name[i+2], self.player):
+                        return self.item_id_to_name[i+2]
                     return self.item_id_to_name[i+1]
                 return self.item_id_to_name[i]
-            
-            if state.has(self.item_id_to_name[i+2], self.player):
-                return self.item_id_to_name[i+2]
-            if state.has(self.item_id_to_name[i+1], self.player):
-                return self.item_id_to_name[i+2]
+
             if state.has(self.item_id_to_name[i], self.player):
+                if state.has(self.item_id_to_name[i+1], self.player):
+                    return self.item_id_to_name[i+2]
                 return self.item_id_to_name[i+1]
             return self.item_id_to_name[i]
         return item.name
@@ -253,3 +278,19 @@ class FFMQWorld(World):
                                         hint_data[self.player][location.address] += f"/{hint}"
                                     else:
                                         hint_data[self.player][location.address] = hint
+
+    def fill_slot_data(self):
+        ret = self.options.as_dict("logic", "sky_coin_mode", "shattered_sky_coin_quantity", "map_shuffle")
+        if self.rooms != rooms:
+            if msgpack:
+                compressed_rooms = base64.b64encode(zlib.compress(msgpack.packb(self.rooms, use_bin_type=True))).decode("ascii")
+                ret["rooms"] = compressed_rooms
+            else:
+                ret["rooms"] = self.rooms
+        else:
+            ret["rooms"] = None
+        return ret
+
+    @staticmethod
+    def interpret_slot_data(slot_data):
+        return slot_data

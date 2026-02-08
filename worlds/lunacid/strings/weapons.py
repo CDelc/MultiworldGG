@@ -98,6 +98,12 @@ class Weapon:
                           shining_blade,
                           ]
 
+    long_weapons = [axe_of_harming, blade_of_ophelia, blessed_wind, brittle_arming_sword, broken_lance, dark_greatsword, dark_rapier, elfen_longsword,
+                    golden_kopesh, halberd, jotunn_slayer, lyrian_greatsword, marauder_black_flail, obsidian_cursebrand, shining_blade, silver_rapier,
+                    skeleton_axe, steel_club, steel_lance, steel_needle, steel_spear, stone_club, sucsarian_spear, thorn, vampire_hunter_sword,
+                    wolfram_greatsword]
+    long_quenchable_weapon = [iron_club, rapier, rusted_sword, shadow_blade, ]
+
 
 class SpookyWeapon:
     cavalry_saber = "Cavalry Saber"

@@ -1,5 +1,5 @@
 from BaseClasses import ItemClassification
-from typing import TypedDict, List
+from typing import TypedDict, List, Dict, Set
 
 from BaseClasses import Item
 
@@ -65,7 +65,55 @@ act1_items: List[ItemDict] = [
      'classification': ItemClassification.useful},
     {'name': "Angler Hook",
      'count': 1,
-     'classification': ItemClassification.useful}
+     'classification': ItemClassification.useful},
+    {'name': "Woodcarver Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Mycologists Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Bone Altar Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Sacrifice Stones Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Backpack Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Campfire Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Goobert Node",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Smaller Backpack Challenge",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Pricey Pelts Challenge",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Boss Totems Challenge",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Tipped Scales Challenge",
+     'count': 3,
+     'classification': ItemClassification.progression},
+    {'name': "All Totem Battles Challenge",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "More Difficult Challenge",
+     'count': 2,
+     'classification': ItemClassification.progression},
+    {'name': "Progressive Candle",
+     'count': 2,
+     'classification': ItemClassification.progression},
+    {'name': "Progressive Squirrel",
+     'count': 2,
+     'classification': ItemClassification.progression},
+    {'name': "Progressive Grizzlies",
+     'count': 3,
+     'classification': ItemClassification.progression}
 ]
 
 
@@ -204,3 +252,9 @@ trap_items: List[ItemDict] = [
      'count': 1,
      'classification': ItemClassification.trap}
 ]
+
+item_groups: Dict[str, Set[str]] = {
+    "Grizzly Bosses Challenge": {"Progressive Grizzlies"},
+    "Single Candle Challenge": {"Progressive Candle"},
+    "Squirrel Fish Challenge": {"Progressive Squirrel"}
+}

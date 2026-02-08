@@ -34,6 +34,16 @@ class starting_girls(Range):
     range_end = 12
     default = 3
 
+class randomize_girl_gifts(Toggle):
+    """randomize the gifts each girl wants"""
+    display_name = "Girls Gifts"
+    default = True
+
+class randomize_girl_trait(Toggle):
+    """randomize the traits each girl likes/hates"""
+    display_name = "Girls Traits"
+    default = True
+
 class puzzle_moves(Range):
     """number of moves you start the puzzles with"""
     display_name = "puzzle moves"
@@ -56,10 +66,10 @@ class puzzle_affection_add(Range):
     default = 100
 
 class shop_items(Range):
-    """number of archipelago items in the shop Note if there is not enough locations for items it will add shop locations to satisfy the locations needed, MAX is 480 so total locations isn't over 1000"""
+    """number of archipelago items in the shop Note if there is not enough locations for items it will add shop locations to satisfy the locations needed"""
     display_name = "shop items"
     range_start = 0
-    range_end = 480
+    range_end = 500
     default = 0
 
 class exclude_shop_items(Range):
@@ -105,6 +115,8 @@ class filler_item(Range):
 class HPOptions(PerGameCommonOptions):
     enabled_girls: enabled_girls
     number_of_starting_girls: starting_girls
+    randomize_girl_gifts:randomize_girl_gifts
+    randomize_girl_trait:randomize_girl_trait
     number_shop_items: shop_items
     exclude_shop_items: exclude_shop_items
     shop_item_cost: shop_item_cost

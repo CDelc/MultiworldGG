@@ -1,5 +1,9 @@
 # Ratchet and Clank 3 AP Frequently Asked Questions
 
+## What are the changes from the vanilla game?
+
+You can read about the changes [here](https://github.com/Taoshix/Archipelago-RaC3/blob/staging/worlds/rac3/docs/en_Ratchet_and_Clank_3.md)
+
 ## I have my client connected, but I can't send out/receive checks, what can I do?
 
 It is probably caused by one of these:
@@ -22,18 +26,13 @@ Updating Universal Tracker appears to solve this problem for those reporting thi
 Until you don't have a weapon it's vendor slot will be active, because the game tries to put it back to the shop because
 you don't have it, don't purchase weapons or Armor in the current versions.
 
-## When I receive a weapon/gadget it sends out multiple checks, why is it happening?
-
-Currently, weapon vendors and some gadget checks are being sent out when you receive them as items. This is because we currently don't know how to properly distinguish between items received from MultiworldGG or obtained in the vanilla game. The best action to
-take to mitigate the effect of this is to put **Gadgets** and **Weapons** into the exclusion list, this makes them always contain filler items (e.g.
-jackpot mode, bolts).
 
 ## X check is in logic, but when I go there I don't receive it, why?
 
-Currently, there are some checks that doesn't work with sequence breaking (Example Obani Gemini: Infobot: Blackwater
-City) these are collected into a location group called  `Unstable`. If you generate the .yaml for yourself make sure it
-is in the **excluded locations** section (it should be there by default along with some ones).
-Due to how problematic this has become, the locations in the `Unstable` group have straight up been skipped during generation to prevent issues until a solution has been found.
+Currently, there are some checks that doesn't work with sequence breaking (For example most of the Phoenix checks) 
+these are collected into a location group called  `Unstable`. If you generate the .yaml for yourself make sure it
+is in the **excluded locations** section (it should be there by default). This will make the unstable locations have
+only filler/trap items.
 
 ## OK, but how do I know which locations are getting excluded with each option?
 

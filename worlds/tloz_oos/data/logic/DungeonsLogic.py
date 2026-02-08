@@ -7,8 +7,8 @@ def make_d0_logic(player: int):
         # 0 keys
         ["enter d0", "d0 key chest", False, None],
         ["enter d0", "d0 rupee chest", False, lambda state:
-        # If hole is removed, stairs are added inside dungeon to make the chest reachable
-        oos_option_no_d0_alt_entrance(state, player)
+            # If hole is removed, stairs are added inside dungeon to make the chest reachable
+            oos_option_no_d0_alt_entrance(state, player)
          ],
         ["d0 rupee chest", "enter d0", False, None],
         ["enter d0", "d0 hidden 2d section", False, lambda state: any([
@@ -150,12 +150,15 @@ def make_d2_logic(player: int):
         # 3 keys
         ["d2 arrow room", "d2 hardhat room", False, lambda state: oos_has_small_keys(state, player, 2, 3)],
         ["d2 hardhat room", "d2 pot chest", False, lambda state: oos_can_break_pot(state, player)],
-        ["d2 hardhat room", "d2 moblin chest", False, lambda state: any([
-            all([
-                oos_can_kill_d2_hardhat(state, player),
-                oos_can_kill_d2_far_moblin(state, player)
-            ])
+        ["d2 hardhat room", "d2 moblin chest", False, lambda state: all([
+            oos_can_kill_d2_hardhat(state, player),
+            oos_can_kill_d2_far_moblin(state, player)
         ])],
+        ["d2 hardhat room", "d2 wild bombs", False, lambda state: all([
+            oos_can_kill_d2_hardhat(state, player),
+            oos_can_harvest_regrowing_bush(state, player)
+        ])],
+        ["d2 wild bombs", "d2 moblin chest", False, None],
         ["d2 spinner", "d2 terrace chest", False, lambda state: oos_has_small_keys(state, player, 2, 3)],
     ]
 

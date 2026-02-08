@@ -4463,6 +4463,42 @@
         ],
         "release_date": null
     },
+    "Schedule I": {
+        "igdb_id": "328373",
+        "world_name": "Schedule I",
+        "igdb_name": "Schedule I",
+        "us_rating": [],
+        "player_perspectives": [
+            "First person",
+            "Third person"
+        ],
+        "genres": [
+            "Simulator",
+            "Strategy",
+            "Indie"
+        ],
+        "themes": [
+            "Action",
+            "Open world"
+        ],
+        "keywords": [
+            "drugs",
+            "3d",
+            "police",
+            "crafting",
+            "gambling",
+            "driving",
+            "management",
+            "blackjack",
+            "action-adventure",
+            "building",
+            "crime",
+            "base building",
+            "skateboarding",
+            "automation"
+        ],
+        "release_date": 2025
+    },
     "Secret of Evermore": {
         "igdb_id": "1359",
         "world_name": "Secret of Evermore",

@@ -38,6 +38,8 @@ class Spell:
                    rock_bridge, ignis_calor, icarian_flight, blue_flame_arc, lava_chasm
                    ]
 
+    long_spells = [poison_mist, lava_chasm]
+
 
 class MobSpell:
     summon_snail = "Summon Snail"

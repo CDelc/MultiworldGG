@@ -157,6 +157,7 @@ Currently, the following games are supported:
 * Rogue Legacy
 * Satisfactory
 * Saving Princess
+* Schedule I
 * Secret of Evermore
 * Shapez
 * Shivers

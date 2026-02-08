@@ -263,6 +263,9 @@ input[type=range]::-webkit-slider-thumb {
   .author_credit {
     margin-bottom: 8px;
   }
+  .author_credit_link {
+    font-size: 19px !important;
+  }
   .world_version {
     margin-bottom: 4px;
   }

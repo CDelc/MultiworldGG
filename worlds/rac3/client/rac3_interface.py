@@ -1267,12 +1267,18 @@ class Rac3Interface(GameInterface):
                     self._write8(RAC3STATUS.HEALTH, 1)
                     self._write8(RAC3STATUS.NANOPAK_HEALTH, 0)
                 if (character == RAC3PLAYERTYPE.RATCHET
-                        and self.planet == RAC3REGION.ANNIHILATION_NATION
-                        and not self.pause_state):
+                        and self.planet == RAC3REGION.ANNIHILATION_NATION):
                     # Patch out sleeping gas health reduction to prevent death
-                    self._write32(RAC3INSTRUCTION.NATION_SLEEP_GAS_HEALTH_UPDATE, 0x24420000)  # addiu v0,v0,0x0
+                    if self._read32(RAC3INSTRUCTION.NATION_SLEEP_GAS_HEALTH_UPDATE) == 0x2442FFFF:
+                        self._write32(RAC3INSTRUCTION.NATION_SLEEP_GAS_HEALTH_UPDATE, 0x24420000)  # addiu v0,v0,0x0
                     # Patch out health refill to prevent auto losing One Hit Wonder challenge
-                    self._write32(RAC3INSTRUCTION.NATION_HEALTH_REFILL, 0x00000000)  # nop
+                    if self._read32(RAC3INSTRUCTION.NATION_HEALTH_REFILL) == 0xAC652850:
+                        self._write32(RAC3INSTRUCTION.NATION_HEALTH_REFILL, 0x00000000)  # nop
+                    # Patch out nanotech level up healing to prevent losing One Hit Wonder challenge
+                    if self._read32(RAC3INSTRUCTION.NATION_LEVELUP_HEALING) == 0x00621821:
+                        self._write32(RAC3INSTRUCTION.NATION_LEVELUP_HEALING, 0x00000000)  # nop
+                    if self._read32(RAC3INSTRUCTION.NATION_LEVELUP_MILESTONE_HEALING) == 0xACA22850:
+                        self._write32(RAC3INSTRUCTION.NATION_LEVELUP_MILESTONE_HEALING, 0x00000000)  # nop
 
         # Vehicle one HP challenge is independent of player_type
         if self.vehicle and self.one_hp_challenge.get(RAC3PLAYERTYPE.VEHICLE, False):
@@ -1287,11 +1293,16 @@ class Rac3Interface(GameInterface):
                 self._write_float(health_addr, target_health)
 
         if (not self.one_hp_challenge.get(character, False)
-                and self.planet == RAC3REGION.ANNIHILATION_NATION
-                and not self.pause_state):
-            # Restore sleeping gas health reduction if one HP challenge is not active for Ratchet
-            self._write32(RAC3INSTRUCTION.NATION_SLEEP_GAS_HEALTH_UPDATE, 0x2442FFFF)  # addiu v0,v0,-0x1
-            self._write32(RAC3INSTRUCTION.NATION_HEALTH_REFILL, 0xAC652850)  # sw a1,0x2850(v1)
+                and self.planet == RAC3REGION.ANNIHILATION_NATION):
+            # Restore patched instructions to their original state when not doing one HP challenge
+            if self._read32(RAC3INSTRUCTION.NATION_SLEEP_GAS_HEALTH_UPDATE) == 0x24420000:
+                self._write32(RAC3INSTRUCTION.NATION_SLEEP_GAS_HEALTH_UPDATE, 0x2442FFFF)  # addiu v0,v0,-0x1
+            if self._read32(RAC3INSTRUCTION.NATION_HEALTH_REFILL) == 0x00000000:
+                self._write32(RAC3INSTRUCTION.NATION_HEALTH_REFILL, 0xAC652850)  # sw a1,0x2850(v1)
+            if self._read32(RAC3INSTRUCTION.NATION_LEVELUP_HEALING) == 0x00000000:
+                self._write32(RAC3INSTRUCTION.NATION_LEVELUP_HEALING, 0x00621821)  # addu v1,v1,v0
+            if self._read32(RAC3INSTRUCTION.NATION_LEVELUP_MILESTONE_HEALING) == 0x00000000:
+                self._write32(RAC3INSTRUCTION.NATION_LEVELUP_MILESTONE_HEALING, 0xACA22850)  # sw a2,0x2850(v1)
 
         # If loading from the main menu we delay fixing the current health until the load is complete
         if self.main_menu:

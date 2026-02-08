@@ -1,6 +1,6 @@
 from typing import Dict, Callable, TYPE_CHECKING
 from BaseClasses import CollectionState, LocationProgressType
-from .Options import ActUnlocks, Goal, PaintingChecksBalancing
+from .Options import ActUnlocks, Goal, PaintingChecksBalancing, RandomizeChallenges
 
 if TYPE_CHECKING:
     from . import InscryptionWorld
@@ -26,6 +26,32 @@ class InscryptionRules:
             "Act 1 - Dagger": self.has_caged_wolf,
             "Act 1 - Magnificus Eye": self.has_dagger,
             "Act 1 - Clock Main Compartment": self.has_magnificus_eye,
+            "Act 1 - Clock Upper Compartment": self.has_trapper_requirements,
+            "Act 1 - Woodlands Battle 2": self.has_later_woodlands_requirements,
+            "Act 1 - Woodlands Battle 3": self.has_later_woodlands_requirements,
+            "Act 1 - Boss Prospector": self.has_prospector_requirements,
+            "Act 1 - Wetlands Battle 1": self.has_wetlands_requirements,
+            "Act 1 - Wetlands Battle 2": self.has_wetlands_requirements,
+            "Act 1 - Wetlands Battle 3": self.has_wetlands_requirements,
+            "Act 1 - Boss Angler": self.has_angler_requirements,
+            "Act 1 - Snow Line Battle 1": self.has_snow_line_requirements,
+            "Act 1 - Snow Line Battle 2": self.has_snow_line_requirements,
+            "Act 1 - Snow Line Battle 3": self.has_snow_line_requirements,
+            "Act 1 - Boss Trapper": self.has_trapper_requirements,
+            "Act 1 - Boss Leshy": self.has_leshy_requirements,
+            "Act 1 - New Game Button": self.beat_act1_requirements,
+            "Act 1 - Trader Rabbit Pelt": self.has_later_woodlands_requirements,
+            "Act 1 - Trader Wolf Pelt": self.has_wolf_pelt_requirements,
+            "Act 1 - Trader Golden Pelt": self.has_golden_pelt_requirements,
+            "Act 1 - Woodlands Consumable Check 1": self.has_woodlands_consumable_requirements,
+            "Act 1 - Woodlands Consumable Check 2": self.has_woodlands_consumable_requirements,
+            "Act 1 - Woodlands Consumable Check 3": self.has_woodlands_consumable_requirements,
+            "Act 1 - Wetlands Consumable Check 1": self.has_wetlands_consumable_requirements,
+            "Act 1 - Wetlands Consumable Check 2": self.has_wetlands_consumable_requirements,
+            "Act 1 - Wetlands Consumable Check 3": self.has_wetlands_consumable_requirements,
+            "Act 1 - Snow Line Consumable Check 1": self.has_snow_line_consumable_requirements,
+            "Act 1 - Snow Line Consumable Check 2": self.has_snow_line_consumable_requirements,
+            "Act 1 - Snow Line Consumable Check 3": self.has_snow_line_consumable_requirements,
             "Act 2 - Battle Prospector": self.has_camera_and_meat,
             "Act 2 - Battle Angler": self.has_camera_and_meat,
             "Act 2 - Battle Trapper": self.has_camera_and_meat,
@@ -73,7 +99,7 @@ class InscryptionRules:
             "Act 3 - Trader 3": self.has_pelts(3),
             "Act 3 - Trader 4": self.has_pelts(4),
             "Act 3 - Trader 5": self.has_pelts(5),
-            "Act 3 - Goobert's Painting": self.has_gems_and_battery,
+            "Act 3 - Goobert's Painting": self.has_goobert_painting_requirements,
             "Act 3 - The Great Transcendence": self.has_transcendence_requirements,
             "Act 3 - Boss Mycologists": self.has_mycologists_boss_requirements,
             "Act 3 - Bone Lord Room": self.has_bone_lord_room_requirements,
@@ -102,6 +128,160 @@ class InscryptionRules:
             "Epilogue": self.has_epilogue_requirements
         }
 
+    act1_item_values: Dict[str, int] = {
+        "Angler Hook": 1,
+        "Oil Painting's Clover Plant": 1,
+        "Dagger": 1,
+        "Woodcarver Node": 2,
+        "Backpack Node": 2,
+        "Sacrifice Stones Node": 3,
+        "Campfire Node": 3,
+        "All Totem Battles Challenge": 3,
+        "Bee Figurine": 3,
+        "Extra Candle": 3
+    }
+
+    act1_boss_item_values: Dict[str, int] = {
+        "Greater Smoke": 1,
+        "Boss Totems Challenge": 3,
+    }
+
+    act1_progressive_values: Dict[str, list[int]] = {
+        "More Difficult Challenge": [5, 5],
+        "Progressive Candle": [3, 3],
+        "Progressive Squirrel": [2, 3],
+        "Tipped Scales Challenge": [5, 4, 3]
+    }
+
+    act1_area2_values: Dict[str, int] = {
+        "Mycologists Node": 1,
+        "Bone Altar Node": 1
+    }
+
+    def act1_battle_requirements(self, state: CollectionState, amount: int, isBoss: bool, area2) -> bool:
+        enough = 0
+        for item, value in self.act1_item_values.items():
+            if state.has(item, self.player): enough += value
+        for item, values in self.act1_progressive_values.items():
+            count = 1
+            for value in values:
+                if state.has(item, self.player, count): enough += value
+                count += 1
+        if isBoss:
+            for item, value in self.act1_boss_item_values.items():
+                if state.has(item, self.player): enough += value
+        if area2:
+            if state.has_all(["Sacrifice Stones", "Goobert Node"], self.player): enough += 1
+            for item, value in self.act1_area2_values.items():
+                if state.has(item, self.player): enough += value
+        if state.has_all(["Squirrel Totem Head", "Woodcarver Node"], self.player): enough += 3
+        if state.has_all(["Smaller Backpack Challenge", "Backpack Node"], self.player): enough += 1
+        return enough >= amount
+
+    def has_later_woodlands_requirements(self, state: CollectionState) -> bool:
+        extra_points = 0
+        extra_points += state.count("Progressive Candle", self.player)*3
+        extra_points += state.count("Backpack Node", self.player)*2
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 3 + extra_points, True, False)
+        return True
+
+    def has_prospector_requirements(self, state: CollectionState) -> bool:
+        extra_points = 0
+        if state.has("All Totem Battles Challenge", self.player): extra_points += 3
+        if self.world.options.randomize_challenges == RandomizeChallenges.option_randomize and \
+            not state.has("Progressive Grizzlies", self.player):
+                extra_points = 10
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 6 + extra_points, True, False) and self.has_later_woodlands_requirements(state)
+        elif self.world.options.randomize_nodes or \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 4 + extra_points, True, False) and self.has_later_woodlands_requirements(state)
+        return True
+
+    def has_wetlands_requirements(self, state: CollectionState) -> bool:
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 12, True, True) and self.has_prospector_requirements(state)
+        elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 8, True, True) and self.has_prospector_requirements(state)
+        elif self.world.options.randomize_nodes:
+            return self.act1_battle_requirements(state, 5, True, False) and self.has_prospector_requirements(state)
+        return True
+    
+    def has_angler_requirements(self, state: CollectionState) -> bool:
+        extra_points = 0
+        if state.has("All Totem Battles Challenge", self.player): extra_points += 3
+        if self.world.options.randomize_challenges == RandomizeChallenges.option_randomize and \
+            not state.has("Progressive Grizzlies", self.player, 2):
+                extra_points = 10
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 17 + extra_points, True, True)
+        elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 13 + extra_points, True, True)
+        elif self.world.options.randomize_nodes:
+            return self.act1_battle_requirements(state, 8, True, True)
+        return True
+
+    def has_snow_line_requirements(self, state: CollectionState) -> bool:
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 21, True, True) and self.has_angler_requirements(state)
+        elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 16, True, True) and self.has_angler_requirements(state)
+        elif self.world.options.randomize_nodes:
+            return self.act1_battle_requirements(state, 8, True, True) and self.has_angler_requirements(state)
+        return True
+
+    def has_trapper_requirements(self, state: CollectionState) -> bool:
+        extra_points = 0
+        if state.has("All Totem Battles Challenge", self.player): extra_points += 3
+        if self.world.options.randomize_challenges == RandomizeChallenges.option_randomize and \
+            not state.has("Progressive Grizzlies", self.player, 3):
+                extra_points += 10
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 27 + extra_points, True, True)
+        elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 22 + extra_points, True, True)
+        elif self.world.options.randomize_nodes:
+            return self.act1_battle_requirements(state, 12, True, True)
+        return True
+
+    def has_leshy_requirements(self, state: CollectionState) -> bool:
+        nope = 0
+        if state.has("All Totem Battles Challenge", self.player): nope += 3
+        if self.world.options.randomize_nodes and \
+            self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 33 + nope, True, True) and self.has_trapper_requirements(state)
+        elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+            return self.act1_battle_requirements(state, 27 + nope, True, True) and self.has_trapper_requirements(state)
+        elif self.world.options.randomize_nodes:
+            return self.act1_battle_requirements(state, 12 + nope, True, True) and self.has_trapper_requirements(state)
+        return True
+
+    def has_woodlands_consumable_requirements(self, state: CollectionState) -> bool:
+        return (not self.world.options.randomize_nodes or state.has("Backpack Node", self.player)) and \
+            self.has_later_woodlands_requirements(state)
+
+    def has_wetlands_consumable_requirements(self, state: CollectionState) -> bool:
+        return (not self.world.options.randomize_nodes or state.has("Backpack Node", self.player)) and \
+            self.has_wetlands_requirements(state)
+
+    def has_snow_line_consumable_requirements(self, state: CollectionState) -> bool:
+        return (not self.world.options.randomize_nodes or state.has("Backpack Node", self.player)) and \
+            self.has_snow_line_requirements(state)
+
+    def has_wolf_pelt_requirements(self, state: CollectionState) -> bool:
+        return self.has_snow_line_requirements(state) or \
+            (self.has_wetlands_requirements(state) and state.has("Pricey Pelts Challenge", self.player))
+
+    def has_golden_pelt_requirements(self, state: CollectionState) -> bool:
+        return self.has_trapper_requirements(state) and state.has("Pricey Pelts Challenge", self.player)
+
     def has_wardrobe_key(self, state: CollectionState) -> bool:
         return state.has("Wardrobe Key", self.player)
 
@@ -115,7 +295,15 @@ class InscryptionRules:
         return state.has("Magnificus Eye", self.player)
 
     def has_useful_act1_items(self, state: CollectionState) -> bool:
+        if self.world.options.randomize_nodes:
+            return state.has_all(("Oil Painting's Clover Plant", "Squirrel Totem Head", "Woodcarver Node"), self.player)
         return state.has_all(("Oil Painting's Clover Plant", "Squirrel Totem Head"), self.player)
+    
+    def has_painting_2_requirements(self, state: CollectionState) -> bool:
+        return state.has("Oil Painting's Clover Plant", self.player) and self.has_angler_requirements(state)
+    
+    def has_painting_3_requirements(self, state: CollectionState) -> bool:
+        return state.has("Oil Painting's Clover Plant", self.player) and self.has_trapper_requirements(state)
 
     def has_all_epitaph_pieces(self, state: CollectionState) -> bool:
         return state.has(self.world.required_epitaph_pieces_name, self.player, self.world.required_epitaph_pieces_count)
@@ -159,15 +347,20 @@ class InscryptionRules:
     def has_transcendence_requirements(self, state: CollectionState) -> bool:
         return state.has("Quill", self.player) and self.has_gems_and_battery(state)
 
-    def has_act1_requirements(self, state: CollectionState) -> bool:
+    def has_goobert_painting_requirements(self, state: CollectionState) -> bool:
         if self.world.options.enable_act_1:
-            if self.world.options.act_unlocks == ActUnlocks.option_items:
-                return state.has("Act 1", self.player)
+            return self.has_trapper_requirements(state) and self.has_gems_and_battery(state)
+        return self.has_gems_and_battery(state)
+
+    def has_act1_requirements(self, state: CollectionState) -> bool:
+        if self.world.options.enable_act_1 and self.world.options.act_unlocks == ActUnlocks.option_items:
+            return state.has("Act 1", self.player)
         return True
 
     def beat_act1_requirements(self, state: CollectionState) -> bool:
         if self.world.options.enable_act_1:
-            return self.has_act1_requirements(state) and state.has("Film Roll", self.player)
+            return self.has_act1_requirements(state) and state.has("Film Roll", self.player) and \
+                self.has_leshy_requirements(state)
         return True
 
     def has_act2_requirements(self, state: CollectionState) -> bool:
@@ -204,9 +397,9 @@ class InscryptionRules:
     def has_epilogue_requirements(self, state: CollectionState) -> bool:
         total_acts = self.world.options.enable_act_1.__int__() + self.world.options.enable_act_2.__int__() \
                     + self.world.options.enable_act_3.__int__()
-        act1 = self.world.options.enable_act_1.__bool__ and self.beat_act1_requirements(state)
-        act2 = self.world.options.enable_act_2.__bool__ and self.beat_act2_requirements(state)
-        act3 = self.world.options.enable_act_3.__bool__ and self.beat_act3_requirements(state)
+        act1 = self.world.options.enable_act_1.__bool__() and self.beat_act1_requirements(state)
+        act2 = self.world.options.enable_act_2.__bool__() and self.beat_act2_requirements(state)
+        act3 = self.world.options.enable_act_3.__bool__() and self.beat_act3_requirements(state)
         required_acts = self.world.options.goal.__int__() + 1
         if required_acts > total_acts: required_acts = total_acts # required acts always =< total acts
 
@@ -230,9 +423,18 @@ class InscryptionRules:
                 if loc.name in self.location_rules:
                     loc.access_rule = self.location_rules[loc.name]
         if self.world.options.enable_act_1:
-            if self.world.options.painting_checks_balancing == PaintingChecksBalancing.option_balanced:
+            if self.world.options.randomize_nodes or \
+                self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+                self.world.get_location("Act 1 - Painting 1").access_rule = self.has_prospector_requirements
+                self.world.get_location("Act 1 - Painting 2").access_rule = self.has_painting_2_requirements
+                self.world.get_location("Act 1 - Painting 3").access_rule = self.has_painting_3_requirements
+            elif self.world.options.painting_checks_balancing == PaintingChecksBalancing.option_balanced:
                 self.world.get_location("Act 1 - Painting 2").access_rule = self.has_useful_act1_items
                 self.world.get_location("Act 1 - Painting 3").access_rule = self.has_useful_act1_items
-            elif self.world.options.painting_checks_balancing == PaintingChecksBalancing.option_force_filler:
+            if self.world.options.painting_checks_balancing == PaintingChecksBalancing.option_force_filler:
                 self.world.get_location("Act 1 - Painting 2").progress_type = LocationProgressType.EXCLUDED
                 self.world.get_location("Act 1 - Painting 3").progress_type = LocationProgressType.EXCLUDED
+        elif self.world.options.enable_act_3:
+            if self.world.options.randomize_nodes or \
+                self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
+                self.world.get_location("Act 3 - Goobert's Painting").progress_type = LocationProgressType.EXCLUDED
