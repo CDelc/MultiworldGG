@@ -1,6 +1,8 @@
-from .Options import InscryptionOptions, ActUnlocks, EpitaphPiecesRandomization, PaintingChecksBalancing, RandomizeHammer, \
-    RandomizeShortcuts, RandomizeVesselUpgrades, StartingAct, RandomizeChallenges, inscryption_option_groups
-from .Items import act1_items, act2_items, act3_items, act2_3_items, act_items, filler_items, trap_items, item_groups, base_id, InscryptionItem
+from .Options import InscryptionOptions, ActUnlocks, EpitaphPiecesRandomization, PaintingChecksBalancing, \
+    RandomizeHammer, Act2RandomizeBridge, RandomizeShortcuts, RandomizeVesselUpgrades, StartingAct, \
+    RandomizeChallenges, inscryption_option_groups
+from .Items import act1_items, act2_items, act3_items, act2_3_items, act_items, filler_items, \
+    trap_items, item_groups, base_id, InscryptionItem
 from .Locations import act1_locations, act2_locations, act3_locations, regions_to_locations
 from .Regions import inscryption_regions_all
 from typing import Dict, Any
@@ -16,7 +18,7 @@ class InscrypWeb(WebWorld):
 
     guide_en = Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up the Inscryption AP/MultiworldGG Multiworld",
+        "A guide to setting up the Inscryption Archipelago Multiworld",
         "English",
         "setup_en.md",
         "setup/en",
@@ -25,7 +27,7 @@ class InscrypWeb(WebWorld):
 
     guide_fr = Tutorial(
         "Multiworld Setup Guide",
-        "Un guide pour configurer Inscryption AP/MultiworldGG Multiworld",
+        "Un guide pour configurer Inscryption Archipelago Multiworld",
         "Français",
         "setup_fr.md",
         "setup/fr",
@@ -148,6 +150,9 @@ class InscryptionWorld(World):
         or not (self.options.enable_act_2 or self.options.enable_act_3):
             useful_items.pop(len(act1_items) + len(act2_items) + len(act3_items))
         if self.options.enable_act_3:
+            if not self.options.act3_overhaul:
+                useful_items.pop(len(act1_items) + len(act2_items) + 18)
+                useful_items.pop(len(act1_items) + len(act2_items) + 17)
             if self.options.randomize_vessel_upgrades == RandomizeVesselUpgrades.option_vanilla:
                 useful_items.pop(len(act1_items) + len(act2_items) + 16)
                 useful_items.pop(len(act1_items) + len(act2_items) + 15)
@@ -159,6 +164,8 @@ class InscryptionWorld(World):
                 if self.options.randomize_shortcuts == RandomizeShortcuts.option_vanilla:
                     included_locations -= 3
         if self.options.enable_act_2:
+            if self.options.act2_randomize_bridge == Act2RandomizeBridge.option_disable:
+                useful_items.pop(len(act1_items) + 13)
             if self.options.epitaph_pieces_randomization == EpitaphPiecesRandomization.option_all_pieces:
                 useful_items.pop(len(act1_items) + 3)
             else:
@@ -244,6 +251,8 @@ class InscryptionWorld(World):
             del used_regions["Act 3"]
             used_regions["Menu"].remove("Act 3")
         if self.options.enable_act_3:
+            if not self.options.act3_overhaul:
+                regions_to_locations["Act 3"].pop(38)
             if self.options.randomize_vessel_upgrades == RandomizeVesselUpgrades.option_vanilla:
                 regions_to_locations["Act 3"].pop(37)
                 regions_to_locations["Act 3"].pop(36)
@@ -255,17 +264,17 @@ class InscryptionWorld(World):
                 regions_to_locations["Act 3"].pop(31)
         if self.options.enable_act_1:
             if self.options.randomize_challenges == RandomizeChallenges.option_disable:
-                    regions_to_locations["Act 1"].pop(38)
+                    regions_to_locations["Act 1"].pop(38) #consumable checks
                     regions_to_locations["Act 1"].pop(37)
                     regions_to_locations["Act 1"].pop(36)
                     regions_to_locations["Act 1"].pop(35)
                     regions_to_locations["Act 1"].pop(34)
                     regions_to_locations["Act 1"].pop(33)
-                    regions_to_locations["Act 1"].pop(32)
+                    regions_to_locations["Act 1"].pop(32) # pelts
                     regions_to_locations["Act 1"].pop(31)
                     regions_to_locations["Act 1"].pop(30)
-                    regions_to_locations["Act 1"].pop(29)
-                    regions_to_locations["Act 1"].pop(28)
+                    regions_to_locations["Act 1"].pop(29) # new game button
+                    regions_to_locations["Act 1"].pop(28) # free checks
                     regions_to_locations["Act 1"].pop(27)
                     regions_to_locations["Act 1"].pop(26)
             if not self.options.randomize_nodes and \
@@ -283,10 +292,10 @@ class InscryptionWorld(World):
                 self.options.randomize_challenges != RandomizeChallenges.option_disable:
                     regions_to_locations["Act 1"].pop(38)
                     regions_to_locations["Act 1"].pop(37)
+                    regions_to_locations["Act 1"].pop(36)
                     regions_to_locations["Act 1"].pop(35)
                     regions_to_locations["Act 1"].pop(34)
-                    regions_to_locations["Act 1"].pop(32)
-                    regions_to_locations["Act 1"].pop(31)
+                    regions_to_locations["Act 1"].pop(33)
         for region_name in used_regions.keys():
             self.multiworld.regions.append(Region(region_name, self.player, self.multiworld))
 
@@ -316,6 +325,8 @@ class InscryptionWorld(World):
             "randomize_nodes",
             "randomize_challenges",
             "randomize_hammer",
+            "act2_randomize_bridge",
+            "act3_overhaul",
             "randomize_shortcuts",
             "randomize_vessel_upgrades",
             "optional_death_card",

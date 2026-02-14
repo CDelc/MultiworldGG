@@ -54,7 +54,7 @@ def get_world_version(world: type(World)) -> str:
     try:
         import json
         import pkgutil
-        
+
         # Get the world's module path
         world_module = world.__module__
         if world_module.startswith('worlds.'):
@@ -63,7 +63,10 @@ def get_world_version(world: type(World)) -> str:
                 manifest_data = pkgutil.get_data(world_module, 'archipelago.json')
                 if manifest_data:
                     manifest = json.loads(manifest_data.decode('utf-8-sig'))
-                    if 'world_version' in manifest and manifest['world_version']:
+                    # Prefer world_version_full if it exists
+                    if 'world_version_full' in manifest and manifest['world_version_full']:
+                        return f"{manifest['world_version_full']}"
+                    elif 'world_version' in manifest and manifest['world_version']:
                         world_version = manifest['world_version']
                         # Don't show version if it's 0.0.0
                         if world_version != "0.0.0":
@@ -72,7 +75,7 @@ def get_world_version(world: type(World)) -> str:
                 pass
     except (ImportError, AttributeError, OSError):
         pass
-    
+
     return ""
 
 

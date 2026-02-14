@@ -126,13 +126,13 @@ def has_defensive_tools(state: CollectionState, player: int, logic_difficulty: i
             and state.has_any_count({"Second Chance": 1, "MP Rage": 1, "Progressive Aero": 2}, player)
         )
 
-def has_basic_tools(state: CollectionState, player: int, spell_costs) -> bool:
+def has_basic_tools(state: CollectionState, player: int, spell_costs, logic_difficulty: int) -> bool:
     return (
             state.has_all({"Dodge Roll", "Progressive Cure"}, player)
             and state.has_any({"Combo Master", "Strike Raid", "Sonic Blade", "Counterattack"}, player)
             and state.has_any({"Leaf Bracer", "Second Chance", "Guard"}, player)
             # and magic_costs(state, player, 0, spell_costs, 6, OFFENSIVE_SPELL_ITEM_NAMES)
-            and has_offensive_magic(state, player, difficulty)
+            and has_offensive_magic(state, player, logic_difficulty)
         )
 
 def can_dumbo_skip(state: CollectionState, player: int) -> bool:
@@ -636,7 +636,7 @@ def set_rules(kh1world):
         lambda state: (
             has_key_item(state, player, "Forget-Me-Not", stacking_world_items, halloween_town_key_item_bundle, difficulty, options.keyblades_unlock_chests) and has_key_item(state, player, "Jack-In-The-Box", stacking_world_items, halloween_town_key_item_bundle, difficulty, options.keyblades_unlock_chests)
             and has_oogie_manor(state, player, difficulty)
-            and (difficulty > LOGIC_BEGINNER or has_basic_tools(state, player, spell_costs) or state.has("Progressive Glide", player))
+            and (difficulty > LOGIC_BEGINNER or has_basic_tools(state, player, spell_costs, difficulty) or state.has("Progressive Glide", player))
             # difficulty > LOGIC_BEGINNER and state.has("High Jump", player, 2)
             # difficulty > LOGIC_NORMAL and state.has("Combo Master", player) or state.has("High Jump", player) or state.has_all({"Dodge Roll", "Air Guard/Dodge Roll"}, player)
             # difficulty > LOGIC_PROUD
@@ -645,7 +645,7 @@ def set_rules(kh1world):
         lambda state: (
             has_key_item(state, player, "Forget-Me-Not", stacking_world_items, halloween_town_key_item_bundle, difficulty, options.keyblades_unlock_chests) and has_key_item(state, player, "Jack-In-The-Box", stacking_world_items, halloween_town_key_item_bundle, difficulty, options.keyblades_unlock_chests)
             and has_oogie_manor(state, player, difficulty)
-            and (difficulty > LOGIC_BEGINNER or has_basic_tools(state, player, spell_costs) or state.has_all({"High Jump", "Progressive Glide"})) #state.has_all({"Dodge Roll", "Air Guard/Dodge Roll"}, player) and state.has("Combo Master", player)
+            and (difficulty > LOGIC_BEGINNER or has_basic_tools(state, player, spell_costs, difficulty) or state.has_all({"High Jump", "Progressive Glide"})) #state.has_all({"Dodge Roll", "Air Guard/Dodge Roll"}, player) and state.has("Combo Master", player)
         ))
     add_rule(kh1world.get_location("Halloween Town Oogie's Manor Hollow Chest"),
         lambda state: (
@@ -746,7 +746,7 @@ def set_rules(kh1world):
             and state.has("Green Trinity", player)
         ))
     add_rule(kh1world.get_location("Monstro Mouth Near Ship Chest"),
-        lambda state: (difficulty > LOGIC_BEGINNER or state.has_any({"High Jump","Progressive Glide"}, player) or has_basic_tools(state, player, spell_costs)))
+        lambda state: (difficulty > LOGIC_BEGINNER or state.has_any({"High Jump","Progressive Glide"}, player) or has_basic_tools(state, player, spell_costs, difficulty)))
     add_rule(kh1world.get_location("Monstro Chamber 2 Platform Chest"),
         lambda state: (
             state.has_any({"High Jump","Progressive Glide"}, player)
@@ -1810,7 +1810,7 @@ def set_rules(kh1world):
             continue
         if difficulty == LOGIC_BEGINNER and location_table[location].behind_boss:
             add_rule(kh1world.get_location(location),
-                lambda state: has_basic_tools(state, player, spell_costs))
+                lambda state: has_basic_tools(state, player, spell_costs, difficulty))
         if options.remote_items.current_key == "off":
             if location_table[location].type == "Static":
                 add_item_rule(kh1world.get_location(location),

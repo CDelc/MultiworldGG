@@ -153,7 +153,10 @@ act2_items: List[ItemDict] = [
      'classification': ItemClassification.useful},
     {'name': "Dock's Clover Plant",
      'count': 1,
-     'classification': ItemClassification.useful}
+     'classification': ItemClassification.useful},
+    {'name': "Act 2 Bridge Repair",
+     'count': 1,
+     'classification': ItemClassification.progression}
 ]
 
 
@@ -209,6 +212,12 @@ act3_items: List[ItemDict] = [
     {'name': "Conduit Upgrade",
      'count': 1,
      'classification': ItemClassification.useful},
+    {'name': "Act 3 Bridge Repair",
+     'count': 1,
+     'classification': ItemClassification.progression},
+    {'name': "Respledent Bastion Gate",
+     'count': 1,
+     'classification': ItemClassification.progression},
 ]
 
 act2_3_items: List[ItemDict] = [

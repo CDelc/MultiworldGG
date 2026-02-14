@@ -36,19 +36,19 @@ act1_locations = [
     "Act 1 - Snow Line Battle 1",
     "Act 1 - Snow Line Battle 2",
     "Act 1 - Snow Line Battle 3",
+    "Act 1 - Free Teeth Skull",
+    "Act 1 - Tarot Card below Figurines",
+    "Act 1 - Card by Rulebook",
     "Act 1 - New Game Button",
     "Act 1 - Trader Rabbit Pelt",
     "Act 1 - Trader Wolf Pelt",
     "Act 1 - Trader Golden Pelt",
     "Act 1 - Woodlands Consumable Check 1",
     "Act 1 - Woodlands Consumable Check 2",
-    "Act 1 - Woodlands Consumable Check 3",
     "Act 1 - Wetlands Consumable Check 1",
     "Act 1 - Wetlands Consumable Check 2",
-    "Act 1 - Wetlands Consumable Check 3",
     "Act 1 - Snow Line Consumable Check 1",
     "Act 1 - Snow Line Consumable Check 2",
-    "Act 1 - Snow Line Consumable Check 3",
 ]
 
 act2_locations = [
@@ -144,7 +144,8 @@ act3_locations = [
     "Act 3 - Vessel Upgrade 1", # act 1 + act 2 + 34
     "Act 3 - Vessel Upgrade 2", # act 1 + act 2 + 35
     "Act 3 - Vessel Upgrade 3", # act 1 + act 2 + 36
-    "Act 3 - Conduit Upgrade" # act 1 + act 2 + 37
+    "Act 3 - Conduit Upgrade", # act 1 + act 2 + 37
+    "Act 3 - Wizard Tower Satellite Dish" # act 1 + act 2 + 37
 ]
 
 regions_to_locations: Dict[str, List[str]] = {

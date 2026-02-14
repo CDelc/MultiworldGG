@@ -100,6 +100,8 @@ class RotNCollections:
         "Senpai": SongData(129, "Senpai", "Friday Night Funkin'", 2, 10, 16, 24),
         #Unbeatable
         "WORN OUT TAPES [tally-ho version]": SongData(130, "WORN OUT TAPES [tally-ho version]", "Free Promo", 5, 12, 16, 25),
+        #Rift Anniversary
+        "Portabellohead": SongData(131, "Portabellohead", "Free Promo", 3, 8, 13, 18, False),
     }
 
     EXTRA_DATA: Dict[str, ExtraSongData] = {
@@ -215,7 +217,7 @@ class RotNCollections:
         for key, data in self.EXTRA_DATA.items():
             self.song_items[key] = SongData(data.code, key, data.DLC, 1, 0, 0, 0, data.DLC)
             self.song_items[key + " (Medium)"] = SongData(data.code + 1, key, data.DLC, 0, 1, 0, 0, data.DLC)
-            self.song_items[key + " (Hard)"] = SongData(data.code + 1, key, data.DLC, 0, 0, 1, 0, data.DLC)
+            self.song_items[key + " (Hard)"] = SongData(data.code + 2, key, data.DLC, 0, 0, 1, 0, data.DLC)
 
         self.item_names_to_id.update({name: data.code for name, data in self.song_items.items()})
 

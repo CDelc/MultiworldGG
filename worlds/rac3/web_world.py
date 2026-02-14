@@ -6,6 +6,7 @@ from worlds.rac3.rac3options import rac3_option_groups
 
 
 class RaC3Web(WebWorld):
+    display_name = "Ratchet & Clank 3"
     theme = "ocean"
     tutorials = [Tutorial(
         "Multiworld Setup Guide",

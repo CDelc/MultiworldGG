@@ -127,6 +127,7 @@ class RandomizeChallenges(Choice):
 
     This option will add checks for trading in each type of pelt to the trader, a check for 
     finishing Act 1, and new consumables in each map area (except the last one) that grant checks.
+    There's also 3 free checks scattered around the cabin.
     If Randomize Nodes is disabled, this will also add checks for each battle.
     
     - No Grizzlies: Randomize everything except Grizzly Bosses Challenge, which is disabled."""
@@ -206,6 +207,31 @@ class SkipTutorial(DefaultOnToggle):
 class SkipEpilogue(Toggle):
     """Completes the goal as soon as the required acts are completed without the need of completing the epilogue."""
     display_name = "Skip Epilogue"
+
+
+class Act2RandomizeBridge(Choice):
+    """Choose whether the bridge in Act 2 should be randomized.
+
+    - Disable: The bridge will require beating one Scrybe, as normal.
+
+    - Enable: The bridge will be repaired upon receiving "Act 2 Bridge Repair".
+
+    - Left Side Start: Like Enable, but you start on the left side of the bridge rather than the right."""
+    display_name = "Act 2 Randomize Bridge"
+    option_disable = 0
+    option_enable = 1
+    option_left_side_start = 2
+    default = 0
+
+
+class Act3Overhaul(Toggle):
+    """Change up the standard progression of Act 3 in this randomizer to be less linear.
+    - Inspectometer Battery will no longer lock you out of the game map,
+    and only prevents access to the Foul Backwater area.
+    - There'll be an "Act 3 Bridge Repair" item that repairs the bridge.
+    - There'll be a "Respledent Bastion Gate" item that unlocks that gate,
+    and the satellite dish that normally unlocks it will be a check."""
+    display_name = "Act 3 Overhaul"
 
 
 class EpitaphPiecesRandomization(Choice):
@@ -298,8 +324,10 @@ class InscryptionOptions(PerGameCommonOptions):
     painting_checks_balancing: PaintingChecksBalancing
     randomize_nodes: RandomizeNodes
     randomize_challenges: RandomizeChallenges
+    act2_randomize_bridge: Act2RandomizeBridge
     epitaph_pieces_randomization: EpitaphPiecesRandomization
     randomize_hammer: RandomizeHammer
+    act3_overhaul: Act3Overhaul
     randomize_shortcuts: RandomizeShortcuts
     randomize_vessel_upgrades: RandomizeVesselUpgrades
     trap_chance: TrapChance
@@ -311,8 +339,10 @@ inscryption_option_groups = [
         PaintingChecksBalancing,
         RandomizeNodes,
         RandomizeChallenges,
+        Act2RandomizeBridge,
         EpitaphPiecesRandomization,
         RandomizeHammer,
+        Act3Overhaul,
         RandomizeShortcuts,
         RandomizeVesselUpgrades,
     ]),
