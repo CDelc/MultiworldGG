@@ -13,22 +13,32 @@
     { "from": "AFE - Upper Root Node", "to": "AFM - Exit", "requires": [] },
 
     // Apeman Facility (Elevator)
-    { "from": "AFE - Upper Root Node", "to": "AFE - Between Root Nodes", "requires": [ { "anyOf": [
-        { "item": "Grapple" },
-        [ { "item": "Air Dash" }, { "item": "Ledge Grab" } ],
-        { "item": "Cloud Leap" }
-        // T-Dash works, but there's no enemy on this side. CS-Dash is too short.
-        // Bow hover from the pagoda works, but you need AD or CL to get up there anyway.
-        // Then the arena happens to require exactly Grapple OR (AD OR T-Dash) OR CL, so no change there.
-    ] } ] },
-    // this assumes the elevator call button is enabled by the mod, since it's impassable otherwise
     {
-        "from": "AFE - Between Root Nodes", "to": "AFE - Upper Root Node",
+        "from": "AFE - Upper Root Node", "to": "AFE - Enter Tutorial Arena",
+        "requires": [ { "anyOf": [
+            { "item": "Grapple" },
+            { "item": "Cloud Leap" },
+            [
+                { "item": "Air Dash" }, // CS-Dash is too short, and no enemy for T-dash
+                { "item": "Ledge Grab" }
+            ]
+        ] } ],
+        "medium_requires": [
+            { "item": "Air Dash" }, // and Swift Runner onto the roof above the root node
+            { "item": "Trick - Bow Hover" }
+        ]
+    },
+    { "from": "AFE - Leave Tutorial Arena", "to": "AFE - Upper Root Node", "requires": [] }, // from this side, single jump is enough
+    {
+        "from": "AFE - Enter Tutorial Arena", "to": "AFE - Leave Tutorial Arena",
         "requires": [ { "anyOf": [
             { "item": "Grapple" }, { "item": "Air Dash" }, { "item": "Cloud Leap" } // to reach the arena's upper enemy
         ] } ],
         "medium_requires": [] // T-dash
     },
+    { "from": "AFE - Leave Tutorial Arena", "to": "AFE - Between Root Nodes", "requires": [] },
+    // this assumes the elevator call button is enabled by the mod, since it's impassable otherwise
+    { "from": "AFE - Between Root Nodes", "to": "AFE - Enter Tutorial Arena", "requires": [] },
     {
         "from": "AFE - Between Root Nodes", "to": "AFE - Upper Right Pagoda",
         "requires": [ { "anyOf": [
@@ -236,6 +246,12 @@
         { "item": "Mystic Nymph: Scout Mode" },
         { "anyOf": [ { "item": "Grapple" }, { "item": "Cloud Leap" } ] }
     ] },
+    // you may need to nymph hack the door from below, then fall through that door from above to reach the ULLE chest
+    { "from": "AFD - Lower Left Exit", "to": "AFD - Under Lower Left Exit", "requires": [
+        { "item": "Mystic Nymph: Scout Mode" }, // nymph hack the door from below
+        { "region": "AFD - Lower Level" } // this chest platform is plenty close to the hack point
+        // backtrack to Lower Left Exit, fall down, hold left, grab the rope, jump to ULLE platform; all itemless
+    ] },
     {
         "from": "AFD - Lower Left Exit", "to": "AFD - Climb to Root Node",
         "requires": [ { "anyOf": [{ "item": "Tai-Chi Kick" }, { "item": "Cloud Leap" }] } ],
@@ -298,7 +314,11 @@
     ] },
 
     // Cortex Center
-    { "from": "CC - Right Exit", "to": "CC - Root Node", "requires": [ { "item": "Charged Strike" } ] },
+    {
+        "from": "CC - Right Exit", "to": "CC - Root Node",
+        "requires": [ { "item": "Charged Strike" } ],
+        "medium_requires": [ { "item": "Trick - Break CS Barrier With Bow" } ]
+    },
     { "from": "CC - Root Node", "to": "CC - Root Node After Boss", "requires": [
         { "item": "Event - Lady Ethereal Soulscape Unlocked" },
         {
@@ -378,7 +398,7 @@
         "ls_requires": [{ "item": "Ledge Grab" }, { "item": "Cloud Leap" }] // CL + LS vault
     }, // any% NMG speedrun uses T-dash (and bow and CS and grapple) here, but there's no enemy for rando to get qi
     { "from": "CC - Caves Lower Left", "to": "CC - Left Exit", "requires": [] },
-    { "from": "CC - Left Exit", "to": "CC - Caves Lower Left", "requires": [] }, // grapple
+    { "from": "CC - Left Exit", "to": "CC - Caves Lower Left", "requires": [ { "item": "Grapple" } ] },
 
     { "from": "CC - Left Exit", "to": "FGH - Right Exit", "requires": [] },
     { "from": "FGH - Right Exit", "to": "CC - Left Exit", "requires": [] },
@@ -442,8 +462,13 @@
             { "item": "Tai-Chi Kick" },
             [ { "item": "Cloud Leap" }, { "item": "Ledge Grab" } ]
         ] } ],
-        "medium_requires": [{ "item": "Air Dash" }, { "item": "Ledge Grab" }] // and swift runner
-    }, // T-dash helps but no qi source, bow hover into LS vault with AD setup works but is redundant with SR
+        "medium_requires": [
+            { "item": "Ledge Grab" } // and swift runner, and either AD or T-dash
+            // while there's no qi source in this region, if you can get here then you must have passed through
+            // either Lower Left Vents or Root Node, and both of those regions have enemies to parry
+        ]
+        // no LS logic: bow hover into LS vault with AD setup works, but is redundant with medium logic
+    },
     {
         "from": "CTH - Lower Right Vents", "to": "CTH - Below Vents Statue",
         "requires": [{ "item": "Tai-Chi Kick" }], // 2 TCK targets are stacked vertically
@@ -459,8 +484,8 @@
             [{ "item": "Cloud Leap" }, { "item": "Air Dash" }], // jump, dash, air jump can bypass grabbing the ledge
             [{ "item": "Cloud Leap" }, { "item": "Tai-Chi Kick" }, { "item": "Ledge Grab" }] // TCK then CL requires the ledge
         ] } ],
-        "medium_requires": [{ "item": "Cloud Leap" }], // jump, T-dash, air jump
-        "ls_requires": [{ "item": "Trick - Bow Hover" }, { "item": "Ledge Grab" }] // LS vault
+        "medium_requires": [{ "item": "Cloud Leap" }] // jump, T-dash, air jump
+        // CL setup into bow hover into parry vault works, but is redundant with medium
     },
     { "from": "CTH - Lower Right Vents", "to": "CTH - Lower Exits", "requires": [] }, // one-way fall
     { "from": "CTH - Lower Exits", "to": "CTH - Lower Right Vents", "requires": [ { "anyOf": [
@@ -571,10 +596,7 @@
                 { "anyOf": [ // with WC and without TCK, the hard jump is from the right green wall to the upper long platform
                     [
                         { "item": "Cloud Leap" }, // is its own horizontal aid, so only 1 more horizontal boost needed
-                        { "anyOf": [
-                            { "item": "Tai-Chi Kick" }, // either using one or both TCK targets
-                            { "item": "Air Dash" } // or the one other horizontal movement we have on vanilla
-                        ] }
+                        { "item": "Air Dash" } // is the only other horizontal movement we have (TCK would be redundant)
                     ],
                     [
                         { "item": "Grapple" }, // doesn't help in the big room, so 2 horizontal boosts needed
@@ -635,9 +657,10 @@
         "requires": [ { "anyOf": [
             { "item": "Grapple" }, { "item": "Air Dash" }, { "item": "Cloud Leap" }
         ] } ],
-        "medium_requires": [ { "anyOf": [
-            { "item": "Trick - Bow Hover" }, { "item": "Charged Strike" } // or swift runner, once that's an item
-        ] } ]
+        "medium_requires": [] // just swift runner and single jump for now
+        // in the future with an SR item, this will be { "anyOf": [
+        //     { "item": "Trick - Bow Hover" }, { "item": "Charged Strike" }, { "item": "Swift Runner" }
+        // ] }
     }, // LS can't help
     {
         "from": "LYR - Root Node", "to": "LYR - Left Exit",
@@ -659,8 +682,14 @@
             { "item": "Mystic Nymph: Scout Mode" } // or hack the rope to climb out
         ] } ],
         "medium_requires": [] // just T-dash
-    }, // LS is redundant
-    // then a one-way dragon boat ride; bow/parry hover can be used here as long as you start it above the flying enemies
+        // then a one-way dragon boat ride, which requires no items
+        // bow/parry hover works here (but is redundant) as long as you start it above the flying enemies
+    },
+    { // in the other direction, bow/parry hover are the only options
+        "from": "LYR - Right Exit", "to": "LYR - Root Node",
+        "medium_requires": [{ "item": "Trick - Bow Hover" }],
+        "ls_requires": [{ "item": "Ledge Grab" }] // parry hover after T-dash setup
+    },
     { "from": "LYR - Root Node", "to": "TRC - Upper Exit", "requires": [ { "item": "Elevator Access Token" } ] },
 
     { "from": "LYR - Root Node", "to": "YC - Upper Exit", "requires": [] },
@@ -783,7 +812,9 @@
         { "item": "Grapple" },
         [ { "item": "Cloud Leap" }, { "item": "Ledge Grab" } ]
     ] } ] },
-    { "from": "YC - Egg Cave & Left Exit", "to": "YC - Root Node", "requires": [] }, // one-way door
+    { "from": "YC - Egg Cave & Left Exit", "to": "YC - Root Node", "requires": [ // climbing to hack point above one-way door
+        { "anyOf": [ { "item": "Cloud Leap" }, { "item": "Wall Climb" }, { "item": "Ledge Grab" } ] }
+    ] },
 
     { "from": "YC - Egg Cave & Left Exit", "to": "TRC - Ground Floor & Exits", "requires": [] },
     { "from": "TRC - Ground Floor & Exits", "to": "YC - Egg Cave & Left Exit", "requires": [] },
@@ -866,7 +897,10 @@
                 { "item": "Tai-Chi Kick" }, // kinda tight, may revisit
                 [ { "item": "Cloud Leap" }, { "item": "Air Dash" } ]
             ] }
-        ] // can't assume you have T-dash since you may have already spent it reaching FU-BS
+        ],
+        "medium_requires": [
+            { "item": "Cloud Leap" } // and swift runner
+        ] // can't assume you have qi for T-dash since you may have already spent it reaching FU-BS
     },
     {
         "from": "FU - Broken Shanhai (with qi)", "to": "FU - Middle Right Exit",
@@ -1334,7 +1368,7 @@
             { "item": "Ledge Grab" } // either LS vault on the left or wall slide up the right
         ]
     },
-    { "from": "FPA - Top Floor of Left Building", "to": "FPA - Hacked Statue in Left Building", "requires": [
+    { "from": "FPA - Top Floor of Left Building", "to": "FPA - Cleared Top Floor of Left Building", "requires": [
         { "anyOf": [ // reach the hack point to clear the enemies
             [ { "item": "Cloud Leap" }, { "item": "Air Dash" } ],
             [
@@ -1342,9 +1376,13 @@
                 { "item": "Tai-Chi Kick" },
                 { "anyOf": [ { "item": "Cloud Leap" }, { "item": "Air Dash" } ] }
             ] // this *could* be done with 2 T-dashes using the hackable statue for qi, but we're not requiring that lol
-        ] },
-        { "item": "Charged Strike" } // AND hacking to actually hack the statue
+        ] }
     ] },
+    {
+        "from": "FPA - Cleared Top Floor of Left Building", "to": "FPA - Hacked Statue in Left Building",
+        "requires": [ { "item": "Charged Strike" } ], // AND hacking to actually hack the statue
+        "medium_requires": [ { "item": "Trick - Break CS Barrier With Bow" } ]
+    },
     {
         "from": "FPA - Upper Left Fire Zone & Pharmacy", "to": "FPA - Chest Platform Below Sniper Zone",
         "requires": [ { "anyOf": [
@@ -1393,6 +1431,7 @@
 
     // Shengwu Hall
     { "from": "SH - Root Node", "to": "SH - After Jiequan", "requires": [ { "item": "Charged Strike" } ] }, // TODO: (more) combat logic?
+    // "Trick - Break CS Barrier With Bow" doesn't apply here because Jiequan's shield recharges
 
     // Underground Cave + 95th Livestock Pen / Peach Blossom Village + Livestock Harvesting Platform
     {

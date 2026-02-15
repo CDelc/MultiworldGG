@@ -45,7 +45,7 @@ class RefunctWorld(World):
     
     item_name_groups = item_groups
 
-    ap_world_version = "0.8.2"        
+    ap_world_version = "0.8.3"        
         
     def get_filler_item_name(self) -> str:
         return ":)"
@@ -483,7 +483,7 @@ class RefunctWorld(World):
                     location = self.get_location(loc_name)
                     num_colors_needed = i // 5 + 1
                     location.access_rule = lambda state, num_colors_needed=num_colors_needed: all([
-                        state.has_group(f"Block Brawl Cubes", self.player, num_colors_needed),
+                        state.has_group_unique(f"Block Brawl Cubes", self.player, num_colors_needed),
                     ])
         
 

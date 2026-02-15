@@ -260,43 +260,43 @@
         ]
     },
     // No Shennong event because rando moves him into FSP immediately
-{
-    "address": null, "name": "Event - Jiequan 1 Fight Unlocked",
-    "region": "FGH - Lower Levels & Root Node",
-    "requires": [
-        { "item_group": "Sol Seals", "count_option": "seals_for_prison" },
-        // Prison weakened state disables AD, CS, Talismans, and nerfs horizontal distance of regular jump and CL.
-        // Most of the Prison requires either N(ymph) to hack ropes/doors or CL to platform around, regardless of weakened state.
-        // The exceptions are the gaps and climbs with a grapple point and the ledge immediately after the first such gap:
-        // - weakened, the first grapple gap requires G or parry hover (LG AND CL); unweakened, it requires G OR CL OR AD
-        // - the ledge afterward requires LG OR CL regardless of weakened state
-        // - the grapple climbs require CL OR G
-        // Putting all that together, we get:
-        // - unweakened Prison: CL OR (G AND LG AND N)
-        // - weakened (vanilla-logic) Prison: G AND (CL OR (LG AND N))
-        // - I won't implement this, but weakened LS-logic Prison is: (LG AND CL) OR (vanilla-logic)
-        {
-            "option": "prevent_weakened_prison_state",
-            "true": [
-                { "anyOf": [
-                    { "item": "Cloud Leap" },
-                    [
-                        { "item": "Grapple" },
-                        { "item": "Ledge Grab" },
-                        { "item": "Mystic Nymph: Scout Mode" }
-                    ]
-                ] }
-            ],
-            "false": [
-                { "item": "Grapple" },
-                { "anyOf": [
-                    { "item": "Cloud Leap" },
-                    [ { "item": "Ledge Grab" }, { "item": "Mystic Nymph: Scout Mode" } ]
-                ] }
-            ]
-        }
-    ]
-},
+    {
+        "address": null, "name": "Event - Jiequan 1 Fight Unlocked",
+        "region": "FGH - Lower Levels & Root Node",
+        "requires": [
+            { "item_group": "Sol Seals", "count_option": "seals_for_prison" },
+            // Prison weakened state disables AD, CS, Talismans, and nerfs horizontal distance of regular jump and CL.
+            // Most of the Prison requires either N(ymph) to hack ropes/doors or CL to platform around, regardless of weakened state.
+            // The exceptions are the gaps and climbs with a grapple point and the ledge immediately after the first such gap:
+            // - weakened, the first grapple gap requires G or parry hover (LG AND CL); unweakened, it requires G OR CL OR AD
+            // - the ledge afterward requires LG OR CL regardless of weakened state
+            // - the grapple climbs require CL OR G
+            // Putting all that together, we get:
+            // - unweakened Prison: CL OR (G AND LG AND N)
+            // - weakened (vanilla-logic) Prison: G AND (CL OR (LG AND N))
+            // - I won't implement this, but weakened LS-logic Prison is: (LG AND CL) OR (vanilla-logic)
+            {
+                "option": "prevent_weakened_prison_state",
+                "true": [
+                    { "anyOf": [
+                        { "item": "Cloud Leap" },
+                        [
+                            { "item": "Grapple" },
+                            { "item": "Ledge Grab" },
+                            { "item": "Mystic Nymph: Scout Mode" }
+                        ]
+                    ] }
+                ],
+                "false": [
+                    { "item": "Grapple" },
+                    { "anyOf": [
+                        { "item": "Cloud Leap" },
+                        [ { "item": "Ledge Grab" }, { "item": "Mystic Nymph: Scout Mode" } ]
+                    ] }
+                ]
+            }
+        ]
+    },
     {
         "address": null, "name": "Event - Lady Ethereal Soulscape Unlocked",
         "region": "CC - Root Node", "requires": [ { "item_group": "Sol Seals", "count_option": "seals_for_ethereal" } ]
@@ -563,8 +563,9 @@
         // ls_requires would be redundant since LS immediately gets you access to Upper Exit
     },
     {
-        "address": 1209, "name": "LYR: Statue Hack Room Near Root Node",
-        "region": "LYR - Root Node", "requires": [ { "item": "Charged Strike" } ] // AND hacking
+        "address": 1209, "name": "LYR: Statue Hack Room Near Root Node", "region": "LYR - Root Node",
+        "requires": [ { "item": "Charged Strike" } ], // AND hacking
+        "medium_requires": [ { "item": "Trick - Break CS Barrier With Bow" } ]
     },
     {
         "address": 1210, "name": "LYR: Examine Stele",
@@ -614,7 +615,7 @@
     },
     {
         "address": 1309, "name": "Greenhouse: Defeat Celestial Spectre: Shuigui",
-        "region": "GH - Shuigui Arena", "requires": [{ "item": "Charged Strike" }]
+        "region": "GH - Shuigui Arena", "requires": [{ "item": "Charged Strike" }] // Cloud Piercer S/X does not work
     },
 
     // Water & Oxygen Synthesis
@@ -768,12 +769,16 @@
         "region": "FU - Main Intersection", "requires": []
     },
     {
-        "address": 1804, "name": "Factory (U): Hack 2 Statues",
-        "region": "FU - Main Intersection", "requires": [
+        "address": 1804, "name": "Factory (U): Hack 2 Statues", "region": "FU - Main Intersection",
+        "requires": [
             { "item": "Charged Strike" }, // to defeat the 1st statue
             { "region": "FU - Middle Right Exit" } // has the platform above the 2nd statue
             // actually getting onto the 2nd statue's ledge can be done with CL OR LG OR TCK OR AD OR CS-dash OR T-dash,
             // but we already needed CS for the 1st statue, so this part doesn't affect logic
+        ],
+        "medium_requires": [
+            { "item": "Trick - Break CS Barrier With Bow" }, // 1st statue
+            { "region": "FU - Middle Right Exit" } // and T-dash to reach the 2nd statue's ledge
         ]
     },
     {

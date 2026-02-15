@@ -1,6 +1,7 @@
 from BaseClasses import ItemClassification, Item
 
-fillers = {"Cure Potion": 61, "Heal Potion": 52, "Seed": 2, "Bomb Refill": 19, "Projectile Refill": 50}
+fillers = {"Cure Potion": 61, "Heal Potion": 52, "Refresher": 17, "Seed": 2, "Bomb Refill": 19,
+           "Projectile Refill": 50}
 
 
 class ItemData:
@@ -222,9 +223,6 @@ for item, data in item_table.items():
 
 def create_items(self) -> None:
     items = []
-    filler_counts = fillers.copy()
-    filler_counts["Projectile Refill"] -= 1  # Re-added if starting with Steel Armor
-
     starting_weapon = self.options.starting_weapon.current_key.title().replace("_", " ")
     if self.options.progressive_gear:
         starting_weapon = {"Steel Sword": "Progressive Sword",
@@ -259,8 +257,6 @@ def create_items(self) -> None:
             nonlocal skipped_one_filler_item
             if item_name in precollected_item_names:
                 if skipped_one_filler_item:
-                    if item_name == "Steel Armor":
-                        items.append("Projectile Refill")
                     items.append(self.create_filler())
                 else:
                     skipped_one_filler_item = True
@@ -291,30 +287,13 @@ def create_items(self) -> None:
         for item in sorted(self.item_name_groups[item_group]):
             add_item(item)
 
-    seed_option = self.options.world_seed_supply.current_key
-    if seed_option == "random_two_to_ten":
-        seed_quantity = self.random.randint(2, 10)
-    elif seed_option == "random_zero_to_twenty_five":
-        seed_quantity = self.random.randint(0, 25)
-    else:
-        seed_quantity = {"zero": 0, "one": 1, "two": 2, "five": 5, "ten": 10, "twenty_five": 25}[seed_option]
-
-    while filler_counts["Seed"] < seed_quantity:
-        filler_counts["Seed"] += 1
-        filler_counts[self.random.choice(["Cure Potion", "Heal Potion", "Bomb Refill", "Projectile Refill"])] -= 1
-    while filler_counts["Seed"] > seed_quantity:
-        filler_counts["Seed"] -= 1
-        filler_counts[self.random.choice(["Cure Potion", "Heal Potion", "Bomb Refill", "Projectile Refill"])] += 1
-
     filler_items = []
-    for item, count in filler_counts.items():
+    for item, count in fillers.items():
         filler_items += [self.create_item(item) for _ in range(count)]
-
-    self.random.shuffle(filler_items)
     if self.options.sky_coin_mode == "shattered_sky_coin":
+        self.multiworld.random.shuffle(filler_items)
         filler_items = filler_items[39:]
-
-    items += filler_items + [self.create_item("Refresher") for _ in range(17)]
+    items += filler_items[1:]
 
     self.multiworld.itempool += items
 
@@ -329,7 +308,10 @@ class FFMQItem(Item):
     type = None
 
     def __init__(self, name, player: int = None):
-        item_data = item_table.get(name, ItemData(None, ItemClassification.progression))
+        if name in item_table:
+            item_data = item_table[name]
+        else:
+            item_data = ItemData(None, ItemClassification.progression)
         super(FFMQItem, self).__init__(
             name,
             item_data.classification,
