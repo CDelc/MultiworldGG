@@ -68,7 +68,7 @@ map_complete_table: dict[str, Portal2LocationData] = {
     "Chapter 5: Turret Factory Completion": Portal2LocationData("sp_a2_bts3", LocationType.MAP_COMPLETION, [portal_gun_2]),
     "Chapter 5: Turret Sabotage Completion": Portal2LocationData("sp_a2_bts4", LocationType.MAP_COMPLETION, [portal_gun_2, turrets]),
     "Chapter 5: Neurotoxin Sabotage Completion": Portal2LocationData("sp_a2_bts5", LocationType.MAP_COMPLETION, [portal_gun_2, laser]),
-    "Chapter 5: Core Completion": Portal2LocationData("sp_a2_core", LocationType.MAP_COMPLETION, [portal_gun_2, button]),
+    "Chapter 5: Core Completion": Portal2LocationData("sp_a2_core", LocationType.MAP_COMPLETION, [portal_gun_2, button, turrets]),
     # Chapter 6
     "Chapter 6: Underground Completion": Portal2LocationData("sp_a3_01", LocationType.MAP_COMPLETION, [portal_gun_2]),
     "Chapter 6: Cave Johnson Completion": Portal2LocationData("sp_a3_03", LocationType.MAP_COMPLETION, [portal_gun_2]),
@@ -133,8 +133,8 @@ wheatley_monitor_table: dict[str, Portal2LocationData] = {
     "Wheatley Monitor 2": Portal2LocationData("sp_a4_tb_trust_drop", LocationType.WHEATLY_MONITOR, [portal_gun_2, button, funnel, frankenturret]),
     "Wheatley Monitor 3": Portal2LocationData("sp_a4_tb_wall_button", LocationType.WHEATLY_MONITOR, [portal_gun_2]),
     "Wheatley Monitor 4": Portal2LocationData("sp_a4_tb_polarity", LocationType.WHEATLY_MONITOR, [turrets]),
-    "Wheatley Monitor 5": Portal2LocationData("sp_a4_tb_catch", LocationType.WHEATLY_MONITOR, [portal_gun_2, frankenturret, funnel, faith_plate, button]), #monitor1
-    "Wheatley Monitor 6": Portal2LocationData("sp_a4_tb_catch", LocationType.WHEATLY_MONITOR, [portal_gun_2, frankenturret, funnel, faith_plate, button]), #monitor2
+    "Wheatley Monitor 5": Portal2LocationData("sp_a4_tb_catch 1", LocationType.WHEATLY_MONITOR, [portal_gun_2, frankenturret, funnel, faith_plate, button]), #monitor1
+    "Wheatley Monitor 6": Portal2LocationData("sp_a4_tb_catch 2", LocationType.WHEATLY_MONITOR, [portal_gun_2, frankenturret, funnel, faith_plate, button]), #monitor2
     "Wheatley Monitor 7": Portal2LocationData("sp_a4_stop_the_box", LocationType.WHEATLY_MONITOR, [faith_plate]),
     "Wheatley Monitor 8": Portal2LocationData("sp_a4_laser_catapult", LocationType.WHEATLY_MONITOR, [portal_gun_2, frankenturret, faith_plate, funnel, reflection_cube, laser, laser_catcher]),
     "Wheatley Monitor 9": Portal2LocationData("sp_a4_laser_platform", LocationType.WHEATLY_MONITOR, [portal_gun_2, laser, laser_catcher, reflection_cube, button]),
@@ -143,13 +143,7 @@ wheatley_monitor_table: dict[str, Portal2LocationData] = {
     "Wheatley Monitor 12": Portal2LocationData("sp_a4_finale3", LocationType.WHEATLY_MONITOR, [portal_gun_2, paint]),
 }
 
-wheatley_maps_to_monitor_names: dict[str, list[str]] = {}
-for key, value in wheatley_monitor_table.items():
-    map_name = value.map_name
-    if map_name not in wheatley_maps_to_monitor_names:
-        wheatley_maps_to_monitor_names[map_name] = [key]
-    else:
-        wheatley_maps_to_monitor_names[map_name].append(key)
+wheatley_maps_to_monitor_names: dict[str, str] = {value.map_name: key for key, value in wheatley_monitor_table.items()}
 
 item_location_table: dict[str, Portal2LocationData] = {
     portal_gun_1: Portal2LocationData("sp_a1_intro3", LocationType.ITEM),
@@ -184,3 +178,69 @@ all_locations_table.update(item_location_table)
 all_locations_table.update(ratman_den_locations_table)
 # all_locations_table.update(achievements_table)
 
+location_groups: dict[str, set[str]] = {
+    "Chambers": {name for name in map_complete_table} | {name for name in cutscene_completion_table},
+    "Wheatley Monitors": {name for name in wheatley_monitor_table},
+    "Ratman Dens": {name for name in ratman_den_locations_table},
+    "Pickups": {name for name in item_location_table}
+}
+
+# Alternate logic for speedrunners
+speedrun_logic_table: dict[str, list[str]] = {
+    # Chapter 1
+    "Chapter 1: Portal Carousel Completion": [button, floor_button],
+    "Chapter 1: Smooth Jazz Completion": [floor_button],
+    "Chapter 1: Cube Momentum Completion": [floor_button],
+    "Chapter 1: Incinerator Completion": [],
+    # Chapter 2
+    "Chapter 2: Laser Intro Completion": [portal_gun_2],
+    "Chapter 2: Laser Stairs Completion": [portal_gun_2, floor_button],
+    "Chapter 2: Dual Lasers Completion": [portal_gun_2, laser, laser_catcher],
+    "Chapter 2: Laser Over Goo Completion": [portal_gun_2, floor_button],
+    "Chapter 2: Catapult Intro Completion": [portal_gun_2, floor_button],
+    "Chapter 2: Trust Fling Completion": [portal_gun_2, faith_plate, floor_button],
+    "Chapter 2: Pit Flings Completion": [portal_gun_2],
+    "Chapter 2: Fizzler Intro Completion": [portal_gun_2],
+    # Chapter 3
+    "Chapter 3: Ricochet Completion": [portal_gun_2, weighted_cube],
+    "Chapter 3: Bridge Intro Completion": [portal_gun_2, floor_button],
+    "Chapter 3: Bridge the Gap Completion": [weighted_cube, button, floor_button],
+    "Chapter 3: Turret Intro Completion": [floor_button],
+    "Chapter 3: Laser Relays Completion": [laser_relays, laser, reflection_cube],
+    "Chapter 3: Turret Blocker Completion": [floor_button],
+    "Chapter 3: Laser Vs. Turret Completion": [portal_gun_2, laser, laser_catcher],
+    "Chapter 3: Pull The Rug Completion": [floor_button, weighted_cube, bridge, portal_gun_2],
+    # Chapter 4
+    "Chapter 4: Column Blocker Completion": [portal_gun_2],
+    "Chapter 4: Laser Chaining Completion": [reflection_cube, laser, laser_relays],
+    "Chapter 4: Triple Laser Completion": [reflection_cube, portal_gun_2],
+    "Chapter 4: Jailbreak Completion": [portal_gun_2, button],
+    "Chapter 4: Escape Completion": [],
+    # Chapter 5
+    "Chapter 5: Turret Sabotage Completion": [portal_gun_2],
+    "Chapter 5: Neurotoxin Sabotage Completion": [portal_gun_2],
+    "Chapter 5: Core Completion": [turrets],
+    # Chapter 6
+    "Chapter 6: Repulsion Intro Completion": [paint, old_floor_button, portal_gun_2],
+    "Chapter 6: Bomb Flings Completion": [portal_gun_2, paint, old_button],
+    "Chapter 6: Crazy Box Completion": [portal_gun_2, old_floor_button],
+    # Chapter 7
+    "Chapter 7: Propulsion Intro Completion": [portal_gun_2],
+    "Chapter 7: Propulsion Flings Completion": [portal_gun_2, antique_cube],
+    "Chapter 7: Conversion Intro Completion": [portal_gun_2],
+    # Chapter 8
+    "Chapter 8: Funnel Intro Completion": [floor_button, funnel],
+    "Chapter 8: Ceiling Button Completion": [floor_button, frankenturret, button, portal_gun_2],
+    "Chapter 8: Wall Button Completion": [floor_button, frankenturret, button, portal_gun_2],
+    "Chapter 8: Polarity Completion": [funnel],
+    "Chapter 8: Funnel Catch Completion": [portal_gun_2],
+    "Chapter 8: Stop The Box Completion": [floor_button, portal_gun_2],
+    "Chapter 8: Laser Catapult Completion": [portal_gun_2],
+    "Chapter 8: Laser Platform Completion": [portal_gun_2, funnel],
+    "Chapter 8: Propulsion Catch Completion": [button, frankenturret],
+    "Chapter 8: Repulsion Polarity Completion": [turrets, button, paint],
+    # Chapter 9
+    "Chapter 9: Finale 1 Completion": [portal_gun_2, frankenturret, faith_plate],
+    "Chapter 9: Finale 2 Completion": [portal_gun_2],
+    "Chapter 9: Finale 3 Completion": [portal_gun_2, funnel],
+}

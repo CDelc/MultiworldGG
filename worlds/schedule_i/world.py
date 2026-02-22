@@ -23,7 +23,7 @@ from . import items, locations, options, regions, rules, web_world, json_data
 # It is recommended that you read these in that specific order, then come back to the world class.
 class Schedule1World(World):
     """
-    Scheudle 1 is a game about manufacturing. Produce a range of drugs. Purchase properties and equipment.
+    Schedule 1 is a game about manufacturing. Produce a range of drugs. Purchase properties and equipment.
     Distribute your products through a network of dealers. Avoid the law and rival manufacturers.
     Expand your empire and become the ultimate drug lord!
     """
@@ -76,7 +76,7 @@ class Schedule1World(World):
     # You must override this function and return this infinitely repeatable item's name.
     # In our case, we defined a function called get_random_filler_item_name for this purpose in our items.py.
     def get_filler_item_name(self) -> str:
-        return items.get_random_filler_item_name(self, json_data.schedule1_item_data)
+        return items.get_random_filler_item_name(self)
 
     # There may be data that the game client will need to modify the behavior of the game.
     # This is what slot_data exists for. Upon every client connection, the slot's slot_data is sent to the client.
@@ -92,7 +92,9 @@ class Schedule1World(World):
             "amount_of_cash_per_bundle_min",
             "amount_of_cash_per_bundle_max",
             "networth_amount_required",
-            "filler_item_pool_type",
+            "ban_bad_filler_items",
+            "ban_progression_skip_items",
+            "trap_chance",
             "randomize_cartel_influence",
             "randomize_drug_making_properties",
             "randomize_business_properties",

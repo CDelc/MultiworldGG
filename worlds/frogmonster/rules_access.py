@@ -61,5 +61,10 @@ access_rule_groups = {
             f"{r.anywhere} -> Soul Frog": FMAccessData(op="replace", rule=lambda player, dif, state: False),
             f"{r.anywhere} -> Soul Fish": FMAccessData(op="replace", rule=lambda player, dif, state: False),
         }
+    },
+    "goal_eye_chest_rules": {
+        "locations": {
+            l.goal: FMAccessData(op="replace", rule=lambda player, dif, state: True)
+        }
     }
 }

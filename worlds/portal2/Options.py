@@ -1,6 +1,11 @@
 from dataclasses import dataclass
-from Options import Choice, LocationSet, OptionGroup, Range, Toggle, DeathLink, PerGameCommonOptions
+from Options import Choice, LocationSet, OptionGroup, Range, StartInventoryPool, Toggle, DeathLink, PerGameCommonOptions
 from .ItemNames import *
+
+class GameModeOption:
+    NORMAL = 0
+    CHAOTIC = 1
+    OPEN_WORLD = 2
 
 class GameMode(Choice):
     """
@@ -10,10 +15,10 @@ class GameMode(Choice):
     open_world -> maps appear in the correct order in the game and are all playable from the start
     """
     display_name = "Game Mode"
-    option_normal = 0
-    option_chaotic = 1
-    option_open_world = 2
-    default = 0
+    option_normal = GameModeOption.NORMAL
+    option_chaotic = GameModeOption.CHAOTIC
+    option_open_world = GameModeOption.OPEN_WORLD
+    default = GameModeOption.NORMAL
     
 class EarlyPlayabilityPercentage(Range):
     """
@@ -39,6 +44,22 @@ class CutsceneLevels(Toggle):
     Determines whether cutscene maps are added to the map pool
     """
     display_name = "Cutscene Levels"
+   
+class LogicDifficultyOption:
+    NORMAL = 0
+    SPEEDRUNNER = 1 
+
+class LogicDifficulty(Choice):
+    """
+    If logic should be for the average player or for an experienced glitch speedrunner
+    normal -> assumes you have everything required to beat the level
+    speedrunner -> assumes you know difficult speedrun techniques for the whole game including some sla tricks, experimental
+    (if you don't speedrun the game don't choose this option)
+    """
+    display_name = "Logic Difficulty"
+    option_normal = LogicDifficultyOption.NORMAL
+    option_speedrunner = LogicDifficultyOption.SPEEDRUNNER
+    default = LogicDifficultyOption.NORMAL
 
 class TrapFillPercentage(Range):
     """
@@ -111,6 +132,7 @@ portal2_option_groups = [
     OptionGroup("Location Options", [
         GameMode,
         EarlyPlayabilityPercentage,
+        LogicDifficulty,
         RemoveLocations,
         CutsceneLevels,
         WheatleyMonitors,
@@ -137,11 +159,13 @@ portal2_option_presets = {
 @dataclass
 class Portal2Options(PerGameCommonOptions):
     death_link: DeathLink
+    start_inventory_from_pool: StartInventoryPool
 
     game_mode: GameMode
     cutscene_levels: CutsceneLevels
     remove_locations: RemoveLocations
     early_playability_percentage: EarlyPlayabilityPercentage
+    logic_difficulty: LogicDifficulty
     # storyachievementsanity: StoryAchievementSanity
     wheatley_monitors: WheatleyMonitors
     ratman_dens: RatmanDens

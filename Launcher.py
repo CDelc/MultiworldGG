@@ -34,6 +34,10 @@ apname = Utils.instance_name if Utils.instance_name else "Archipelago"
 from Utils import (init_logging, is_frozen, is_linux, is_macos, is_windows, local_path, messagebox, open_filename,
                    user_path)
 from Updater import get_latest_release_info, download_and_install_win
+
+if __name__ == "__main__":
+    init_logging('Launcher')
+
 from worlds.LauncherComponents import Component, components, icon_paths, SuffixIdentifier, Type
 
 apname = "Archipelago" if not Utils.instance_name else Utils.instance_name
@@ -570,7 +574,6 @@ def main(args: argparse.Namespace | dict | None = None):
 
 
 if __name__ == '__main__':
-    init_logging('Launcher')
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")  # if launched process uses kivy, fork won't work
     parser = argparse.ArgumentParser(

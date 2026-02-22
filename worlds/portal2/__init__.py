@@ -7,10 +7,9 @@ import Utils
 import settings
 from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import add_item_rule
-from .Options import CutsceneLevels, Portal2Options, portal2_option_groups, portal2_option_presets
+from .Options import CutsceneLevels, Portal2Options, portal2_option_groups, portal2_option_presets, GameModeOption, LogicDifficultyOption
 from .Items import Portal2Item, game_item_table, item_table, junk_items, trap_items
 from .Locations import *
-from entrance_rando import *
 from .ItemNames import portal_gun_2
 
 from . import Components as components
@@ -65,27 +64,26 @@ class Portal2World(World):
 
     item_name_to_id = {}
     location_name_to_id = {}
-
-    location_count = 0
-    item_count= 0
-
-    maps_in_use: list[str] = []
-    chapter_maps_dict = {}
+    location_name_groups = location_groups
     
     for key, value in item_table.items():
         item_name_to_id[key] = value.id
 
     for key, value in all_locations_table.items():
         location_name_to_id[key] = value.id
+    
+    def __init__(self, multiworld, player):
+        super().__init__(multiworld, player)
+        self.maps_in_use: list[str] = []
+        self.chapter_maps_dict: dict[str, list[str]] = {}
+        self.location_logic: dict[str, list[str]] = {}
 
     # Helper Functions
 
     def create_item(self, name: str):
-        self.item_count += 1
         return Portal2Item(name, item_table[name].classification, self.item_name_to_id[name], self.player)
     
     def create_location(self, name, id, parent):
-        self.location_count += 1
         return Portal2Location(self.player, name, id, parent)
     
     def get_filler_item_name(self):
@@ -98,7 +96,7 @@ class Portal2World(World):
                 map_choice = map_pool.pop(0)
                 used_maps.append(map_choice)
                 
-                if self.options.game_mode == 1:
+                if self.options.game_mode == GameModeOption.CHAOTIC:
                     random_chapter = self.random.randint(1, 8)
                     chapter_maps[f"Chapter {random_chapter}"].append(map_choice)
                 else:
@@ -114,11 +112,12 @@ class Portal2World(World):
         proportion_map_pick: float = self.options.early_playability_percentage / 100
 
         # Maps with no requirements
-        map_pool += [name for name in possible_maps if len(all_locations_table[name].required_items) == 0]
+        map_pool += [name for name in possible_maps if len(self.location_logic[name]) == 0]
         pick_maps(ceil(len(map_pool) * proportion_map_pick))
         
         # Maps with just portal gun upgrade
-        map_pool += [name for name in possible_maps if all_locations_table[name].required_items == [portal_gun_2]]
+        map_pool += [name for name in possible_maps if len(self.location_logic[name]) <= 2
+                     and name not in used_maps and name not in map_pool]
         pick_maps(ceil(len(map_pool) * proportion_map_pick))
 
         # All other maps
@@ -128,19 +127,18 @@ class Portal2World(World):
         return chapter_maps
     
     def create_in_level_check(self, name: str, requirements: list[str], entrance_region: Region):
-        item_region = Region(f"{name} End", self.player, self.multiworld)
-        self.multiworld.regions.append(item_region)
-        item_region.add_locations({name: self.location_name_to_id[name]}, Portal2Location)
-        self.location_count += 1
-        entrance_region.connect(item_region, f"Get {name}", lambda state, _item_reqs=requirements: state.has_all(_item_reqs, self.player))
+        new_region = Region(f"{name} End", self.player, self.multiworld)
+        self.multiworld.regions.append(new_region)
+        new_region.add_locations({name: self.location_name_to_id[name]}, Portal2Location)
+        entrance_region.connect(new_region, f"Get {name}", lambda state, _item_reqs=requirements: state.has_all(_item_reqs, self.player))
 
-    def create_connected_maps(self, chapter_number: int, map_location_names: list[str] = None):
+    def create_connected_maps(self, chapter_number: int, map_location_names: list[str] | None = None):
         chapter_name = f"Chapter {chapter_number}"
         chapter_region = Region(chapter_name, self.player, self.multiworld)
         self.multiworld.regions.append(chapter_region)
 
         # Get all map locations for that chapter
-        if not map_location_names:
+        if map_location_names is None:
             map_location_names = [name for name in self.maps_in_use if name.startswith(chapter_name)]
             # Add them to chapter maps for menu gen and UT
             self.chapter_maps_dict[chapter_name] = map_location_names
@@ -154,8 +152,7 @@ class Portal2World(World):
             region_end = Region(f"{name} End", self.player, self.multiworld)
             self.multiworld.regions.append(region_end)
             region_end.add_locations({map_name: self.location_name_to_id[map_name]}, Portal2Location)
-            self.location_count += 1
-            item_reqs = all_locations_table[map_name].required_items
+            item_reqs = self.location_logic[map_name]
             region_start.connect(region_end, f"Beat {name}", lambda state, _item_reqs=item_reqs: state.has_all(_item_reqs, self.player))
 
             # Additional locations
@@ -163,22 +160,22 @@ class Portal2World(World):
             map_code = location_names_to_map_codes[map_name]
             if map_code in item_maps_to_item_location:
                 item_check_name = item_maps_to_item_location[map_code]
-                item_check_reqs = item_location_table[item_check_name].required_items
+                item_check_reqs = self.location_logic[item_check_name]
                 self.create_in_level_check(item_check_name, item_check_reqs, region_start)
             # Wheatley monitors
-            if self.options.wheatley_monitors and map_code in wheatley_maps_to_monitor_names:
-                monitors = wheatley_maps_to_monitor_names[map_code]
-                for monitor in monitors:
-                    requirements = wheatley_monitor_table[monitor].required_items
-                    self.create_in_level_check(monitor, requirements, region_start)
+            if self.options.wheatley_monitors and "sp_a4_" in map_code:
+                for key, value in wheatley_maps_to_monitor_names.items():
+                    if map_code in key:
+                        wheatley_requirements = self.location_logic[value]
+                        self.create_in_level_check(value, wheatley_requirements, region_start)
             # Ratman Dens
             if self.options.ratman_dens and map_code in ratman_map_to_ratman_den:
                 den = ratman_map_to_ratman_den[map_code]
-                requirements = ratman_den_locations_table[den].required_items
-                self.create_in_level_check(den, requirements, region_start)
+                ratman_requirements = self.location_logic[den]
+                self.create_in_level_check(den, ratman_requirements, region_start)
             
             # Connect to chapter region if there was no previous level or if open world
-            if self.options.game_mode == 2 or not last_region:
+            if self.options.game_mode == GameModeOption.OPEN_WORLD or not last_region:
                 chapter_region.connect(region_start)
             else:
                 last_region.connect(region_start)
@@ -191,6 +188,13 @@ class Portal2World(World):
 
     def generate_early(self):
         self.multiworld.early_items[self.player][portal_gun_2] = 1
+        
+        # Update logic for speedrun option
+        self.location_logic = {location:data.required_items for location, data in all_locations_table.items()}
+        if self.options.logic_difficulty == LogicDifficultyOption.SPEEDRUNNER:
+            for map_location in self.maps_in_use:
+                if map_location in speedrun_logic_table:
+                    self.location_logic[map_location] = speedrun_logic_table[map_location]
         
         # Universal Tracker Support
         re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
@@ -215,11 +219,11 @@ class Portal2World(World):
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
 
-        if not (self.chapter_maps_dict or self.options.game_mode == 2):
+        if not (self.chapter_maps_dict or self.options.game_mode == GameModeOption.OPEN_WORLD):
             self.chapter_maps_dict = self.create_randomized_maps()
         # Add chapters to those regions
         for i in range(1,9):
-            if self.options.game_mode == 2:
+            if self.options.game_mode == GameModeOption.OPEN_WORLD:
                 chapter_region, last_region = self.create_connected_maps(i)
             else:
                 chapter_region, last_region = self.create_connected_maps(i, self.chapter_maps_dict[f"Chapter {i}"])
@@ -228,16 +232,9 @@ class Portal2World(World):
         
 
         # For chapter 9
-        self.chapter_maps_dict["Chapter 9"] = [name for name in all_locations_table.keys() if name.startswith("Chapter 9")]
+        self.chapter_maps_dict["Chapter 9"] = [name for name in sorted(all_locations_table.keys()) if name.startswith("Chapter 9")]
         chapter_9_region, last_region = self.create_connected_maps(9)
-        all_chapter_9_requirements = set()
-        # Don't add requirements to the chapter start if open world
-        if not self.options.game_mode == 2:
-            for name, value in all_locations_table.items():
-                if name.startswith("Chapter 9"):
-                    all_chapter_9_requirements.update(value.required_items)
-        
-        menu_region.connect(chapter_9_region, f"Chapter 9 Entrance", rule=lambda state: state.has_all(all_chapter_9_requirements, self.player))
+        menu_region.connect(chapter_9_region, f"Chapter 9 Entrance")
 
         # Add Goal Region and Event
         end_game_region = Region("End Game", self.player, self.multiworld)
@@ -247,29 +244,26 @@ class Portal2World(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
     def create_items(self):
-        for item, _ in game_item_table.items():
-            self.multiworld.itempool.append(self.create_item(item))
+        itempool = [self.create_item(item_name) for item_name in game_item_table.keys()]
 
-        fill_count = self.location_count - self.item_count
-        trap_percentage = self.options.trap_fill_percentage
-        trap_fill_number = round(trap_percentage/100 * fill_count)
-        trap_weights = [self.options.motion_blur_trap_weight, 
-                        self.options.fizzle_portal_trap_weight, 
-                        self.options.butter_fingers_trap_weight,
-                        self.options.cube_confetti_trap_weight,
-                        self.options.slippery_floor_trap_weight] # in the same order as the traps appear in trap_items list
+        filler_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(itempool)
+        trap_percentage: int = self.options.trap_fill_percentage.value
+        trap_fill_number: int = min(round(trap_percentage / 100 * filler_count), filler_count)
+        trap_weights: list[int] = [self.options.motion_blur_trap_weight.value,
+                                   self.options.fizzle_portal_trap_weight.value,
+                                   self.options.butter_fingers_trap_weight.value,
+                                   self.options.cube_confetti_trap_weight.value,
+                                   self.options.slippery_floor_trap_weight.value]  # in the same order as the traps appear in trap_items list
 
         if sum(trap_weights) > 0 and trap_fill_number > 0:
             traps = self.random.choices(trap_items, weights=trap_weights, k=trap_fill_number)
-            for t in traps:
-                self.multiworld.itempool.append(self.create_item(t))
-        else:
-            trap_fill_number = 0
+            itempool.extend(self.create_item(trap) for trap in traps)
 
         # Fill remaining with filler item
-        filler_name = self.get_filler_item_name()
-        for _ in range(fill_count - trap_fill_number):
-            self.multiworld.itempool.append(self.create_item(filler_name))
+        filler_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(itempool)
+        itempool.extend(self.create_item(self.get_filler_item_name()) for _ in range(filler_count))
+
+        self.multiworld.itempool.extend(itempool)
 
     def set_rules(self):
         # Stop any progression items from being in the final location
