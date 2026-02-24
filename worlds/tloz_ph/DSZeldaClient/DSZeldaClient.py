@@ -36,7 +36,7 @@ class DSZeldaClient(BizHawkClient):
     addr_stage: "Address"
     addr_room: "Address"
     addr_entrance: "Address"
-    save_spam_protection: "Address"
+    save_spam_protection: bool
     stage_flag_address: "Address"  # Stage flag address
     health_address: "Address"
 
@@ -98,6 +98,7 @@ class DSZeldaClient(BizHawkClient):
         self.read_result = {}
         self.current_stage = 0xB
         self.current_scene = None
+        self.current_room = None
         self.last_stage = None
         self.entering_from = None
         self.entering_dungeon = None
@@ -373,10 +374,10 @@ class DSZeldaClient(BizHawkClient):
             current_room = read_result.get(self.addr_room, None)
             current_room = 0 if current_room == 0xFF and current_stage != 0x29 else current_room  # Resetting in a dungeon sets a special value
             current_room = 3 if current_room == 0xFF else current_room
+            self.current_room = current_room
             self.current_scene = current_scene = current_stage * 0x100 + current_room
             current_entrance = read_result.get(self.addr_entrance, 0)
             num_received_items = read_result.get(self.addr_received_item_index, None)
-
 
             await self.process_read_list(ctx, read_result)
 
@@ -389,6 +390,7 @@ class DSZeldaClient(BizHawkClient):
                 self.current_entrance = current_entrance
                 self.current_scene = current_scene
                 self.current_stage = current_stage
+                self.current_room = current_room
 
                 # Backup in case of missing loading
                 self._backup_coord_read = await self.get_coords(ctx, multi=True)
@@ -407,9 +409,10 @@ class DSZeldaClient(BizHawkClient):
                     self.delay_reset = 0
                     await self._remove_vanilla_item(ctx, num_received_items)
 
-            # Nothing happens while loading
-            if ctx.server is not None and not loading and not self._loading_scene and not self._entered_entrance:
+                await self.detected_new_scene(ctx)
 
+            # Nothing happens while loading
+            if ctx.server and not loading and not self._loading_scene and not self._entered_entrance:
                 # If new file, set up starting flags
                 if slot_memory == 0:
                     if await self.watched_intro_cs(ctx):  # Check if watched intro cs
@@ -442,17 +445,19 @@ class DSZeldaClient(BizHawkClient):
                     await self._process_checked_locations(ctx, None, detection_type=self.getting_location_type)
 
                 # Process received items
-                if num_received_items is not None and num_received_items < len(ctx.items_received):
-                    if self._just_entered_game:
-                        self._log_received_items = True
-                    await self._process_received_items(ctx, num_received_items, self._log_received_items)
-                else:
-                    self._log_received_items = False
+                if num_received_items is not None:
+                    if num_received_items < len(ctx.items_received):
+                        print(f"Received items: {num_received_items}")
+                        if self._just_entered_game:
+                            self._log_received_items = True
+                        await self._process_received_items(ctx, num_received_items, self._log_received_items)
+                    else:
+                        self._log_received_items = False
 
-                if num_received_items > len(ctx.items_received):
-                    await self.addr_received_item_index.overwrite(ctx, len(ctx.items_received))
-                    logger.info(f"Save file has more items than Multiworld. Probable cause: loaded wrong save file. \n"
-                                f"Reset item count to Multiworld's. If this is the wrong save file, you can safely quit without saving.")
+                    if num_received_items > len(ctx.items_received):
+                        await self.addr_received_item_index.overwrite(ctx, len(ctx.items_received))
+                        logger.info(f"Save file has more items than Multiworld. Probable cause: loaded wrong save file. \n"
+                                    f"Reset item count to Multiworld's. If this is the wrong save file, you can safely quit without saving.")
 
                 # Exit location received cs
                 if self.receiving_location and not self.getting_location:
@@ -485,6 +490,9 @@ class DSZeldaClient(BizHawkClient):
 
                         self.delay_pickup = None
                         self.last_key_count = 0
+                        if self.last_vanilla_item:
+                            print("Delay Pickup is removing vanilla item")
+                            await self._remove_vanilla_item(ctx, num_received_items)
 
                     # Remove vanilla item
                     elif self.last_vanilla_item:
@@ -579,6 +587,12 @@ class DSZeldaClient(BizHawkClient):
         except bizhawk.RequestFailedError:
             # Exit handler and return to main loop to reconnect
             print("Couldn't read data")
+
+    async def detected_new_scene(self, ctx: "BizHawkClientContext"):
+        """
+        Called on having detected a new scene, after updating entrance warp and setting dynaflags etc.
+        """
+        pass
 
     async def update_main_read_list(self, ctx: "BizHawkClientContext", stage: int, in_game=True):
         """
@@ -1441,7 +1455,7 @@ class DSZeldaClient(BizHawkClient):
         :return:
         """
         key_address = self.key_address = await self.get_small_key_address(ctx)
-        key_data = self.dungeon_key_data.get(current_stage, None)
+        key_data = self.dungeon_key_data.get(current_stage, {})
         tracker = key_data["address"]
         read_list = [key_address, tracker]
         key_values = await read_multiple(ctx, read_list)
@@ -1572,6 +1586,8 @@ class DSZeldaClient(BizHawkClient):
             self.last_saved_scene = self.current_scene
             await self.store_data(ctx, storage_key(ctx, save_key), self.last_saved_scene, "replace", default=0)
             self.save_spam_protection = True
+            return True
+        return False
 
     async def get_saved_scene(self, ctx, save_key):
         """

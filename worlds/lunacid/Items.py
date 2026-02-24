@@ -181,7 +181,7 @@ def create_spells(item_factory: LunacidItemFactory, equipment_by_elements: Dict[
 
 
 def determine_starting_weapon(random: Random, options: LunacidOptions) -> str:
-    starting_selection = starting_weapon
+    starting_selection = starting_weapon.copy()
     if options.shopsanity:
         starting_selection += shop_starting_weapons
     if options.dropsanity:

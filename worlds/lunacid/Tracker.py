@@ -29,6 +29,8 @@ def setup_options_from_slot_data(world: "LunacidWorld"):
             world.options.secret_door_lock.value = world.passthrough["secret_door_lock"]
             world.options.switch_locks.value = world.passthrough["switch_locks"]
             world.options.door_locks.value = world.passthrough["door_locks"]
+            world.options.challenges.value = world.passthrough["challenges"]
+            world.options.tricks_and_glitches.value = world.passthrough["tricks_and_glitches"]
             world.starting_weapon = world.passthrough["starting_weapon"]
             world.weapon_elements = world.passthrough["elements"]
             stats = world.passthrough["created_class_stats"]

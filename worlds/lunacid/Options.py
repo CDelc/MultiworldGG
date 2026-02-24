@@ -210,11 +210,10 @@ class TricksAndGlitches(OptionSet):
     Rock Bridge Skip: Skipping the Vampiric Symbol doors in Castle Le Fanu with Rock Bridge is logical.
     Early Surface: Removes logic for reaching the surface entrances from Wing's Rest and Hollow Basin (requires about 20 DEX only).
     Barrier Skip: Skips requiring the Earth and Water Talismans.
-    Melee Window: Some non-ranged weapons and spells can hit the window if you rock bridge to it.  Puts these in logic.
     """
     internal_name = "tricks_and_glitches"
     display_name = "Tricks & Glitches"
-    valid_keys = ["Lightless", "Rock Bridge Skip", "Early Surface", "Barrier Skip", "Melee Window"]
+    valid_keys = ["Lightless", "Rock Bridge Skip", "Early Surface", "Barrier Skip"]
     default = []
 
 

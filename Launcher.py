@@ -10,6 +10,7 @@ Additional components can be added to worlds.LauncherComponents.components.
 
 import argparse
 import logging
+import re
 import logging.handlers
 import multiprocessing
 import os
@@ -252,6 +253,11 @@ def run_gui(launch_components: list[Component], args: Any) -> None:
     from kivymd.uix.textfield import MDTextField
     from kivy.clock import Clock
     from kivy.uix.widget import Widget
+    from kivy.uix.boxlayout import BoxLayout
+    from kivy.uix.scrollview import ScrollView
+    from kivy.uix.label import Label
+    from kivy.uix.popup import Popup
+    from kivy.graphics import Color, Rectangle
     from kivymd.uix.dialog import (
         MDDialog,
         MDDialogHeadlineText,
@@ -419,47 +425,150 @@ def run_gui(launch_components: list[Component], args: Any) -> None:
 
         def _maybe_show_update_dialog(self, dt):
             try:
-                latest_ver, download_url = get_latest_release_info()
+                latest_ver, download_url, changelog = get_latest_release_info()
             except Exception as e:
                 logging.warning("Launcher update check failed: %s", e)
                 return
 
             if latest_ver > Utils.version_tuple:
 
-                dialog = MDDialog(
-                    MDDialogHeadlineText(
-                        text="Update Available",
-                        halign="center",
-                    ),
-                    MDDialogSupportingText(
-                        text=(
-                            f"A new version of {Utils.instance_name} is available: "
-                            f"{latest_ver.as_simple_string()}\n\n"
-                            f"You are currently running version {Utils.version_tuple.as_simple_string()}.\n\n"
-                            "Download and install the update now?"
-                        ),
-                        halign="left",
-                    ),
-                    MDDialogButtonContainer(
-                        Widget(),
-                        MDButton(
-                            MDButtonText(text="Later"),
-                            style="text",
-                            on_release=lambda *a: dialog.dismiss()
-                        ),
+                def _md_to_kivy(text: str) -> str:
+                    def inline(s: str) -> str:
+                        s = re.sub(r"\[([^\]]*)\]\([^\)]*\)", r"\1", s)  # [text](url) → text
+                        s = s.replace("[", r"\[")                          # escape literal [
+                        s = re.sub(r"\*\*(.+?)\*\*", r"[b]\1[/b]", s)   # **bold**
+                        s = re.sub(r"__(.+?)__",      r"[b]\1[/b]", s)   # __bold__
+                        s = re.sub(r"\*(.+?)\*",      r"[i]\1[/i]", s)   # *italic*
+                        s = re.sub(r"`(.+?)`", r"[color=#79b8ff]\1[/color]", s)  # `code`
+                        return s
+                    out = []
+                    for line in text.split("\n"):
+                        s = line.strip()
+                        if s.startswith("## "):
+                            out.append(f"[b][color=#aaddff]{inline(s[3:])}[/color][/b]")
+                        elif s.startswith("### "):
+                            out.append(f"[b]{inline(s[4:])}[/b]")
+                        elif s.startswith("# "):
+                            out.append(f"[b][color=#ffffff]{inline(s[2:])}[/color][/b]")
+                        elif re.match(r"^[-*+] ", s):
+                            out.append(f"  \u2022 {inline(s[2:])}")
+                        elif re.match(r"^---+$|^\*\*\*+$", s):
+                            out.append("\u2500" * 40)
+                        else:
+                            out.append(inline(line))
+                    return "\n".join(out)
 
-                        MDButton(
-                            MDButtonText(text="Update Now"),
-                            style="filled",
-                            on_release=lambda *a: self._on_user_requested_update(dialog, download_url)
-                        ),
-                        spacing="8dp",
-                    ),
-                    size_hint=(0.8, None),
+                # --- Right column: terminal-style changelog box ---
+                changelog_label = Label(
+                    text=_md_to_kivy(changelog),
+                    size_hint_y=None,
+                    halign="left",
+                    valign="top",
+                    markup=True,
+                    font_size="12sp",
+                    color=(0.85, 0.85, 0.85, 1),
+                    padding=(8, 8),
+                )
+                changelog_label.bind(
+                    width=lambda inst, val: setattr(inst, "text_size", (val, None))
+                )
+                changelog_label.bind(
+                    texture_size=lambda inst, val: setattr(inst, "height", val[1])
                 )
 
-                dialog.height = dp(200)
-                dialog.open()
+                changelog_scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
+                changelog_scroll.add_widget(changelog_label)
+
+                with changelog_scroll.canvas.before:
+                    Color(0.08, 0.08, 0.08, 1)
+                    bg_rect = Rectangle(pos=changelog_scroll.pos, size=changelog_scroll.size)
+                changelog_scroll.bind(
+                    pos=lambda inst, val: setattr(bg_rect, "pos", val),
+                    size=lambda inst, val: setattr(bg_rect, "size", val),
+                )
+
+                # --- Left column: version, disclaimer, buttons ---
+                version_label = Label(
+                    text=(
+                        f"[b]{Utils.instance_name} {latest_ver.as_simple_string()}[/b]"
+                        f" is available\n\nYou are currently using version {Utils.version_tuple.as_simple_string()}."
+                    ),
+                    size_hint_y=None,
+                    halign="left",
+                    valign="top",
+                    markup=True,
+                    font_size="20sp",
+                    color=(0.9, 0.9, 0.9, 1),
+                )
+                version_label.bind(
+                    width=lambda inst, val: setattr(inst, "text_size", (val, None))
+                )
+                version_label.bind(
+                    texture_size=lambda inst, val: setattr(inst, "height", val[1])
+                )
+
+                disclaimer_label = Label(
+                    text=(
+                        "If you are currently playing a game listed in the changelog, "
+                        "consider finishing it before updating."
+                    ),
+                    size_hint=(1, None),
+                    halign="left",
+                    valign="top",
+                    markup=False,
+                    font_size="17sp",
+                    color=(1.0, 0.85, 0.4, 1),
+                )
+                disclaimer_label.bind(
+                    width=lambda inst, val: setattr(inst, "text_size", (val, None))
+                )
+                disclaimer_label.bind(
+                    texture_size=lambda inst, val: setattr(inst, "height", val[1])
+                )
+
+                later_btn = MDButton(MDButtonText(text="Later"), style="text")
+                update_btn = MDButton(MDButtonText(text="Update Now"), style="filled")
+
+                btn_row = BoxLayout(
+                    orientation="horizontal",
+                    size_hint_y=None,
+                    height=dp(48),
+                    spacing=dp(8),
+                )
+                btn_row.add_widget(Widget())
+                btn_row.add_widget(later_btn)
+                btn_row.add_widget(update_btn)
+
+                left_col = BoxLayout(
+                    orientation="vertical",
+                    size_hint_x=0.42,
+                    spacing=dp(8),
+                )
+                left_col.add_widget(version_label)
+                left_col.add_widget(disclaimer_label)
+                left_col.add_widget(Widget())
+                left_col.add_widget(btn_row)
+
+                # --- Two-column body inside Popup ---
+                body = BoxLayout(
+                    orientation="horizontal",
+                    spacing=dp(12),
+                    padding=(dp(12), dp(16), dp(12), dp(12)),
+                )
+                body.add_widget(left_col)
+                body.add_widget(changelog_scroll)
+
+                popup = Popup(
+                    title="Update Available",
+                    title_align="center",
+                    title_size="26sp",
+                    content=body,
+                    size_hint=(0.85, 0.62),
+                    auto_dismiss=False,
+                )
+                later_btn.bind(on_release=popup.dismiss)
+                update_btn.bind(on_release=lambda *a: self._on_user_requested_update(popup, download_url))
+                popup.open()
 
         def _on_user_requested_update(self, dialog, download_url):
             dialog.dismiss()
@@ -476,7 +585,7 @@ def run_gui(launch_components: list[Component], args: Any) -> None:
 
             Clock.schedule_once(lambda dt: self._finalize_update(dialog, download_url), 0.5)
 
-        def _finalize_update(self, dialog: MDDialog, download_url: str):
+        def _finalize_update(self, dialog, download_url: str):
             dialog.dismiss()
             download_and_install_win(download_url)
             self.stop()

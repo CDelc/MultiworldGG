@@ -10,6 +10,7 @@ import itertools
 from BaseClasses import ItemClassification, Location, LocationProgressType, Region, Item, MultiWorld, Tutorial
 from Fill import fill_restrictive
 
+from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import add_rule
 
@@ -273,11 +274,22 @@ class CrossCodeWorld(World):
         ]))
 
     def generate_early(self):
+        if (
+            self.options.chest_lock_randomization.value and
+            self.options.chest_key_shuffle.value in (
+                self.options.chest_key_shuffle.option_own_dungeons,
+                self.options.chest_key_shuffle.option_original_dungeons
+            )
+        ):
+            raise OptionError(
+                "Chest lock randomization is incompatible with "
+                "chest key placement in own dungeons or original dungeons"
+            )
+
         self.fill_pools()
 
         self.variables = defaultdict(list)
 
-        start_inventory = self.options.start_inventory.value
         # self.logic_mode = self.options.logic_mode.current_key
         self.logic_mode = "open"
         self.region_pack = self.world_data.region_packs[self.logic_mode]
@@ -303,7 +315,8 @@ class CrossCodeWorld(World):
         self.required_items = Counter()
         self.required_items.update(self.pools.item_pools["required"])
 
-        for name in self._equip_chain_names:
+        # self._equip_chain_names is a set, so sort for deterministic results.
+        for name in sorted(self._equip_chain_names):
             self.required_items.update(self.pools.item_pools[f"pool:{name}"])
 
         if self.options.shop_rando.value:
@@ -327,16 +340,16 @@ class CrossCodeWorld(World):
             self.multiworld.push_precollected(self.create_item(green_leaf_shade_name))
 
         if self.options.start_with_chest_detector.value:
-            start_inventory["Chest Detector"] = 1
+            self.multiworld.push_precollected(self.create_item("Chest Detector"))
 
         if self.options.start_with_discs.value & StartWithDiscs.option_insight:
-            start_inventory["Disc of Insight"] = 1
+            self.multiworld.push_precollected(self.create_item("Disc of Insight"))
         if self.options.start_with_discs.value & StartWithDiscs.option_flora:
-            start_inventory["Disc of Flora"] = 1
+            self.multiworld.push_precollected(self.create_item("Disc of Flora"))
 
         if self.options.start_with_pet.value:
             chosen_pet = self.pools.pull_items_from_pool("pets", self.random)[0]
-            start_inventory[chosen_pet.name] = 1
+            self.multiworld.push_precollected(self.create_item(chosen_pet.name))
 
         if self.options.chest_lock_randomization.value:
             self._chest_lock_weights = list(itertools.accumulate([
@@ -518,7 +531,8 @@ class CrossCodeWorld(World):
         replaced: dict[str, list[CrossCodeItem]] = defaultdict(list)
 
         # deal with progressive chains
-        for chain_name in self.enabled_chain_names:
+        # self.enabled_chain_names is a set, so sort for deterministic results.
+        for chain_name in sorted(self.enabled_chain_names):
             chain = self.pools.progressive_chains[chain_name]
             # item_to_add is the "Progressive [X]" item
             item_to_add = self.world_data.progressive_items[chain_name]
@@ -584,6 +598,15 @@ class CrossCodeWorld(World):
                 if loc.data.access.cond is not None:
                     add_rule(loc, condition_satisfied(self.player, loc.data.access.cond, loc.data.code, self.logic_dict))
 
+    def get_pre_fill_items(self) -> list[Item]:
+        pre_fill_items = self.pre_fill_any_dungeon.copy()
+        # self.dungeon_areas is a set, so sort for deterministic results. This probably isn't necessary in most cases,
+        # but other apworlds could do whatever they like with the returned list, so it is safer to return a list with a
+        # deterministic order.
+        for dungeon in sorted(self.dungeon_areas):
+            pre_fill_items.extend(self.pre_fill_specific_dungeons[dungeon])
+        return pre_fill_items
+
     def pre_fill(self):
         allowed_locations_by_item: dict[Item, set[CrossCodeLocation]] = {}
         all_items_list = list(self.pre_fill_any_dungeon)
@@ -618,36 +641,53 @@ class CrossCodeWorld(World):
         for item in self.pre_fill_any_dungeon:
             allowed_locations_by_item[item] = all_locations
 
-        all_locations_list = list(all_locations)
+        # all_locations is a set, so sort for deterministic results.
+        all_locations_list = sorted(all_locations)
         self.random.shuffle(all_locations_list)
 
         # Get the list of items and sort by priority
         def priority(item: CrossCodeItem) -> int:
             # 0 - Master dungeon-specific
-            # 1 - Element dungeon-specific
-            # 2 - Key dungeon-specific
+            # 1 - Key dungeon-specific
+            # 2 - Element dungeon-specific
             # 3 - Other dungeon-specific
             # 4 - Master any local dungeon
-            # 5 - Element any local dungeon
-            # 6 - Key any local dungeon
+            # 5 - Key any local dungeon
+            # 6 - Element any local dungeon
             # 7 - Other any local dungeon
-            i = 3
-            if item.name in ("Heat", "Cold", "Shock", "Wave"):
-                i = 0
             if "Master" in item.name:
-                i = 1
+                i = 0
             elif "Key" in item.name:
+                i = 1
+            elif item.name in ("Heat", "Cold", "Shock", "Wave"):
                 i = 2
+            else:
+                i = 3
             if allowed_locations_by_item[item] is all_locations:
                 i += 4
             return i
-        all_items_list.sort(key=priority)
+        # Items are placed starting from the end of the list.
+        all_items_list.sort(key=priority, reverse=True)
 
         # Set up state
-        all_state = self.multiworld.get_all_state(use_cache=False)
+        all_state = self.multiworld.get_all_state(use_cache=False, perform_sweep=False)
         # Remove dungeon items we are about to put in from the state so that we don't double count
         for item in all_items_list:
             all_state.remove(item)
+
+        # Prevent minimal accessibility from locking non-required keys, and other dungeon items, behind themselves when
+        # the goal is reachable without them.
+        if self.options.accessibility == "minimal":
+            if all_state.has("Victory", self.player):
+                # Remove the event that the completion_condition checks for, so that the completion condition will
+                # return False.
+                all_state.remove_item("Victory", self.player)
+            else:
+                # Tell the all_state that it has already collected the item from the location the "Victory" event is
+                # placed at, so that it won't collect the "Victory" event when sweeping.
+                all_state.advancements.add(self.get_location("The Creator"))
+
+        all_state.sweep_for_advancements()
 
         cclogger.debug("master_key_shuffle: %s", self.options.master_key_shuffle)
         cclogger.debug("small_key_shuffle: %s", self.options.small_key_shuffle)

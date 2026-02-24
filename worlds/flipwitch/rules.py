@@ -125,10 +125,12 @@ class FlipwitchRules:
             GhostCastleEntrance.ghost_stairwell_mid_to_small_hallway: lambda state: state.has(Upgrade.bewitched_bubble, self.player),
             GhostCastleEntrance.small_hallway_to_ghost_stairwell_mid: lambda state: state.has(Upgrade.bewitched_bubble, self.player),
             GhostCastleEntrance.large_hall_bottom_to_large_hall_top: lambda state: self.can_double_jump(state),
-            GhostCastleEntrance.large_hall_top_to_shrub_room: lambda state: state.has(Key.rose_garden, self.player),
+            GhostCastleEntrance.large_hall_top_to_shrub_room: lambda state: state.has(Key.rose_garden, self.player) and (self.can_double_jump(state) or self.can_roll(state)),
             GhostCastleEntrance.shrub_room_to_large_hall_top: lambda state: state.has(Key.rose_garden, self.player),
             GhostCastleEntrance.shrub_room_to_ladder_room: lambda state: self.can_double_jump(state),
             GhostCastleEntrance.ladder_room_to_upper_halls: lambda state: state.has(Upgrade.bewitched_bubble, self.player) or self.can_roll(state) or
+                                                                          self.can_triple_jump(state) or state.has(Upgrade.demon_wings, self.player),
+            GhostCastleEntrance.upper_halls_to_ladder_room:  lambda state: state.has(Upgrade.bewitched_bubble, self.player) or self.can_roll(state) or
                                                                           self.can_triple_jump(state) or state.has(Upgrade.demon_wings, self.player),
             GhostCastleEntrance.fashion_room_to_upper_halls: lambda state: state.has(Upgrade.bewitched_bubble, self.player) or self.can_roll(state) or
                                                                           self.can_triple_jump(state) or state.has(Upgrade.demon_wings, self.player),

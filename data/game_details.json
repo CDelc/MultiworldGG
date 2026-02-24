@@ -6047,6 +6047,34 @@
         "keywords": [],
         "release_date": null
     },
+    "Vampire Survivors": {
+        "igdb_id": "186725",
+        "world_name": "Vampire Survivors",
+        "igdb_name": "Vampire Survivors",
+        "us_rating": [],
+        "player_perspectives": [
+            "Bird view / Isometric"
+        ],
+        "genres": [
+            "Role-playing (RPG)",
+            "Adventure",
+            "Indie",
+            "Arcade"
+        ],
+        "themes": [
+            "Action",
+            "Fantasy",
+            "Survival"
+        ],
+        "keywords": [
+            "pixel graphics",
+            "increasing difficulty",
+            "roguelite",
+            "bullet heaven",
+            "danmaku"
+        ],
+        "release_date": 2022
+    },
     "VVVVVV": {
         "igdb_id": "1990",
         "world_name": "VVVVVV",

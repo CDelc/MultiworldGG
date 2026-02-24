@@ -151,6 +151,7 @@ class LunacidWorld(World):
         self.custom_class_stats = {}
 
     def generate_early(self) -> None:
+        Tracker.setup_options_from_slot_data(self)
         self.package_custom_class()
         self.level = self.determine_starting_level()
         self.enemy_random_data, enemy_regions = self.randomize_enemies()
@@ -161,7 +162,6 @@ class LunacidWorld(World):
             self.enemy_regions = enemy_regions
         if self.options.challenges == self.options.challenges.option_exp:
             self.options.levelsanity.value = self.options.levelsanity.option_false
-        Tracker.setup_options_from_slot_data(self)
 
     def create_item(self, name: str, override_classification: ItemClassification = None) -> "LunacidItem":
         if name == self.glitches_item_name:
@@ -224,10 +224,10 @@ class LunacidWorld(World):
 
         if self.options.etnas_pupil and self.options.dropsanity == self.options.dropsanity.option_randomized:
             alchemy_items = []
-            for alchemy_item in Alchemy.necessary_alchemy_items:
-                alchemy_items.append(Item(alchemy_item, ItemClassification.progression | ItemClassification.useful,
-                                          self.item_name_to_id[alchemy_item], self.player))
-            alchemy_items *= 5  # make sure there's enough of them to go around
+            for _ in range(5):  # make sure there's enough of them to go around
+                for alchemy_item in Alchemy.necessary_alchemy_items:
+                    alchemy_items.append(Item(alchemy_item, ItemClassification.progression | ItemClassification.useful,
+                                              self.item_name_to_id[alchemy_item], self.player))
             self.local_alchemy = alchemy_items
 
         if self.multiworld.players == 1:
@@ -538,7 +538,7 @@ class LunacidWorld(World):
         slot_data = {
             "ut_seed": self.seed,
             "seed": self.random.randrange(1000000000),  # Seed should be max 9 digits
-            "client_version": "1.0.15",
+            "client_version": "1.0.9",
             "rolled_month": self.rolled_month,
             "starting_weapon": self.starting_weapon.name,
             "elements": self.weapon_elements,
@@ -554,7 +554,8 @@ class LunacidWorld(World):
                                    "quenchsanity", "etnas_pupil", "switch_locks", "door_locks", "random_elements",
                                    "secret_door_lock", "death_link", "starting_class",
                                    "starting_area", "levelsanity", "bookworm",
-                                   "grasssanity", "breakables", "total_strange_coin", "random_equip_stats", "silver_link"),
+                                   "grasssanity", "breakables", "total_strange_coin", "random_equip_stats", "silver_link",
+                                   "challenges", "tricks_and_glitches"),
             "entrances": self.randomized_entrances
         }
 
