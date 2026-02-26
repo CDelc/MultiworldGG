@@ -320,6 +320,10 @@ class BuildExeCommand(cx_Freeze.command.build_exe.build_exe):
         # need to finish download before copying
         sni_thread.join()
 
+        # overridden buildfolders are not given as a path so below path concatenation won't work
+        if not isinstance(self.buildfolder, Path):
+            self.buildfolder = Path(self.buildfolder)
+
         # include_files seems to not be done automatically. implement here
         for src, dst in self.include_files:
             print(f"copying {src} -> {self.buildfolder / dst}")
