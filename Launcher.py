@@ -135,7 +135,7 @@ components.extend([
               description="Generate template YAMLs for currently installed games."),
     Component("MultiworldGG Website", func=lambda: webbrowser.open("https://multiworld.gg/"),
               description="Open multiworld.gg in your browser."),
-    Component("ZSR Discord", icon="discord", func=lambda: webbrowser.open("https://discord.gg/zsr"),
+    Component("Unofficial AP Discord", icon="discord", func=lambda: webbrowser.open("https://discord.multiworld.gg"),
               description="Join the Discord server to play public multiworlds, report issues, or just chat!"),
     Component("Browse Files", func=browse_files,
               description="Open the MultiworldGG installation folder in your file browser."),

@@ -37,7 +37,7 @@ If you would like to validate your config file to make sure it works, you may do
 ## Generating a Single-Player Game
 
 1. After modifying your yaml, place it into your MultiworldGG/player folder
-   - Alternately, navigate to the [Player Settings](../player-settings) page, configure your options,
+   - Alternately, navigate to the [Player Settings](../player-options) page, configure your options,
       and click the "Generate Game" button.
 2. Open the MultiworldGG Launcher and click "Generate". This will create a zip file in MultiworldGG/output
 3. Navigate to the MultiworldGG website and go to the Host Game page

@@ -81,7 +81,7 @@ the first Karnak escape.
 
 ## Where is the settings page?
 
-The settings page [can be found here](../player-settings).
+The settings page [can be found here](../player-options).
 
 ## When does a player receive items?
 

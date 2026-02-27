@@ -258,6 +258,38 @@
         ],
         "release_date": 2023
     },
+    "AM2R: Return of Samus": {
+        "igdb_id": "27238",
+        "world_name": "AM2R",
+        "igdb_name": "AM2R: Return of Samus",
+        "us_rating": [],
+        "player_perspectives": [
+            "Side view"
+        ],
+        "genres": [
+            "Platform",
+            "Adventure",
+            "Indie"
+        ],
+        "themes": [
+            "Action",
+            "Science fiction"
+        ],
+        "keywords": [
+            "exploration",
+            "metroidvania",
+            "action-adventure",
+            "side-scrolling",
+            "freeware",
+            "unofficial",
+            "exploration driven",
+            "copyright infringement",
+            "metroid",
+            "fangame",
+            "unofficial remake"
+        ],
+        "release_date": 2016
+    },
     "An Untitled Story": {
         "igdb_id": "72926",
         "world_name": "An Untitled Story",
@@ -4920,6 +4952,28 @@
             "retroachievements"
         ],
         "release_date": 2003
+    },
+    "Sonic Robo Blast 2": {
+        "igdb_id": "341762",
+        "world_name": "Sonic Robo Blast 2",
+        "igdb_name": "Sonic Robo Blast 2",
+        "us_rating": [],
+        "player_perspectives": [
+            "Third person"
+        ],
+        "genres": [
+            "Platform"
+        ],
+        "themes": [
+            "Action"
+        ],
+        "keywords": [
+            "homebrew",
+            "unofficial",
+            "fangame",
+            "retroachievements"
+        ],
+        "release_date": 2024
     },
     "Spyro 3": {
         "igdb_id": "1578",

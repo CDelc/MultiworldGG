@@ -381,7 +381,7 @@ def favicon():
 
 @app.route('/discord')
 def discord():
-    return redirect("https://discord.gg/zsr")
+    return redirect("https://discord.multiworld.gg")
 
 
 @app.route('/datapackage')

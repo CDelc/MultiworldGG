@@ -38,7 +38,7 @@ Run the MultiworldGGLauncher.exe from your MultiworldGG install and click `Gener
 This will produce a `/Players/Templates` folder in your MultiworldGG install, which contains default config files for 
 every game in your `custom_worlds` and `lib/worlds` folder. You can manually edit the config file using a text editor of your choice.
 
-Alternately, the [Player Settings](../player-settings) page on the website allows you to configure
+Alternately, the [Player Settings](../player-options) page on the website allows you to configure
 your personal settings and export a config file from them.
 
 ### Verifying your config file
@@ -49,7 +49,7 @@ If you would like to validate your config file to make sure it works, you may do
 ## Generating a Single-Player Game
 
 1. After modifying your yaml, place it into your MultiworldGG/player folder
-   - Alternately, navigate to the [Player Settings](../player-settings) page, configure your options,
+   - Alternately, navigate to the [Player Settings](../player-options) page, configure your options,
       and click the "Generate Game" button.
 2. Open the MultiworldGG Launcher and click "Generate". This will create a zip file in MultiworldGG/output
    - You will need to open this .zip to get your .aplm patch file if you are not using the MultiworldGG website

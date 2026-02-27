@@ -2,7 +2,7 @@
 
 ## Où se trouve la page des paramètres ?
 
-La [page des paramètres du joueur pour ce jeu](../player-settings) contient la plupart des options dont vous avez besoin pour configurer et exporter un fichier de configuration. 
+La [page des paramètres du joueur pour ce jeu](../player-options) contient la plupart des options dont vous avez besoin pour configurer et exporter un fichier de configuration. 
 
 ## Qu'apporte la randomisation à ce jeu ?
 
