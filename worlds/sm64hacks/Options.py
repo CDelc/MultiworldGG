@@ -99,11 +99,11 @@ def _format_display_name(filename: str) -> str:
 def _populate_json_file_options():
     """Dynamically populate JsonFile class with options from GitHub."""
     json_files = _get_json_files_from_github()
-    
+
     if not json_files:
         logger.warning("No JSON files found from GitHub, using fallback list")
         json_files = [
-            "Super Mario 64.json",  # default
+            "Super Mario 64.json",
             "24 Hour Hack.json",
             "Aventure Alpha Redone.json",
             "Cursed Castles.json",
@@ -148,44 +148,32 @@ def _populate_json_file_options():
             "Ztar Attack 2.json",
             "Ztar Attack Rebooted.json",
         ]
-    
-    JsonFile._value_to_filename = {}
-    JsonFile._value_to_display_name = {}
-    
+
     option_value = 1
     new_options = {}
+    new_name_lookup = {}
     for json_file in sorted(json_files):
         option_name = _filename_to_option_name(json_file)
-        display_name = _format_display_name(json_file)
         setattr(JsonFile, f"option_{option_name}", option_value)
-        new_options[option_name.lower()] = option_value
-        JsonFile._value_to_filename[option_value] = json_file
-        JsonFile._value_to_display_name[option_value] = display_name
+        new_options[json_file.lower()] = option_value
+        new_name_lookup[option_value] = json_file
         option_value += 1
-    
+
     JsonFile.options.update(new_options)
-    JsonFile.name_lookup.update({option_id: name for name, option_id in new_options.items()})
-    
+    JsonFile.name_lookup.update(new_name_lookup)
+
     default_value = None
-    default_found = False
-    
     for json_file in sorted(json_files):
-        normalized_clean = re.sub(r'[^a-z0-9]', '', json_file.lower().replace('.json', '').strip())
-        if normalized_clean == "supermario64" or "supermario64" in normalized_clean:
-            option_name = _filename_to_option_name(json_file)
-            if hasattr(JsonFile, f"option_{option_name}"):
-                default_value = getattr(JsonFile, f"option_{option_name}")
-                default_found = True
-                break
-    
-    if default_found and default_value is not None and default_value in JsonFile.name_lookup:
+        normalized = re.sub(r'[^a-z0-9]', '', json_file.lower().replace('.json', ''))
+        if normalized == "supermario64" or "supermario64" in normalized:
+            default_value = new_options.get(json_file.lower())
+            break
+
+    if default_value is not None:
         JsonFile.default = default_value
     elif option_value > 1:
         JsonFile.default = 1
-        if default_found:
-            logger.warning(f"Found Super Mario 64 (value: {default_value}) but it's not in name_lookup. Using first option instead.")
-        else:
-            logger.warning(f"Could not find Super Mario 64, using first option (value: {JsonFile.default})")
+        logger.warning("Could not find Super Mario 64, using first option as default")
     else:
         logger.error("No options were populated, cannot set default")
 
@@ -230,33 +218,18 @@ class RandomizeMoat(Toggle):
     display_name = "Randomize Moat"
 
 class JsonFile(TextChoice):
-    """Name of the hack to use.
-    Custom jsons can be used with offline generation by placing the json in the data/sm64hacks folder. Note that Custom Value is not supported in web generation."""
+    """Name of the hack to use. Set to the JSON filename, e.g. 'Star Revenge 7.json'.
+    For custom JSONs, place the file in data/sm64hacks/custom_jsons/ and use its filename here.
+    Note that custom values are not supported in web generation."""
     auto_display_name = True
     display_name = "Hack to Use"
     default = 1  # Will be set by _populate_json_file_options()
-    _value_to_filename = {}  # Mapping of option value -> filename
-    _value_to_display_name = {}  # Mapping of option value -> formatted display name
-    
+
     @classmethod
     def get_option_name(cls, value) -> str:
-        # Use the formatted display name if available (for dynamic options from GitHub)
-        if hasattr(cls, '_value_to_display_name') and value in cls._value_to_display_name:
-            return cls._value_to_display_name[value]
-        
-        # Fallback to the old format for custom values or edge cases
-        if cls.auto_display_name:
-            option_name = cls.name_lookup[value]
-            if "_dot_" in option_name:
-                option_name = option_name.replace("_dot_", ".")
-            return option_name.replace("_", " ").title()
-        else:
-            return cls.name_lookup[value]
-    
-    @classmethod
-    def get_filename_from_value(cls, value):
-        """Get the JSON filename from an option value."""
-        return cls._value_to_filename.get(value)
+        if isinstance(value, str):
+            return _format_display_name(value)
+        return _format_display_name(cls.name_lookup[value])
 
 class FillerTrapPercentage(Range):
     """Decides what percent chance of filler items should be traps, compared to coins. This only matters if some items need to be created outside of the APWorld (for example, due to item_links), not for internal junk (i.e. Troll Stars)

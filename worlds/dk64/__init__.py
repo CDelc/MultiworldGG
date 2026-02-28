@@ -73,12 +73,10 @@ if baseclasses_loaded:
                     # Write the ZIP file to the destination
                     with open(zip_dest, "wb") as f:
                         f.write(zip_data)
-                    print(f"Copied {zip_path} to {zip_dest}")
 
                     # Extract the ZIP file
                     with zipfile.ZipFile(zip_dest, "r") as zip_ref:
                         zip_ref.extractall(temp_dir)
-                    print(f"Extracted {zip_dest} into {temp_dir}")
 
         except PermissionError:
             display_error_box("Permission Error", "Unable to install Dependencies to AP, please try to install AP as an admin.")
