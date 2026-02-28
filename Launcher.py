@@ -214,7 +214,7 @@ def launch(exe, in_terminal=False):
             # Attempt to use xdg-terminal-exec first to allow user-defined defaults
             xdg = which('xdg-terminal-exec')
             if xdg:
-                subprocess.Popen([xdg, shlex.join(exe)])
+                subprocess.Popen([xdg, '--', *exe])
                 return
             terminal = which('x-terminal-emulator') or which('gnome-terminal') or which('xterm')
             if terminal:
