@@ -1234,10 +1234,12 @@ def collect_hint_location_name(ctx: Context, team: int, slot: int, location: str
 
 
 def collect_hint_location_id(ctx: Context, team: int, slot: int, seeked_location: int,
-                             status: HintStatus | None = HintStatus.HINT_UNSPECIFIED) -> typing.List[Hint]:
+                             status: HintStatus | None = HintStatus.HINT_UNSPECIFIED,
+                             allow_hidden: bool = True) -> typing.List[Hint]:
     """
     Collect a new hint for a given location id, with a given status (defaults to "unspecified").
     If None is passed for the status, then an automatic status will be determined from the item's quality.
+    If allow_hidden is False, the hint will always be fully visible (used for externally triggered hints).
     """
     prev_hint = ctx.get_hint(team, slot, seeked_location)
     if prev_hint:
@@ -1249,7 +1251,8 @@ def collect_hint_location_id(ctx: Context, team: int, slot: int, seeked_location
         found = seeked_location in ctx.location_checks[team, slot]
         entrance = ctx.er_hint_data.get(slot, {}).get(seeked_location, "")
         hidden_display = (
-            ((ctx.hint_mode == "own" and slot == receiving_player) or ctx.hint_mode == "all")
+            allow_hidden
+            and ((ctx.hint_mode == "own" and slot == receiving_player) or ctx.hint_mode == "all")
             and not found
         )
 
@@ -2038,7 +2041,8 @@ async def process_client_cmd(ctx: Context, client: Client, args: dict):
 
                 target_item, target_player, flags = ctx.locations[client.slot][location]
                 if create_as_hint:
-                    hints.extend(collect_hint_location_id(ctx, client.team, client.slot, location))
+                    hints.extend(collect_hint_location_id(ctx, client.team, client.slot, location,
+                                                          allow_hidden=False))
                 locs.append(NetworkItem(target_item, location, target_player, flags))
             ctx.notify_hints(client.team, hints, only_new=create_as_hint == 2, persist_even_if_found=True)
             if locs and create_as_hint:
@@ -2091,7 +2095,8 @@ async def process_client_cmd(ctx: Context, client: Client, args: dict):
                                                       "text": error_text, "original_cmd": cmd}])
                         return
 
-                hints += collect_hint_location_id(ctx, client.team, location_player, location, status)
+                hints += collect_hint_location_id(ctx, client.team, location_player, location, status,
+                                                    allow_hidden=False)
 
             # As of writing this code, only_new=True does not update status for existing hints
             ctx.notify_hints(client.team, hints, only_new=True, persist_even_if_found=True)
