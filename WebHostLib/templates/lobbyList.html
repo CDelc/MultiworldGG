@@ -1,0 +1,71 @@
+{% extends 'pageWrapper.html' %}
+
+{% block head %}
+    <title>Game Lobbies</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename="styles/lobby.css") }}" />
+{% endblock %}
+
+{% block body %}
+    {% include 'header/grassHeader.html' %}
+    <div id="lobby-list-wrapper">
+        <div id="lobby-list" class="grass-island">
+            <h1>Game Lobbies</h1>
+            <p>
+                Lobbies let you gather a group before generating a multiworld.
+                Instead of collecting everyone's YAML files yourself, create a lobby and share the link &mdash;
+                each player joins, uploads their own config, and the host generates the seed once everyone is ready.
+                Lobbies include a chat so you can coordinate settings and sort out any issues before rolling.
+            </p>
+            <div id="lobby-actions">
+                <a href="{{ url_for('lobby_create') }}">
+                    <button id="create-lobby-button">Create Lobby</button>
+                </a>
+            </div>
+            {% if lobbies %}
+                <table id="lobby-table">
+                    <thead>
+                        <tr>
+                            <th>Lobby</th>
+                            <th>Players</th>
+                            <th>YAMLs</th>
+                            <th>Status</th>
+                            <th>Password</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lobby in lobbies %}
+                            <tr>
+                                <td>{{ lobby.title }}</td>
+                                <td>{{ player_counts.get(lobby.id, 0) }}</td>
+                                <td>{{ yaml_counts.get(lobby.id, 0) }}</td>
+                                <td>
+                                    {% if lobby.state == 0 %}
+                                        <span class="status-open">Open</span>
+                                    {% elif lobby.state == 1 %}
+                                        <span class="status-generating">Generating...</span>
+                                    {% elif lobby.state == 2 %}
+                                        <span class="status-done">Done</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lobby.password_hash %}
+                                        Yes
+                                    {% else %}
+                                        No
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('lobby_view', lobby=lobby.id) }}">Join</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="no-lobbies">No active lobbies. Create one to get started!</p>
+            {% endif %}
+        </div>
+    </div>
+    {% include 'islandFooter.html' %}
+{% endblock %}

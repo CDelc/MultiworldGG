@@ -1,0 +1,170 @@
+{% extends 'pageWrapper.html' %}
+
+{% block head %}
+    <title>Lobby: {{ lobby.title }}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename="styles/lobby.css") }}" />
+{% endblock %}
+
+{% block body %}
+    {% include 'header/grassHeader.html' %}
+    <div id="lobby-wrapper">
+        <div id="lobby-container" class="grass-island">
+            <h1>{{ lobby.title }}</h1>
+
+            {% if lobby.state == -1 %}
+                <p class="lobby-expired">This lobby has expired.</p>
+            {% elif not player and lobby.state == 0 %}
+                {# Join form #}
+                <div id="lobby-join">
+                    <h2>Join Lobby</h2>
+                    <form method="post" action="{{ url_for('lobby_join', lobby=lobby.id) }}">
+                        <div class="join-field">
+                            <label for="player_name">Display Name:</label>
+                            <input type="text" id="player_name" name="player_name" required maxlength="32" placeholder="Your name">
+                        </div>
+                        {% if needs_password %}
+                            <div class="join-field">
+                                <label for="password">Password:</label>
+                                <input type="password" id="password" name="password" required placeholder="Lobby password">
+                            </div>
+                        {% endif %}
+                        <button type="submit" class="lobby-btn">Join</button>
+                    </form>
+                </div>
+            {% elif not player %}
+                {# Non-joined visitor viewing a non-open lobby #}
+                <p>This lobby is
+                    {% if lobby.state == 1 %}currently generating a seed.
+                    {% elif lobby.state == 2 %}finished. Only lobby members can access the room.
+                    {% endif %}
+                </p>
+            {% else %}
+                {# Main lobby interface #}
+                <div id="lobby-info">
+                    <span class="lobby-meta">
+                        Max YAMLs per player: {{ lobby.max_yamls_per_player }} |
+                        Timeout: {{ lobby.timeout_minutes }} min |
+                        {% if lobby.race %}Race Mode{% else %}Standard{% endif %}
+                    </span>
+                    <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
+                        {% if lobby.state == 0 %}Open
+                        {% elif lobby.state == 1 %}Generating...
+                        {% elif lobby.state == 2 %}Done
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div id="lobby-main">
+                    {# Left: Players & YAMLs #}
+                    <div id="lobby-sidebar">
+                        <h3>Players</h3>
+                        <ul id="lobby-players">
+                            {% for p in lobby.players | sort(attribute='joined_at') %}
+                                <li class="lobby-player" data-player-id="{{ p.id }}">
+                                    <strong>{{ p.player_name }}{% if p.session_id == lobby.owner %} (Host){% endif %}</strong>
+                                    <ul class="player-yamls">
+                                        {% for y in p.yamls | sort(attribute='uploaded_at') %}
+                                            <li data-yaml-id="{{ y.id }}">
+                                                {{ y.filename }}{% if y.yaml_game %} - <span class="yaml-game-name">{{ y.yaml_game }}</span>{% endif %}{% if y.yaml_player_name %} <span class="yaml-slot-name">({{ y.yaml_player_name }})</span>{% endif %}
+                                                {% if player and (p == player or is_owner) and lobby.state == 0 %}
+                                                    <button class="yaml-delete-btn" data-yaml-id="{{ y.id }}" title="Remove YAML">&times;</button>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% if is_owner and p.session_id != lobby.owner and lobby.state == 0 %}
+                                        <button class="kick-btn" data-player-id="{{ p.id }}" title="Kick player">Kick</button>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                        {% if player and lobby.state == 0 %}
+                            <div id="yaml-upload-area">
+                                <h3>Upload YAML</h3>
+                                <form id="yaml-upload-form" enctype="multipart/form-data">
+                                    <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple>
+                                    <button type="button" id="yaml-upload-btn" class="lobby-btn">Upload</button>
+                                </form>
+                                <div id="yaml-upload-drop" class="drop-zone">
+                                    <p>or drag & drop files here</p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if not is_owner and player and lobby.state == 0 %}
+                            <button id="leave-btn" class="lobby-btn lobby-btn-danger">Leave Lobby</button>
+                        {% endif %}
+                    </div>
+
+                    {# Center: Chat #}
+                    <div id="lobby-chat">
+                        <div id="chat-messages">
+                            {% for msg in recent_messages %}
+                                <div class="chat-msg {% if msg.player is none %}chat-system{% endif %}">
+                                    <span class="chat-time">{{ msg.sent_at.strftime('%H:%M') }}</span>
+                                    {% if msg.player is none %}
+                                        <span class="chat-system-text">{{ msg.content }}</span>
+                                    {% else %}
+                                        <strong class="chat-sender">{{ msg.sender_name }}:</strong>
+                                        <span class="chat-text">{{ msg.content }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if player %}
+                            <div id="chat-input-area">
+                                <input type="text" id="chat-input" maxlength="500" placeholder="Type a message...">
+                                <button id="chat-send-btn" class="lobby-btn">Send</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Generation controls #}
+                {% if lobby.state == 0 and is_owner %}
+                    <div id="lobby-generate">
+                        <button id="generate-btn" class="lobby-btn lobby-btn-primary"
+                                {% if yaml_count == 0 %}disabled{% endif %}>
+                            Generate Seed
+                        </button>
+                        <span id="generate-info">
+                            {{ yaml_count }} YAML(s) from {{ player_count }} player(s)
+                        </span>
+                        <button id="close-btn" class="lobby-btn lobby-btn-danger">Close Lobby</button>
+                    </div>
+                {% endif %}
+
+                {# Done state: links #}
+                <div id="lobby-result" {% if lobby.state != 2 %}style="display:none"{% endif %}>
+                    {% if lobby.state == 2 %}
+                        <h2>Seed Ready!</h2>
+                        {% if lobby.seed %}
+                            <p><a href="{{ url_for('view_seed', seed=lobby.seed.id) }}">View Seed</a></p>
+                        {% endif %}
+                        {% if lobby.room %}
+                            <p><a href="{{ url_for('host_room', room=lobby.room.id) }}" class="lobby-btn lobby-btn-primary">Go to Room</a></p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% include 'islandFooter.html' %}
+
+    {% if player %}
+    <script>
+        const LOBBY_ID = "{{ lobby.id | suuid }}";
+        const API_BASE = "/api/lobby/" + LOBBY_ID;
+        const IS_OWNER = {{ "true" if is_owner else "false" }};
+        const MY_PLAYER_ID = {{ player.id if player else "null" }};
+        const LOBBY_STATE_OPEN = 0;
+        const LOBBY_STATE_GENERATING = 1;
+        const LOBBY_STATE_DONE = 2;
+        const LOBBY_STATE_CLOSED = -1;
+        let lastMessageId = {{ recent_messages[-1].id if recent_messages else 0 }};
+        let currentState = {{ lobby.state }};
+    </script>
+    <script src="{{ url_for('static', filename='assets/lobby.js') }}"></script>
+    {% endif %}
+{% endblock %}

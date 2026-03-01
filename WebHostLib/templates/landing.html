@@ -51,6 +51,9 @@
                     games were generated and
                     <a href="{{ url_for("stats") }}">{{ rooms }}</a>
                     were hosted in the last 7 days.
+                    <br />
+                    <a href="{{ url_for("lobby_list") }}">{{ open_lobbies }} {% if open_lobbies == 1 %}lobby is{% else %}lobbies are{% endif %}</a>
+                    open right now.
                 </p>
             </div>
         </div>

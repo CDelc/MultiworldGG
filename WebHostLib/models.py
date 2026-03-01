@@ -31,6 +31,7 @@ class Room(db.Entity):
     tracker = Optional(UUID, index=True)
     # Port special value -1 means the server errored out. Another attempt can be made with a page refresh
     last_port = Optional(int, default=lambda: 0)
+    lobby = Optional('Lobby')  # back-reference from Lobby.room
 
 
 class Seed(db.Entity):
@@ -42,6 +43,7 @@ class Seed(db.Entity):
     slots = Set(Slot)
     spoiler = Optional(LongStr, lazy=True)
     meta = Required(LongStr, default=lambda: "{\"race\": false}")  # additional meta information/tags
+    lobbies = Set('Lobby')  # back-reference from Lobby.seed
 
 
 class Command(db.Entity):
@@ -61,3 +63,60 @@ class Generation(db.Entity):
 class GameDataPackage(db.Entity):
     checksum = PrimaryKey(str)
     data = Required(bytes)
+
+
+# Lobby states
+LOBBY_OPEN = 0
+LOBBY_GENERATING = 1
+LOBBY_DONE = 2
+LOBBY_CLOSED = -1
+
+
+class Lobby(db.Entity):
+    id = PrimaryKey(UUID, default=uuid4)
+    title = Required(str)
+    owner = Required(UUID, index=True)
+    password_hash = Optional(str)
+    creation_time = Required(datetime, default=lambda: datetime.utcnow(), index=True)
+    last_activity = Required(datetime, default=lambda: datetime.utcnow(), index=True)
+    timeout_minutes = Required(int, default=30)  # max 2880 (2 days)
+    max_yamls_per_player = Required(int, default=1)
+    race = Required(bool, default=False)
+    meta = Required(LongStr, default=lambda: "{}")  # generation settings (server_options, plando_options, etc.)
+    state = Required(int, default=0, index=True)  # LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED
+    seed = Optional('Seed')
+    room = Optional(Room)
+    players = Set('LobbyPlayer')
+    messages = Set('LobbyMessage')
+    yamls = Set('LobbyYaml')
+    generation_id = Optional(UUID)  # ID of the Generation/Seed (they share the same UUID)
+
+
+class LobbyPlayer(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    session_id = Required(UUID, index=True)
+    player_name = Required(str)
+    joined_at = Required(datetime, default=lambda: datetime.utcnow())
+    yamls = Set('LobbyYaml')
+    messages = Set('LobbyMessage')
+
+
+class LobbyYaml(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    player = Required(LobbyPlayer, index=True)
+    filename = Required(str)
+    yaml_player_name = Optional(str)  # resolved "name" field from the YAML, for duplicate detection
+    yaml_game = Optional(str)  # resolved "game" field from the YAML
+    content = Required(bytes, lazy=True)
+    uploaded_at = Required(datetime, default=lambda: datetime.utcnow())
+
+
+class LobbyMessage(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    player = Optional(LobbyPlayer)  # null = system message
+    sender_name = Required(str)
+    content = Required(str)
+    sent_at = Required(datetime, default=lambda: datetime.utcnow())

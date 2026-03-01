@@ -12,8 +12,14 @@
         <div id="generate-game" class="grass-island">
             <h1>Generate Game{% if race %} (Race Mode){% endif %}</h1>
             <p>
-                This page allows you to generate a game by uploading a config file or a zip file containing config
-                files. If you do not have a config (.yaml) file yet, you may create one on the game's settings page,
+                <strong>Playing with others?</strong> If you don't have everyone's YAML files yet, consider using a
+                <a href="{{ url_for('lobby_create') }}">Lobby</a> instead &mdash; players can join, upload their own
+                configs, and you can generate once everyone is ready.
+                You can also <a href="{{ url_for('lobby_list') }}">browse open lobbies</a> to join an existing group.
+            </p>
+            <p>
+                This page allows you to generate a game if you already have all config files collected.
+                If you do not have a config (.yaml) file yet, you may create one on the game's settings page,
                 which you can find on the <a href="{{ url_for("games") }}">supported games list</a>.
             </p>
             <p>
