@@ -3,7 +3,9 @@ import os
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from flask import request, session, jsonify
+import io
+
+from flask import request, session, jsonify, send_file
 from markupsafe import Markup
 from pony.orm import commit, select
 
@@ -258,6 +260,32 @@ def lobby_upload_yaml(lobby: UUID):
     return jsonify({"uploaded": uploaded}), 201
 
 
+@api_endpoints.route('/lobby/<suuid:lobby>/yaml/<int:yaml_id>', methods=['GET'])
+def lobby_download_yaml(lobby: UUID, yaml_id: int):
+    lobby = Lobby.get(id=lobby)
+    if not lobby:
+        return jsonify({"error": "Lobby not found"}), 404
+
+    yaml_record = LobbyYaml.get(id=yaml_id)
+    if not yaml_record or yaml_record.lobby != lobby:
+        return jsonify({"error": "YAML not found"}), 404
+
+    player = _get_player_in_lobby(lobby)
+    if not player:
+        return jsonify({"error": "Permission denied"}), 403
+
+    content = yaml_record.content
+    if isinstance(content, str):
+        content = content.encode("utf-8")
+
+    return send_file(
+        io.BytesIO(content),
+        download_name=yaml_record.filename,
+        as_attachment=True,
+        mimetype="application/x-yaml",
+    )
+
+
 @api_endpoints.route('/lobby/<suuid:lobby>/yaml/<int:yaml_id>', methods=['DELETE'])
 def lobby_delete_yaml(lobby: UUID, yaml_id: int):
     lobby = Lobby.get(id=lobby)
@@ -409,6 +437,94 @@ def lobby_generate(lobby: UUID):
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"status": "generating"}), 202
+
+
+@api_endpoints.route('/lobby/<suuid:lobby>/settings', methods=['PATCH'])
+def lobby_update_settings(lobby: UUID):
+    lobby = Lobby.get(id=lobby)
+    if not lobby:
+        return jsonify({"error": "Lobby not found"}), 404
+
+    if lobby.owner != session["_id"]:
+        return jsonify({"error": "Only the lobby owner can update settings"}), 403
+
+    if lobby.state != LOBBY_OPEN:
+        return jsonify({"error": "Cannot change settings after generation has started"}), 400
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    # Lobby fields
+    if "title" in data:
+        title = str(data["title"]).strip()
+        if not title or len(title) > 48:
+            return jsonify({"error": "Title must be 1–48 characters"}), 400
+        lobby.title = title
+
+    if "max_yamls_per_player" in data:
+        try:
+            lobby.max_yamls_per_player = max(1, min(int(data["max_yamls_per_player"]), 20))
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid max_yamls_per_player"}), 400
+
+    if "timeout_minutes" in data:
+        try:
+            lobby.timeout_minutes = max(1, min(int(data["timeout_minutes"]), 2880))
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid timeout_minutes"}), 400
+
+    # Meta fields
+    meta = json.loads(lobby.meta)
+    server_opts = meta.get("server_options", {})
+    gen_opts = meta.get("generator_options", {})
+
+    _release  = {"auto", "goal", "auto-enabled", "enabled", "disabled"}
+    _collect  = {"auto", "goal", "auto-enabled", "enabled", "disabled"}
+    _remaining = {"goal", "enabled", "disabled"}
+    _countdown = {"auto", "disabled", "enabled"}
+    _hint_mode = {"default", "own", "all"}
+
+    if data.get("release_mode") in _release:
+        server_opts["release_mode"] = data["release_mode"]
+    if data.get("collect_mode") in _collect:
+        server_opts["collect_mode"] = data["collect_mode"]
+    if data.get("remaining_mode") in _remaining:
+        server_opts["remaining_mode"] = data["remaining_mode"]
+    if data.get("countdown_mode") in _countdown:
+        server_opts["countdown_mode"] = data["countdown_mode"]
+    if data.get("hint_mode") in _hint_mode:
+        server_opts["hint_mode"] = data["hint_mode"]
+
+    if "hint_cost" in data:
+        try:
+            server_opts["hint_cost"] = max(0, min(int(data["hint_cost"]), 105))
+        except (ValueError, TypeError):
+            pass
+
+    if "item_cheat" in data:
+        server_opts["item_cheat"] = bool(data["item_cheat"])
+
+    if "spoiler" in data:
+        try:
+            gen_opts["spoiler"] = max(0, min(int(data["spoiler"]), 3))
+        except (ValueError, TypeError):
+            pass
+
+    meta["server_options"] = server_opts
+    meta["generator_options"] = gen_opts
+    lobby.meta = json.dumps(meta)
+    lobby.last_activity = datetime.utcnow()
+
+    LobbyMessage(
+        lobby=lobby,
+        player=None,
+        sender_name="System",
+        content="Lobby settings were updated by the host.",
+    )
+    commit()
+
+    return jsonify({"success": True})
 
 
 @api_endpoints.route('/lobby/<suuid:lobby>/leave', methods=['POST'])

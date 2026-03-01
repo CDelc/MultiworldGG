@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body %}
-    {% include 'header/grassHeader.html' %}
+    {% include 'header/oceanIslandHeader.html' %}
     <div id="lobby-list-wrapper">
         <div id="lobby-list" class="grass-island">
             <h1>Game Lobbies</h1>
@@ -21,6 +21,8 @@
                     <button id="create-lobby-button">Create Lobby</button>
                 </a>
             </div>
+        </div>
+        <div id="lobby-list-table" class="grass-island">
             {% if lobbies %}
                 <table id="lobby-table">
                     <thead>

@@ -31,7 +31,7 @@ def _get_player_in_lobby(lobby: Lobby) -> LobbyPlayer | None:
 @app.route('/lobbies')
 def lobby_list():
     lobbies = select(
-        l for l in Lobby if l.state in (LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE)
+        l for l in Lobby if l.state == LOBBY_OPEN
     ).order_by(lambda l: desc(l.last_activity))[:50]
 
     # Expire stale lobbies on read, only commit if something changed
@@ -67,8 +67,8 @@ def lobby_create():
         if not title:
             flash('Lobby title is required.')
             return redirect(url_for('lobby_create'))
-        if len(title) > 100:
-            flash('Lobby title must be 100 characters or fewer.')
+        if len(title) > 48:
+            flash('Lobby title must be 48 characters or fewer.')
             return redirect(url_for('lobby_create'))
 
         password = request.form.get('password', '').strip()
@@ -87,6 +87,14 @@ def lobby_create():
         max_yamls = max(1, min(max_yamls, 20))
 
         race = bool(request.form.get('race'))
+
+        owned_active = count(
+            l for l in Lobby
+            if l.owner == session["_id"] and l.state in (LOBBY_OPEN, LOBBY_GENERATING)
+        )
+        if owned_active >= 3:
+            flash('You can only host up to 3 active lobbies at a time. Close or finish an existing one first.')
+            return redirect(url_for('lobby_create'))
 
         meta = get_meta(request.form, race)
 
@@ -153,6 +161,10 @@ def lobby_view(lobby: UUID):
     yaml_count = count(y for y in LobbyYaml if y.lobby == lobby)
     player_count = count(p for p in LobbyPlayer if p.lobby == lobby)
 
+    meta = json.loads(lobby.meta)
+    server_opts = meta.get("server_options", {})
+    gen_opts = meta.get("generator_options", {})
+
     return render_template(
         "lobby.html",
         lobby=lobby,
@@ -162,6 +174,8 @@ def lobby_view(lobby: UUID):
         recent_messages=recent_messages,
         yaml_count=yaml_count,
         player_count=player_count,
+        server_opts=server_opts,
+        gen_opts=gen_opts,
     )
 
 
@@ -183,6 +197,15 @@ def lobby_join(lobby: UUID):
     # Check if already joined
     existing = _get_player_in_lobby(lobby)
     if existing:
+        return redirect(url_for('lobby_view', lobby=lobby.id))
+
+    # Check membership limit
+    active_memberships = count(
+        p for p in LobbyPlayer
+        if p.session_id == session["_id"] and p.lobby.state in (LOBBY_OPEN, LOBBY_GENERATING)
+    )
+    if active_memberships >= 5:
+        flash('You can only be part of up to 5 active lobbies at a time.')
         return redirect(url_for('lobby_view', lobby=lobby.id))
 
     # Verify password

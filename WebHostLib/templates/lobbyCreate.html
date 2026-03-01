@@ -22,7 +22,7 @@
                             <tbody>
                                 <tr>
                                     <td><label for="title">Lobby Title:</label></td>
-                                    <td><input type="text" id="title" name="title" required maxlength="100" placeholder="My Game Lobby"></td>
+                                    <td><input type="text" id="title" name="title" required maxlength="48" placeholder="My Game Lobby"></td>
                                 </tr>
                                 <tr>
                                     <td><label for="player_name">Your Name:</label></td>
@@ -188,6 +188,21 @@
                         <h3>Server Settings</h3>
                         <table>
                             <tbody>
+                                <tr>
+                                    <td>
+                                        <label for="hint_mode">Hint Mode:
+                                            <span class="interactive" data-tooltip="Decide if hints include exact location data or just reference the respective world.">(?)
+                                            </span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <select name="hint_mode" id="hint_mode">
+                                            <option value="all">Hide All</option>
+                                            <option value="own">Hide Own</option>
+                                            <option selected value="default">Default (show full location)</option>
+                                        </select>
+                                    </td>
+                                </tr>
                                 <tr>
                                     <td>
                                         <label for="hint_cost">Hint Cost:

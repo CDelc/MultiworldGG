@@ -41,17 +41,34 @@
             {% else %}
                 {# Main lobby interface #}
                 <div id="lobby-info">
-                    <span class="lobby-meta">
-                        Max YAMLs per player: {{ lobby.max_yamls_per_player }} |
-                        Timeout: {{ lobby.timeout_minutes }} min |
-                        {% if lobby.race %}Race Mode{% else %}Standard{% endif %}
-                    </span>
-                    <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
-                        {% if lobby.state == 0 %}Open
-                        {% elif lobby.state == 1 %}Generating...
-                        {% elif lobby.state == 2 %}Done
-                        {% endif %}
-                    </span>
+                    <div class="lobby-info-row">
+                        <span class="lobby-meta">
+                            Max YAMLs: {{ lobby.max_yamls_per_player }} |
+                            Timeout: {{ lobby.timeout_minutes }} min |
+                            {% if lobby.race %}Race Mode{% else %}Standard{% endif %}
+                        </span>
+                        <span class="lobby-info-right">
+                            {% if is_owner and lobby.state == 0 %}
+                                <button id="settings-edit-btn" class="lobby-btn">&#9881; Edit Settings</button>
+                            {% endif %}
+                            <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
+                                {% if lobby.state == 0 %}Open
+                                {% elif lobby.state == 1 %}Generating...
+                                {% elif lobby.state == 2 %}Seed created, Lobby locked
+                                {% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="lobby-info-row">
+                        <span class="lobby-meta">
+                            Release: {{ server_opts.get('release_mode', '?') }} |
+                            Collect: {{ server_opts.get('collect_mode', '?') }} |
+                            Remaining: {{ server_opts.get('remaining_mode', '?') }} |
+                            Hints: {% set hm = server_opts.get('hint_mode', 'default') %}{% if hm == 'default' %}Full{% elif hm == 'own' %}Hide Own{% elif hm == 'all' %}Hide All{% else %}{{ hm }}{% endif %} @ {% set hc = server_opts.get('hint_cost', 5) %}{% if hc > 100 %}Off{% else %}{{ hc }}%{% endif %} |
+                            Item Cheat: {% if server_opts.get('item_cheat') %}On{% else %}Off{% endif %} |
+                            Spoiler: {% set sp = gen_opts.get('spoiler', 0) %}{% if sp == 0 %}Off{% elif sp == 1 %}On{% elif sp == 2 %}+Playthrough{% elif sp == 3 %}Full{% endif %}
+                        </span>
+                    </div>
                 </div>
 
                 <div id="lobby-main">
@@ -61,20 +78,28 @@
                         <ul id="lobby-players">
                             {% for p in lobby.players | sort(attribute='joined_at') %}
                                 <li class="lobby-player" data-player-id="{{ p.id }}">
-                                    <strong>{{ p.player_name }}{% if p.session_id == lobby.owner %} (Host){% endif %}</strong>
+                                    <div class="lobby-player-header">
+                                        <strong>{{ p.player_name }}{% if p.session_id == lobby.owner %} (Host){% endif %}</strong>
+                                        {% if is_owner and p.session_id != lobby.owner and lobby.state == 0 %}
+                                            <button class="kick-btn" data-player-id="{{ p.id }}" title="Kick player">Kick</button>
+                                        {% endif %}
+                                    </div>
                                     <ul class="player-yamls">
                                         {% for y in p.yamls | sort(attribute='uploaded_at') %}
                                             <li data-yaml-id="{{ y.id }}">
-                                                {{ y.filename }}{% if y.yaml_game %} - <span class="yaml-game-name">{{ y.yaml_game }}</span>{% endif %}{% if y.yaml_player_name %} <span class="yaml-slot-name">({{ y.yaml_player_name }})</span>{% endif %}
+                                                <span class="yaml-slot-name" data-tooltip="{{ y.filename }}"><span>{{ y.yaml_player_name }}</span></span>
+                                                {% if y.yaml_game %}
+                                                    <a class="yaml-game-name" href="/games/{{ y.yaml_game | urlencode }}/player-options">{{ y.yaml_game }}</a>
+                                                {% else %}
+                                                    <span class="yaml-game-name">{{ y.filename }}</span>
+                                                {% endif %}
+                                                <a class="yaml-download-btn" href="/api/lobby/{{ lobby.id | suuid }}/yaml/{{ y.id }}" title="Download YAML" download>&#x2B07;</a>
                                                 {% if player and (p == player or is_owner) and lobby.state == 0 %}
                                                     <button class="yaml-delete-btn" data-yaml-id="{{ y.id }}" title="Remove YAML">&times;</button>
                                                 {% endif %}
                                             </li>
                                         {% endfor %}
                                     </ul>
-                                    {% if is_owner and p.session_id != lobby.owner and lobby.state == 0 %}
-                                        <button class="kick-btn" data-player-id="{{ p.id }}" title="Kick player">Kick</button>
-                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -135,11 +160,17 @@
                     </div>
                 {% endif %}
 
+                {# Generating state #}
+                <div id="lobby-generating" {% if lobby.state != 1 %}style="display:none"{% endif %}>
+                    <h2>Generating&hellip;</h2>
+                    <p>Seed is currently generating, please wait.</p>
+                </div>
+
                 {# Done state: links #}
                 <div id="lobby-result" {% if lobby.state != 2 %}style="display:none"{% endif %}>
                     {% if lobby.state == 2 %}
                         <h2>Seed Ready!</h2>
-                        {% if lobby.seed %}
+                        {% if lobby.seed and is_owner %}
                             <p><a href="{{ url_for('view_seed', seed=lobby.seed.id) }}">View Seed</a></p>
                         {% endif %}
                         {% if lobby.room %}
@@ -147,6 +178,138 @@
                         {% endif %}
                     {% endif %}
                 </div>
+            {% if is_owner and lobby.state == 0 %}
+            {# Settings modal #}
+            <div id="settings-modal">
+                <div id="settings-modal-content" class="grass-island">
+                    <h2>Edit Settings</h2>
+                    <div id="settings-form-grid">
+                        <div class="settings-section">
+                            <h3>Lobby Settings</h3>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><label for="edit-title">Title:</label></td>
+                                        <td><input type="text" id="edit-title" maxlength="48" value="{{ lobby.title }}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-max-yamls">Max YAMLs per Player:</label></td>
+                                        <td>
+                                            <select id="edit-max-yamls">
+                                                {% for n in range(1, 11) %}
+                                                    <option value="{{ n }}" {% if n == lobby.max_yamls_per_player %}selected{% endif %}>{{ n }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-timeout">Timeout:</label></td>
+                                        <td>
+                                            <select id="edit-timeout">
+                                                {% for val, label in [(15,'15 minutes'),(30,'30 minutes'),(60,'1 hour'),(120,'2 hours'),(360,'6 hours'),(720,'12 hours'),(1440,'1 day'),(2880,'2 days')] %}
+                                                    <option value="{{ val }}" {% if val == lobby.timeout_minutes %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="settings-section">
+                            <h3>Generation Settings</h3>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><label for="edit-release-mode">Release:</label></td>
+                                        <td>
+                                            <select id="edit-release-mode">
+                                                {% for val, lbl in [('auto','Auto on goal'),('goal','After goal'),('auto-enabled','Auto + Manual'),('enabled','Manual'),('disabled','Disabled')] %}
+                                                    <option value="{{ val }}" {% if val == server_opts.get('release_mode') %}selected{% endif %}>{{ lbl }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-collect-mode">Collect:</label></td>
+                                        <td>
+                                            <select id="edit-collect-mode">
+                                                {% for val, lbl in [('auto','Auto on goal'),('goal','After goal'),('auto-enabled','Auto + Manual'),('enabled','Manual'),('disabled','Disabled')] %}
+                                                    <option value="{{ val }}" {% if val == server_opts.get('collect_mode') %}selected{% endif %}>{{ lbl }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-remaining-mode">Remaining:</label></td>
+                                        <td>
+                                            <select id="edit-remaining-mode">
+                                                {% for val, lbl in [('goal','After goal'),('enabled','Manual'),('disabled','Disabled')] %}
+                                                    <option value="{{ val }}" {% if val == server_opts.get('remaining_mode') %}selected{% endif %}>{{ lbl }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-countdown-mode">Countdown:</label></td>
+                                        <td>
+                                            <select id="edit-countdown-mode">
+                                                {% for val, lbl in [('auto','Auto'),('enabled','Enabled'),('disabled','Disabled')] %}
+                                                    <option value="{{ val }}" {% if val == server_opts.get('countdown_mode') %}selected{% endif %}>{{ lbl }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-hint-mode">Hint Mode:</label></td>
+                                        <td>
+                                            <select id="edit-hint-mode">
+                                                {% for val, lbl in [('default','Default (full location)'),('own','Hide Own'),('all','Hide All')] %}
+                                                    <option value="{{ val }}" {% if val == server_opts.get('hint_mode', 'default') %}selected{% endif %}>{{ lbl }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-hint-cost">Hint Cost:</label></td>
+                                        <td>
+                                            <select id="edit-hint-cost">
+                                                {% for n in range(0, 110, 5) %}
+                                                    <option value="{{ n }}" {% if n == server_opts.get('hint_cost', 5) %}selected{% endif %}>{% if n > 100 %}Off{% else %}{{ n }}%{% endif %}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-item-cheat">Item Cheat:</label></td>
+                                        <td>
+                                            <select id="edit-item-cheat">
+                                                <option value="1" {% if server_opts.get('item_cheat') %}selected{% endif %}>Enabled</option>
+                                                <option value="0" {% if not server_opts.get('item_cheat') %}selected{% endif %}>Disabled</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="edit-spoiler">Spoiler Log:</label></td>
+                                        <td>
+                                            <select id="edit-spoiler">
+                                                {% for val, lbl in [(0,'Disabled'),(1,'Enabled'),(2,'+ Playthrough'),(3,'Full')] %}
+                                                    <option value="{{ val }}" {% if val == gen_opts.get('spoiler', 0) %}selected{% endif %}>{{ lbl }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="settings-modal-actions">
+                        <button id="settings-save-btn" class="lobby-btn lobby-btn-primary">Save</button>
+                        <button id="settings-cancel-btn" class="lobby-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             {% endif %}
         </div>
     </div>
