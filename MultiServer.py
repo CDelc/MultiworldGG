@@ -224,6 +224,7 @@ class Context:
                       "remaining_mode": str,
                       "collect_mode": str,
                       "countdown_mode": str,
+                      "hint_mode": str,
                       "item_cheat": bool,
                       "compatibility": int}
     # team -> slot id -> list of clients authenticated to slot.
@@ -252,7 +253,7 @@ class Context:
     logger: logging.Logger
 
     def __init__(self, host: str, port: int, server_password: str, password: str, location_check_points: int,
-                 hint_cost: int, item_cheat: bool, release_mode: str = "disabled", collect_mode="disabled",
+                 hint_cost: int, item_cheat: bool, release_mode: str = "disabled", collect_mode="disabled", hint_mode: str = "default",
                  countdown_mode: str = "auto", remaining_mode: str = "disabled", auto_shutdown: typing.SupportsFloat = 0, 
                  compatibility: int = 2, log_network: bool = False, logger: logging.Logger = logging.getLogger()):
         self.logger = logger
@@ -288,6 +289,7 @@ class Context:
         self.remaining_mode: str = remaining_mode
         self.collect_mode: str = collect_mode
         self.countdown_mode: str = countdown_mode
+        self.hint_mode: str = hint_mode
         self.item_cheat = item_cheat
         self.exit_event = asyncio.Event()
         self.client_activity_timers: typing.Dict[
@@ -674,7 +676,7 @@ class Context:
                              "server_password": self.server_password, "password": self.password,
                              "release_mode": self.release_mode,
                              "remaining_mode": self.remaining_mode, "collect_mode": self.collect_mode,
-                             "countdown_mode": self.countdown_mode,
+                             "countdown_mode": self.countdown_mode, "hint_mode": self.hint_mode,
                              "item_cheat": self.item_cheat, "compatibility": self.compatibility}
 
         }
@@ -710,6 +712,7 @@ class Context:
             self.remaining_mode = savedata["game_options"]["remaining_mode"]
             self.collect_mode = savedata["game_options"]["collect_mode"]
             self.countdown_mode = savedata["game_options"].get("countdown_mode", self.countdown_mode)
+            self.hint_mode = savedata["game_options"]["hint_mode"]
             self.item_cheat = savedata["game_options"]["item_cheat"]
             self.compatibility = savedata["game_options"]["compatibility"]
 
@@ -1200,7 +1203,10 @@ def collect_hints(ctx: Context, team: int, slot: int, item: typing.Union[int, st
         else:
             found = location_id in ctx.location_checks[team, finding_player]
             entrance = ctx.er_hint_data.get(finding_player, {}).get(location_id, "")
-
+            hidden_display = (
+                ((ctx.hint_mode == "own" and receiving_player == finding_player) or ctx.hint_mode == "all")
+                and not found
+            )
             hint_status = status  # Assign again because we're in a for loop
             if found:
                 hint_status = HintStatus.HINT_FOUND
@@ -1211,7 +1217,7 @@ def collect_hints(ctx: Context, team: int, slot: int, item: typing.Union[int, st
                     hint_status = HintStatus.HINT_PRIORITY
 
             hints.append(
-                Hint(receiving_player, finding_player, location_id, item_id, found, entrance, item_flags, hint_status)
+                Hint(receiving_player, finding_player, location_id, item_id, found, entrance, item_flags, hint_status, hidden_display)
             )
 
     return hints
@@ -1242,6 +1248,10 @@ def collect_hint_location_id(ctx: Context, team: int, slot: int, seeked_location
 
         found = seeked_location in ctx.location_checks[team, slot]
         entrance = ctx.er_hint_data.get(slot, {}).get(seeked_location, "")
+        hidden_display = (
+            ((ctx.hint_mode == "own" and slot == receiving_player) or ctx.hint_mode == "all")
+            and not found
+        )
 
         if found:
             status = HintStatus.HINT_FOUND
@@ -1251,7 +1261,7 @@ def collect_hint_location_id(ctx: Context, team: int, slot: int, seeked_location
             else:
                 status = HintStatus.HINT_PRIORITY
 
-        return [Hint(receiving_player, slot, seeked_location, item_id, found, entrance, item_flags, status)]
+        return [Hint(receiving_player, slot, seeked_location, item_id, found, entrance, item_flags, status, hidden_display)]
     return []
 
 
@@ -1750,12 +1760,21 @@ class ClientMessageProcessor(CommonCommandProcessor):
         if hints:
             new_hints = set(hints) - self.ctx.hints[self.client.team, self.client.slot]
             old_hints = list(set(hints) - new_hints)
-            if old_hints and not new_hints:
-                self.ctx.notify_hints(self.client.team, old_hints)
+            hidden_old_hints = [hint for hint in old_hints if hint.hidden]
+            truly_old_hints = [hint for hint in old_hints if not hint.hidden]
+            if truly_old_hints and not new_hints and not hidden_old_hints:
+                self.ctx.notify_hints(self.client.team, truly_old_hints)
                 self.output("Hint was previously used, no points deducted.")
-            if new_hints:
+            if new_hints or hidden_old_hints:
+                # Remove hidden old hints from store so they can be re-added as fully revealed
+                for hint in hidden_old_hints:
+                    self.ctx.hints[self.client.team, hint.finding_player].discard(hint)
+                    for player in self.ctx.slot_set(hint.receiving_player):
+                        self.ctx.hints[self.client.team, player].discard(hint)
+                revealed_hints = [hint._replace(hidden=False) for hint in hidden_old_hints]
+
                 found_hints = [hint for hint in new_hints if hint.found]
-                not_found_hints = [hint for hint in new_hints if not hint.found]
+                not_found_hints = [hint for hint in new_hints if not hint.found] + revealed_hints
                 if not not_found_hints:  # everything's been found, no need to pay
                     can_pay = 1000
                 elif cost:
@@ -1770,7 +1789,7 @@ class ClientMessageProcessor(CommonCommandProcessor):
                 not_found_hints.sort(key=lambda hint: self.ctx.get_sphere(hint.finding_player, hint.location),
                                      reverse=True)
 
-                hints = found_hints + old_hints
+                hints = found_hints + truly_old_hints
                 while can_pay > 0:
                     if not not_found_hints:
                         break
@@ -2537,7 +2556,7 @@ class ServerCommandProcessor(CommonCommandProcessor):
         self.output(f"Set option {option_name} to {getattr(self.ctx, option_name)}")
         if option_name in {"release_mode", "remaining_mode", "collect_mode"}:
             self.ctx.broadcast_all([{"cmd": "RoomUpdate", 'permissions': get_permissions(self.ctx)}])
-        elif option_name in {"hint_cost", "location_check_points"}:
+        elif option_name in {"hint_mode", "hint_cost", "location_check_points"}:
             self.ctx.broadcast_all([{"cmd": "RoomUpdate", option_name: getattr(self.ctx, option_name)}])
         return True
 
@@ -2627,6 +2646,13 @@ def parse_args() -> argparse.Namespace:
                              disabled: !remaining is never available
                              goal:     !remaining can be used after goal completion
                              ''')
+    parser.add_argument('--hint_mode', default=defaults["hint_mode"], nargs='?',
+                    choices=['default', 'own', 'all'], help='''\
+                            Select hint detail display for hints (default: %(default)s)
+                            default: hints show up in full, no matter the world
+                            own: hints in the hinting player's world do not display their full location
+                            all: hints in all worlds do not display their full location
+                            ''')
     parser.add_argument('--auto_shutdown', default=defaults["auto_shutdown"], type=int,
                         help="automatically shut down the server after this many minutes without new location checks. "
                              "0 to keep running. Not yet implemented.")
@@ -2685,7 +2711,7 @@ async def main(args: argparse.Namespace):
 
     ctx = Context(args.host, args.port, args.server_password, args.password, args.location_check_points,
                   args.hint_cost, not args.disable_item_cheat, args.release_mode, args.collect_mode,
-                  args.countdown_mode, args.remaining_mode,
+                  args.countdown_mode, args.remaining_mode, args.hint_mode,
                   args.auto_shutdown, args.compatibility, args.log_network)
     data_filename = args.multidata
 
