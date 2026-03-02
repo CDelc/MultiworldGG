@@ -163,7 +163,10 @@
             p.yamls.forEach(y => {
                 const slotName = escapeHtml(y.player_name || '');
                 const isCustom = !!y.is_custom;
-                const customTag = isCustom ? '<span class="yaml-custom-tag" title="Custom APWorld">&#x1F9E9;</span>' : '';
+                const apwMissing = isCustom && !y.apworld;
+                const customTag = isCustom
+                    ? `<span class="yaml-custom-tag${apwMissing ? ' yaml-custom-tag-missing' : ''}" title="${apwMissing ? 'APWorld missing' : 'Custom APWorld'}">&#x1F9E9;</span>`
+                    : '';
                 const gameDisplay = y.game
                     ? (isCustom
                         ? `<span class="yaml-game-name yaml-game-custom">${escapeHtml(y.game)}</span>`

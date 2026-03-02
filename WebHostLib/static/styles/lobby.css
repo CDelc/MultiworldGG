@@ -776,6 +776,10 @@ a.lobby-btn-primary:hover {
     line-height: 1;
 }
 
+.yaml-custom-tag-missing {
+    filter: grayscale(1) sepia(1) hue-rotate(300deg) saturate(8) brightness(0.85);
+}
+
 
 .apworld-upload-btn {
     -webkit-appearance: none;
