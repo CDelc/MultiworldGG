@@ -205,26 +205,44 @@
         bindReadyButtons();
     }
 
+    function buildMessageDiv(msg) {
+        const div = document.createElement("div");
+        div.className = "chat-msg" + (msg.system ? " chat-system" : "");
+        div.dataset.messageId = msg.id;
+        const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isTrueSystem = msg.system && msg.sender === "System";
+        const deleteBtn = (!isTrueSystem && IS_OWNER)
+            ? `<button class="msg-delete-btn" data-message-id="${msg.id}" title="Delete message">&times;</button>`
+            : "";
+        if (isTrueSystem) {
+            div.innerHTML = `<span class="chat-time">${time}</span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
+        } else {
+            div.innerHTML = `${deleteBtn}<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span>`;
+        }
+        return div;
+    }
+
+    function insertMessageInOrder(div, msgId) {
+        // Find the first existing message with a higher ID and insert before it,
+        // so messages always appear in server-assigned ID order regardless of
+        // which client echoed them first.
+        const existing = chatMessages.querySelectorAll(".chat-msg[data-message-id]");
+        for (const el of existing) {
+            if (parseInt(el.dataset.messageId, 10) > msgId) {
+                chatMessages.insertBefore(div, el);
+                return;
+            }
+        }
+        chatMessages.appendChild(div);
+    }
+
     function appendMessages(messages) {
         if (!chatMessages || !messages.length) return;
         messages.forEach(msg => {
             if (msg.id > lastMessageId) lastMessageId = msg.id;
             if (renderedMessageIds.has(msg.id)) return;
             renderedMessageIds.add(msg.id);
-            const div = document.createElement("div");
-            div.className = "chat-msg" + (msg.system ? " chat-system" : "");
-            div.dataset.messageId = msg.id;
-            const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const isTrueSystem = msg.system && msg.sender === "System";
-            const deleteBtn = (!isTrueSystem && IS_OWNER)
-                ? `<button class="msg-delete-btn" data-message-id="${msg.id}" title="Delete message">&times;</button>`
-                : "";
-            if (isTrueSystem) {
-                div.innerHTML = `<span class="chat-time">${time}</span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
-            } else {
-                div.innerHTML = `${deleteBtn}<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span>`;
-            }
-            chatMessages.appendChild(div);
+            insertMessageInOrder(buildMessageDiv(msg), msg.id);
         });
         scrollChatToBottom();
     }
@@ -347,12 +365,7 @@
 
                     if (!renderedMessageIds.has(data.id)) {
                         renderedMessageIds.add(data.id);
-                        const div = document.createElement("div");
-                        div.className = "chat-msg";
-                        div.dataset.messageId = data.id;
-                        const time = new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        div.innerHTML = `<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(data.sender)}:</strong> <span class="chat-text">${escapeHtml(data.content)}</span>`;
-                        chatMessages.appendChild(div);
+                        insertMessageInOrder(buildMessageDiv(data), data.id);
                         scrollChatToBottom();
                     }
                 }

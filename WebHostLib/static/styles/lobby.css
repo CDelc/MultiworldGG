@@ -288,6 +288,14 @@
     color: #000;
 }
 
+.kick-btn:active {
+    padding: 2px 8px;
+    margin-top: 4px;
+    margin-right: 0;
+    margin-bottom: 0;
+    border: 1px solid #ffc107;
+}
+
 #yaml-upload-area {
     grid-column: 1;
     padding-right: 7px;
@@ -429,6 +437,12 @@
 
 .lobby-btn:hover {
     background: #f0f0f0;
+}
+
+.lobby-btn:active {
+    padding: 8px 16px;
+    margin: 0;
+    border: 1px solid #ccc;
 }
 
 .lobby-btn-primary,
@@ -808,8 +822,10 @@ a.lobby-btn-primary:hover {
 .ready-btn:active:not(:disabled) {
     background: #28a745;
     color: #fff;
-    transform: none;
-    box-shadow: none;
+    padding: 2px 8px;
+    margin: 0;
+    border-right: 1px solid #28a745;
+    border-bottom: 1px solid #28a745;
 }
 
 .ready-btn:disabled {
