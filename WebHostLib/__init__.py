@@ -75,7 +75,7 @@ app.config["MONITORING_ADMIN_TOKEN"] = None  # Admin token for monitoring API en
 cache = Cache()
 Compress(app)
 limiter = Limiter(
-    key_func=lambda: session.get("_id", "") or "",
+    key_func=lambda s=session: s.get("_id", "") or "",
     app=app,
     default_limits=[],
     storage_uri="memory://",

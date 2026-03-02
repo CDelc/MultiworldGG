@@ -178,7 +178,6 @@ html{
     }
 
     #base-header #site-title img{
-        height: calc(38px * 2);
         margin-top: 30px;
         margin-left: 20px;
     }

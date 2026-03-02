@@ -28,20 +28,31 @@
                     <thead>
                         <tr>
                             <th>Lobby</th>
+                            <th>Host</th>
                             <th>Players</th>
                             <th>YAMLs</th>
                             <th>Status</th>
                             <th>Password</th>
+                            <th>Custom</th>
+                            <th>Settings</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for lobby in lobbies %}
+                            {% set meta = lobby_metas.get(lobby.id, {}) %}
+                            {% set s = meta.get('server_options', {}) %}
+                            {% set g = meta.get('generator_options', {}) %}
+                            {% set hm = s.get('hint_mode', 'default') %}
+                            {% set hc = s.get('hint_cost', 10) %}
                             <tr>
-                                <td>{{ lobby.title }}</td>
-                                <td>{{ player_counts.get(lobby.id, 0) }}</td>
-                                <td>{{ yaml_counts.get(lobby.id, 0) }}</td>
-                                <td>
+                                <td data-label="Lobby">{{ lobby.title }}</td>
+                                <td data-label="Host">{{ owner_names.get(lobby.id, '?') }}</td>
+                                <td data-label="Players">
+                                    {{ player_counts.get(lobby.id, 0) }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %}
+                                </td>
+                                <td data-label="YAMLs">{{ yaml_counts.get(lobby.id, 0) }}</td>
+                                <td data-label="Status">
                                     {% if lobby.state == 0 %}
                                         <span class="status-open">Open</span>
                                     {% elif lobby.state == 1 %}
@@ -50,14 +61,24 @@
                                         <span class="status-done">Done</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {% if lobby.password_hash %}
-                                        Yes
-                                    {% else %}
-                                        No
-                                    {% endif %}
+                                <td data-label="Password">{{ 'Yes' if lobby.password_hash else 'No' }}</td>
+                                <td data-label="Custom APWorlds">{{ 'Yes' if lobby.allow_custom_apworlds else 'No' }}</td>
+                                <td class="lobby-settings-td">
+                                    <span class="settings-tip">Hover for settings
+                                        <div class="settings-tip-content">
+                                            <div>Release: {{ s.get('release_mode', 'auto') }}</div>
+                                            <div>Collect: {{ s.get('collect_mode', 'auto') }}</div>
+                                            <div>Remaining: {{ s.get('remaining_mode', 'goal') }}</div>
+                                            <div>Hints: {% if hm == 'default' %}Full{% elif hm == 'own' %}Hide Own{% elif hm == 'all' %}Hide All{% else %}{{ hm }}{% endif %} @ {% if hc > 100 %}Off{% else %}{{ hc }}%{% endif %}</div>
+                                            <div>Item Cheat: {{ 'On' if s.get('item_cheat', True) else 'Off' }}</div>
+                                            <div>Spoiler: {% set sp = g.get('spoiler', 3) %}{% if sp == 0 %}Off{% elif sp == 1 %}On{% elif sp == 2 %}+Playthrough{% else %}Full{% endif %}</div>
+                                            <div>Max YAMLs/player: {{ lobby.max_yamls_per_player }}</div>
+                                            <div>Timeout: {{ lobby.timeout_minutes }} min</div>
+                                            <div>Mode: {{ 'Race' if lobby.race else 'Standard' }}</div>
+                                        </div>
+                                    </span>
                                 </td>
-                                <td>
+                                <td class="lobby-join-td">
                                     <a href="{{ url_for('lobby_view', lobby=lobby.id) }}">Join</a>
                                 </td>
                             </tr>

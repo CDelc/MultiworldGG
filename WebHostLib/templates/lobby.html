@@ -14,34 +14,66 @@
             {% if lobby.state == -1 %}
                 <p class="lobby-expired">This lobby has expired.</p>
             {% elif not player and lobby.state == 0 %}
-                {% if is_full %}
-                    <p class="lobby-expired">This lobby is full.</p>
-                {% else %}
-                {# Join form #}
-                <div id="lobby-join">
-                    <h2>Join Lobby</h2>
-                    <form method="post" action="{{ url_for('lobby_join', lobby=lobby.id) }}">
-                        <div class="join-field">
-                            <label for="player_name">Display Name:</label>
-                            <input type="text" id="player_name" name="player_name" required maxlength="32" placeholder="Your name">
-                        </div>
-                        {% if needs_password %}
-                            <div class="join-field">
-                                <label for="password">Password:</label>
-                                <input type="password" id="password" name="password" required placeholder="Lobby password">
-                            </div>
-                        {% endif %}
-                        <button type="submit" class="lobby-btn">Join</button>
-                    </form>
+                <div class="lobby-preview grass-island">
+                    <p class="lobby-preview-meta">
+                        Host: <strong>{{ owner_name }}</strong> &mdash;
+                        Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
+                        Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
+                        Timeout: {{ lobby.timeout_minutes }} min &mdash;
+                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: Enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: Disabled' }}
+                    </p>
+                    <p class="lobby-preview-meta">
+                        Release: {{ server_opts.get('release_mode', 'auto') }} &mdash;
+                        Collect: {{ server_opts.get('collect_mode', 'auto') }} &mdash;
+                        Remaining: {{ server_opts.get('remaining_mode', 'goal') }} &mdash;
+                        {% set hm = server_opts.get('hint_mode', 'default') %}
+                        Hints: {% if hm == 'default' %}Full{% elif hm == 'own' %}Hide Own{% elif hm == 'all' %}Hide All{% else %}{{ hm }}{% endif %}
+                        @ {% set hc = server_opts.get('hint_cost', 10) %}{% if hc > 100 %}Off{% else %}{{ hc }}%{% endif %} &mdash;
+                        Item Cheat: {{ 'On' if server_opts.get('item_cheat', True) else 'Off' }}
+                    </p>
                 </div>
-                {% endif %}
+                <div id="lobby-join">
+                    {% if is_full %}
+                        <p class="lobby-expired">This lobby is full.</p>
+                    {% else %}
+                        <h2>Join Lobby</h2>
+                        <p class="lobby-join-explainer">
+                            Pick a display name and join the lobby. Once inside, upload your YAML config file &mdash;
+                            one per game you want to play. The host will generate the seed when everyone is ready.
+                            {% if needs_password %}This lobby is password-protected.{% endif %}
+                        </p>
+                        <form method="post" action="{{ url_for('lobby_join', lobby=lobby.id) }}">
+                            <div class="join-field">
+                                <label for="player_name">Display Name:</label>
+                                <input type="text" id="player_name" name="player_name" required maxlength="32" placeholder="Your name">
+                            </div>
+                            {% if needs_password %}
+                                <div class="join-field">
+                                    <label for="password">Password:</label>
+                                    <input type="password" id="password" name="password" required placeholder="Lobby password">
+                                </div>
+                            {% endif %}
+                            <button type="submit" class="lobby-btn lobby-btn-primary">Join Lobby</button>
+                        </form>
+                    {% endif %}
+                    <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
+                </div>
             {% elif not player %}
                 {# Non-joined visitor viewing a non-open lobby #}
+                <div class="lobby-preview grass-island">
+                    <p class="lobby-preview-meta">
+                        Host: <strong>{{ owner_name }}</strong> &mdash;
+                        Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
+                        Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
+                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: Enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: Disabled' }}
+                    </p>
+                </div>
                 <p>This lobby is
                     {% if lobby.state == 1 %}currently generating a seed.
                     {% elif lobby.state == 2 %}finished. Only lobby members can access the room.
                     {% endif %}
                 </p>
+                <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
             {% else %}
                 {# Main lobby interface #}
                 <div id="lobby-info">
@@ -50,8 +82,7 @@
                             Max YAMLs: {{ lobby.max_yamls_per_player }} |
                             Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} |
                             Timeout: {{ lobby.timeout_minutes }} min |
-                            {% if lobby.race %}Race Mode{% else %}Standard{% endif %}
-                            {% if lobby.allow_custom_apworlds %} | <span class="badge-custom-apworlds">Custom APWorlds: Enabled</span>{% endif %}
+                            {% if lobby.race %}Race Mode | {% endif %}{{ 'Custom APWorlds: Enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: Disabled' }}
                         </span>
                         <span class="lobby-info-right">
                             {% if not is_owner and lobby.state == 0 %}
@@ -59,7 +90,7 @@
                             {% endif %}
                             {% if is_owner and lobby.state == 0 %}
                                 <button id="close-btn" class="lobby-btn lobby-btn-danger">Close Lobby</button>
-                                <button id="settings-edit-btn" class="lobby-btn lobby-btn-primary">&#9881; Edit Settings</button>
+                                <button id="settings-edit-btn" class="lobby-btn lobby-btn-purple">&#9881; Edit Settings</button>
                             {% endif %}
                             <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
                                 {% if lobby.state == 0 %}Open
@@ -79,31 +110,85 @@
                             Spoiler: {% set sp = gen_opts.get('spoiler', 0) %}{% if sp == 0 %}Off{% elif sp == 1 %}On{% elif sp == 2 %}+Playthrough{% elif sp == 3 %}Full{% endif %}
                         </span>
                     </div>
+                    {% if lobby.state == 0 %}
+                    <div class="lobby-info-row">
+                        <span id="generate-info" class="lobby-meta">{{ yaml_count }} YAML(s) from {{ player_count }} player(s)</span>
+                        <span id="ready-count-label" class="lobby-meta"></span>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div id="lobby-main">
-                    {# Left: Players & YAMLs #}
+                    {# Left: Players #}
                     <div id="lobby-sidebar">
                         <h3>Players</h3>
                         <ul id="lobby-players">
                             <li class="lobby-player-loading">Loading players&hellip;</li>
                         </ul>
-
-                        {% if player and lobby.state == 0 %}
-                            <div id="yaml-upload-area">
-                                <h3>Upload YAML</h3>
-                                <div id="yaml-upload-drop" class="drop-zone">
-                                    <p>Drop .yaml / .zip files here, or
-                                        <label for="yaml-file-input" class="drop-zone-label">browse</label>
-                                    </p>
-                                    <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple style="display:none">
-                                </div>
-                            </div>
-                        {% endif %}
-
                     </div>
 
-                    {# Center: Chat #}
+                    {# YAML Upload #}
+                    {% if player and lobby.state == 0 %}
+                        <div id="yaml-upload-area">
+                            <h3>Upload YAML</h3>
+                            <div id="yaml-upload-drop" class="drop-zone">
+                                <p>Drop .yaml / .zip files here, or
+                                    <label for="yaml-file-input" class="drop-zone-label">browse</label>
+                                </p>
+                                <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple style="display:none">
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Generation controls #}
+                    {% if lobby.state == 0 and is_owner %}
+                        <div id="lobby-generate">
+                            <div id="generate-standard">
+                                <button id="generate-btn" class="lobby-btn lobby-btn-primary"
+                                        {% if yaml_count == 0 %}disabled{% endif %}>
+                                    Generate Seed
+                                </button>
+                            </div>
+                            <div id="generate-custom" style="display:none">
+                                <div class="custom-disclaimer">
+                                    &#9888; This lobby contains custom APWorlds. The server cannot generate this seed.
+                                    Download the package, generate locally with the {{ instance_name }} launcher, then upload the result (AP_12345.zip) here.
+                                    <div id="missing-apworlds-notice" style="display:none; margin-top:8px;">
+                                        <strong>Missing APWorlds:</strong>
+                                        <ul id="missing-apworlds-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>
+                                    </div>
+                                </div>
+                                <button id="download-package-btn" class="lobby-btn lobby-btn-primary">&#x2B07; Download Package</button>
+                                <div id="upload-game-zone" class="drop-zone" style="margin-top:10px">
+                                    <p>Drop AP_*.zip file here, or
+                                        <label for="game-file-input" class="drop-zone-label">browse</label>
+                                    </p>
+                                    <input type="file" id="game-file-input" accept=".zip" style="display:none">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Generating state #}
+                    <div id="lobby-generating" {% if lobby.state != 1 %}style="display:none"{% endif %}>
+                        <h2>Generating&hellip;</h2>
+                        <p>Seed is currently generating, please wait.</p>
+                    </div>
+
+                    {# Done state: links #}
+                    <div id="lobby-result" {% if lobby.state != 2 %}style="display:none"{% endif %}>
+                        {% if lobby.state == 2 %}
+                            <h2>Seed Ready!</h2>
+                            {% if lobby.seed and is_owner %}
+                                <p><a href="{{ url_for('view_seed', seed=lobby.seed.id) }}">View Seed</a></p>
+                            {% endif %}
+                            {% if lobby.room %}
+                                <p><a href="{{ url_for('host_room', room=lobby.room.id) }}" class="lobby-btn lobby-btn-primary">Go to Room</a></p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    {# Right: Chat #}
                     <div id="lobby-chat">
                         <div id="chat-messages">
                             {% for msg in recent_messages %}
@@ -128,60 +213,6 @@
                             </div>
                         {% endif %}
                     </div>
-                </div>
-
-                {# Generation controls #}
-                {% if lobby.state == 0 %}
-                <div id="ready-count-label" style="font-size:0.85rem; color:#aaa; text-align:center; margin-bottom:6px;"></div>
-                {% endif %}
-                {% if lobby.state == 0 and is_owner %}
-                    <div id="lobby-generate">
-                        <div id="generate-standard">
-                            <button id="generate-btn" class="lobby-btn lobby-btn-primary"
-                                    {% if yaml_count == 0 %}disabled{% endif %}>
-                                Generate Seed
-                            </button>
-                        </div>
-                        <div id="generate-custom" style="display:none">
-                            <div class="custom-disclaimer">
-                                &#9888; This lobby contains custom APWorlds. The server cannot generate this seed.
-                                Download the package, generate locally with the {{ instance_name }} launcher, then upload the result (AP_12345.zip) here.
-                                <div id="missing-apworlds-notice" style="display:none; margin-top:8px;">
-                                    <strong>Missing APWorlds:</strong>
-                                    <ul id="missing-apworlds-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>
-                                </div>
-                            </div>
-                            <button id="download-package-btn" class="lobby-btn lobby-btn-primary">&#x2B07; Download Package</button>
-                            <div id="upload-game-zone" class="drop-zone" style="margin-top:10px">
-                                <p>Drop AP_*.zip file here, or
-                                    <label for="game-file-input" class="drop-zone-label">browse</label>
-                                </p>
-                                <input type="file" id="game-file-input" accept=".zip" style="display:none">
-                            </div>
-                        </div>
-                        <span id="generate-info">
-                            {{ yaml_count }} YAML(s) from {{ player_count }} player(s)
-                        </span>
-                    </div>
-                {% endif %}
-
-                {# Generating state #}
-                <div id="lobby-generating" {% if lobby.state != 1 %}style="display:none"{% endif %}>
-                    <h2>Generating&hellip;</h2>
-                    <p>Seed is currently generating, please wait.</p>
-                </div>
-
-                {# Done state: links #}
-                <div id="lobby-result" {% if lobby.state != 2 %}style="display:none"{% endif %}>
-                    {% if lobby.state == 2 %}
-                        <h2>Seed Ready!</h2>
-                        {% if lobby.seed and is_owner %}
-                            <p><a href="{{ url_for('view_seed', seed=lobby.seed.id) }}">View Seed</a></p>
-                        {% endif %}
-                        {% if lobby.room %}
-                            <p><a href="{{ url_for('host_room', room=lobby.room.id) }}" class="lobby-btn lobby-btn-primary">Go to Room</a></p>
-                        {% endif %}
-                    {% endif %}
                 </div>
             {% if is_owner and lobby.state == 0 %}
             {# Settings modal #}

@@ -7,7 +7,7 @@
 }
 
 #lobby-list {
-    width: 700px;
+    width: 960px;
     min-height: 240px;
     text-align: center;
 }
@@ -17,7 +17,7 @@
 }
 
 #lobby-list-table {
-    width: 700px;
+    width: 960px;
     text-align: center;
 }
 
@@ -40,7 +40,7 @@
 
 #lobby-table th {
     font-family: Inter-Medium, sans-serif;
-    color: #618d63;
+    color: #ffdd5a;
 }
 
 #lobby-table tr:hover {
@@ -144,15 +144,15 @@
 .lobby-status--1 { color: #dc3545; font-weight: bold; }
 
 #lobby-main {
-    display: flex;
-    gap: 20px;
-    min-height: 400px;
+    display: grid;
+    grid-template-columns: 600px 1fr;
+    column-gap: 20px;
+    row-gap: 12px;
+    align-items: start;
 }
 
 #lobby-sidebar {
-    width: 600px;
-    flex-shrink: 0;
-    border-right: 1px solid #ddd;
+    grid-column: 1;
     padding-right: 7px;
 }
 
@@ -285,9 +285,8 @@
 }
 
 #yaml-upload-area {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 2px solid #ddd;
+    grid-column: 1;
+    padding-right: 7px;
 }
 
 #yaml-upload-form {
@@ -326,7 +325,8 @@
 }
 
 #lobby-chat {
-    flex-grow: 1;
+    grid-column: 2;
+    grid-row: 1 / span 2;
     display: flex;
     flex-direction: column;
 }
@@ -345,9 +345,6 @@
     padding: 3px 0;
     line-height: 1.4;
     word-wrap: break-word;
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
 }
 
 .msg-delete-btn {
@@ -358,15 +355,15 @@
     font-size: 0.85rem;
     padding: 0 4px;
     line-height: 1;
-    flex-shrink: 0;
+    color: pink;
 }
 
 .chat-msg:hover .msg-delete-btn {
-    color: #888;
+    color: #ea166c;
 }
 
 .msg-delete-btn:hover {
-    color: #dc3545 !important;
+    color: #ea166c !important;
 }
 
 .chat-time {
@@ -468,8 +465,18 @@ a.lobby-btn-primary:hover {
     background: #a71d2a;
 }
 
+.lobby-btn-purple {
+    background: #652895;
+    color: #fff;
+    border-color: #652895;
+}
+
+.lobby-btn-purple:hover {
+    background: #7d35b5;
+}
+
 #lobby-generate {
-    margin-top: 20px;
+    grid-column: 1 / 3;
     padding-top: 15px;
     border-top: 1px solid #ddd;
     text-align: center;
@@ -480,16 +487,9 @@ a.lobby-btn-primary:hover {
     margin: 20px auto 0;
 }
 
-#generate-info {
-    display: block;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    font-size: 1.3rem;
-    color: white;
-}
 
 #lobby-generating {
-    margin-top: 20px;
+    grid-column: 1 / 3;
     padding: 20px;
     background-color: #8BC6EC;
     background-image: linear-gradient(0deg, #093C4F 0%, #09194F 100%);
@@ -503,7 +503,7 @@ a.lobby-btn-primary:hover {
 }
 
 #lobby-result {
-    margin-top: 20px;
+    grid-column: 1 / 3;
     padding: 20px;
     background-color: #8BC6EC;
     background-image: linear-gradient(0deg, #093C4F 0%, #09194F 100%);
@@ -524,6 +524,28 @@ a.lobby-btn-primary:hover {
 #lobby-join {
     max-width: 400px;
     margin: 20px auto;
+    text-align: center;
+}
+
+.lobby-join-explainer {
+    font-size: 0.85rem;
+    color: #ccc;
+    margin-bottom: 20px;
+    text-align: left;
+    line-height: 1.5;
+}
+
+.lobby-back-link {
+    display: inline-block;
+    margin-top: 18px;
+    font-size: 0.85rem;
+    color: #aaa;
+    text-decoration: none;
+}
+
+.lobby-back-link:hover {
+    color: #fff;
+    text-decoration: underline;
 }
 
 .join-field {
@@ -549,6 +571,49 @@ a.lobby-btn-primary:hover {
     color: #dc3545;
     font-weight: bold;
     text-align: center !important;
+}
+
+.lobby-preview {
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+}
+
+.lobby-preview-meta {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.settings-tip {
+    position: relative;
+    cursor: help;
+    font-size: 0.8rem;
+    color: #aaa;
+    text-decoration: underline dotted;
+    white-space: nowrap;
+}
+
+.settings-tip-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 200;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #ddd;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    text-decoration: none;
+}
+
+.settings-tip:hover .settings-tip-content {
+    display: block;
 }
 
 .lobby-info-right {
@@ -710,7 +775,19 @@ a.lobby-btn-primary:hover {
 
 @media (max-width: 768px) {
     #lobby-main {
+        display: flex;
         flex-direction: column;
+        gap: 10px;
+    }
+
+    .player-yamls li {
+        flex-wrap: wrap;
+        row-gap: 4px;
+    }
+
+    .yaml-game-name {
+        flex: 1 1 calc(100% - 136px);
+        min-width: 0;
     }
 
     #lobby-sidebar {
@@ -719,11 +796,44 @@ a.lobby-btn-primary:hover {
         border-bottom: 1px solid #ddd;
         padding-right: 0;
         padding-bottom: 15px;
+        order: 4;
+    }
+
+    #yaml-upload-area {
+        border-right: none;
+        padding-right: 0;
+        border-top: 2px solid #ddd;
+        padding-top: 10px;
+        order: 3;
+    }
+
+    #lobby-generate,
+    #lobby-generating,
+    #lobby-result {
+        order: 1;
+    }
+
+    #lobby-chat {
+        grid-column: unset;
+        grid-row: unset;
+        order: 2;
     }
 
     #lobby-container {
-        width: 100%;
+        width: 98%;
+        box-sizing: border-box;
         padding: 10px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #lobby-main > * {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #chat-messages {
+        height: 250px;
     }
 
     #lobby-create {
@@ -732,6 +842,111 @@ a.lobby-btn-primary:hover {
 
     #lobby-list,
     #lobby-list-table {
+        width: 98%;
+        box-sizing: border-box;
+    }
+
+    .lobby-info-row {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    /* Lobby list: table → cards */
+    #lobby-table thead {
+        display: none;
+    }
+
+    #lobby-table,
+    #lobby-table tbody,
+    #lobby-table tr,
+    #lobby-table td {
+        display: block;
         width: 100%;
+    }
+
+    #lobby-table tr {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.15);
+        box-sizing: border-box;
+    }
+
+    #lobby-table tr:hover {
+        background: rgba(0, 0, 0, 0.15);
+    }
+
+    #lobby-table td {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 3px 0;
+        border-bottom: none;
+    }
+
+    #lobby-table td[data-label]::before {
+        content: attr(data-label);
+        color: #aaa;
+        font-size: 0.8rem;
+        min-width: 110px;
+        flex-shrink: 0;
+    }
+
+    /* Settings cell: show content inline, hide tooltip label */
+    .lobby-settings-td {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lobby-settings-td::before {
+        content: "Settings";
+        color: #aaa;
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+
+    .lobby-settings-td .settings-tip {
+        font-size: 0;
+        text-decoration: none;
+        cursor: default;
+        white-space: normal;
+    }
+
+    .lobby-settings-td .settings-tip-content {
+        display: block;
+        position: static;
+        background: none;
+        border: none;
+        padding: 0;
+        box-shadow: none;
+        font-size: 0.78rem;
+        color: #aaa;
+        white-space: normal;
+        line-height: 1.6;
+    }
+
+    /* Join button cell */
+    .lobby-join-td {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        justify-content: center;
+    }
+
+    .lobby-join-td a {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 8px;
+        background: #652895;
+        color: #fff;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .lobby-join-td a:hover {
+        background: #7d35b5;
     }
 }

@@ -49,14 +49,23 @@ def lobby_list():
     lobby_ids = [l.id for l in active_lobbies]
     player_counts = {}
     yaml_counts = {}
+    owner_names = {}
     if lobby_ids:
         for lid, cnt in select((p.lobby.id, count()) for p in LobbyPlayer if p.lobby.id in lobby_ids):
             player_counts[lid] = cnt
         for lid, cnt in select((y.lobby.id, count()) for y in LobbyYaml if y.lobby.id in lobby_ids):
             yaml_counts[lid] = cnt
+        for lid, name in select(
+            (p.lobby.id, p.player_name) for p in LobbyPlayer
+            if p.lobby.id in lobby_ids and p.session_id == p.lobby.owner
+        ):
+            owner_names[lid] = name
+
+    lobby_metas = {l.id: json.loads(l.meta) for l in active_lobbies}
 
     return render_template("lobbyList.html", lobbies=active_lobbies,
-                           player_counts=player_counts, yaml_counts=yaml_counts)
+                           player_counts=player_counts, yaml_counts=yaml_counts,
+                           owner_names=owner_names, lobby_metas=lobby_metas)
 
 
 @app.route('/lobby/create', methods=['GET', 'POST'])
@@ -173,6 +182,11 @@ def lobby_view(lobby: UUID):
     server_opts = meta.get("server_options", {})
     gen_opts = meta.get("generator_options", {})
 
+    owner_name = select(
+        p.player_name for p in LobbyPlayer
+        if p.lobby == lobby and p.session_id == lobby.owner
+    ).first() or "Unknown"
+
     return render_template(
         "lobby.html",
         lobby=lobby,
@@ -186,6 +200,7 @@ def lobby_view(lobby: UUID):
         is_full=is_full,
         server_opts=server_opts,
         gen_opts=gen_opts,
+        owner_name=owner_name,
         instance_name=Utils.instance_name or "Archipelago",
     )
 
