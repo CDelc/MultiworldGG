@@ -18,6 +18,9 @@
     let idleCycles = 0;
     let currentPlayerCount = 0;
     let knownVersion = null;
+    let pollErrorCount = 0;
+    let lastReadyCount = 0;
+    let lastTotalCount = 0;
 
     // Returns { fast, slow, idleThreshold } based on lobby size.
     // Small lobby  (<20 players): 3s → 10s after ~15s idle
@@ -61,7 +64,7 @@
                         clearInterval(pollTimer);
                         document.getElementById("lobby-container").innerHTML =
                             '<h2>You have been removed from this lobby.</h2>' +
-                            '<p><a href="/lobbies">Back to Lobbies</a></p>';
+                            '<a href="/lobbies" class="lobby-back-link">&larr; Back to lobby list</a>';
                         return;
                     }
                 }
@@ -77,8 +80,18 @@
                 }
 
                 currentPlayerCount = data.players.length;
+                lastReadyCount = data.ready_count || 0;
+                lastTotalCount = data.player_count || 0;
+                pollErrorCount = 0;
             })
-            .catch(err => console.error("Poll error:", err));
+            .catch(err => {
+                pollErrorCount++;
+                console.error("Poll error:", err);
+                if (pollErrorCount >= 3) {
+                    clearInterval(pollTimer);
+                    alert("Connection to the lobby was lost after repeated failures. Please refresh the page to reconnect.");
+                }
+            });
     }
 
     function pingAndMaybePoll() {
@@ -137,7 +150,9 @@
             if (p.id === MY_PLAYER_ID && currentState === LOBBY_STATE_OPEN) {
                 const readyClass = p.is_ready ? " ready-btn-on" : "";
                 const readyLabel = p.is_ready ? "Ready ✓" : "Mark Ready";
-                html += `<button class="ready-btn${readyClass}" data-player-id="${p.id}">${readyLabel}</button>`;
+                const hasYamls = p.yamls && p.yamls.length > 0;
+                const disabledAttr = hasYamls ? "" : " disabled title=\"Upload at least one YAML first\"";
+                html += `<button class="ready-btn${readyClass}"${disabledAttr} data-player-id="${p.id}">${readyLabel}</button>`;
             } else if (p.is_ready) {
                 html += `<span class="ready-indicator" title="Ready">✓</span>`;
             }
@@ -197,11 +212,12 @@
                 const div = document.createElement("div");
                 div.className = "chat-msg" + (msg.system ? " chat-system" : "");
                 div.dataset.messageId = msg.id;
-                const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const deleteBtn = (!msg.system && IS_OWNER)
+                const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                const isTrueSystem = msg.system && msg.sender === "System";
+                const deleteBtn = (!isTrueSystem && IS_OWNER)
                     ? `<button class="msg-delete-btn" data-message-id="${msg.id}" title="Delete message">&times;</button>`
                     : "";
-                if (msg.system) {
+                if (isTrueSystem) {
                     div.innerHTML = `<span class="chat-time">${time}</span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
                 } else {
                     div.innerHTML = `${deleteBtn}<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span>`;
@@ -295,6 +311,14 @@
         if (data.room_id) {
             html += `<p><a href="/room/${data.room_id}" class="lobby-btn lobby-btn-primary">Go to Room</a></p>`;
         }
+        if (data.server_password) {
+            const pw = data.server_password.replace(/"/g, "&quot;");
+            html += `<p class="server-password-row">Server Password:
+                <span class="server-password-reveal">
+                    <span class="password-placeholder">hover to reveal</span>
+                    <span class="password-value">${pw}</span>
+                </span></p>`;
+        }
         resultDiv.innerHTML = html;
         resultDiv.style.display = "block";
     }
@@ -320,7 +344,7 @@
                         lastMessageId = data.id;
                         const div = document.createElement("div");
                         div.className = "chat-msg";
-                        const time = new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const time = new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
                         div.innerHTML = `<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(data.sender)}:</strong> <span class="chat-text">${escapeHtml(data.content)}</span>`;
                         chatMessages.appendChild(div);
                         scrollChatToBottom();
@@ -443,6 +467,10 @@
 
     if (downloadPackageBtn) {
         downloadPackageBtn.addEventListener("click", () => {
+            if (lastReadyCount < lastTotalCount) {
+                const unready = lastTotalCount - lastReadyCount;
+                if (!confirm(`${unready} player(s) are not ready yet. Download package anyway?`)) return;
+            }
             window.location.href = `${API_BASE}/download-package`;
         });
     }
@@ -548,6 +576,7 @@
     function bindReadyButtons() {
         document.querySelectorAll(".ready-btn").forEach(btn => {
             btn.addEventListener("click", function () {
+                btn.disabled = true;
                 fetch(API_BASE + "/ready", { method: "POST" })
                     .then(res => res.json())
                     .then(data => {
@@ -556,7 +585,10 @@
                             pollStatus();
                         }
                     })
-                    .catch(err => console.error("Ready toggle error:", err));
+                    .catch(err => console.error("Ready toggle error:", err))
+                    .finally(() => {
+                        setTimeout(() => { btn.disabled = false; }, 1500);
+                    });
             });
         });
     }
@@ -593,7 +625,12 @@
 
     if (generateBtn) {
         generateBtn.addEventListener("click", () => {
-            if (!confirm("Generate the seed with all uploaded YAMLs?")) return;
+            if (lastReadyCount < lastTotalCount) {
+                const unready = lastTotalCount - lastReadyCount;
+                if (!confirm(`${unready} player(s) are not ready yet. Generate anyway?`)) return;
+            } else {
+                if (!confirm("Generate the seed with all uploaded YAMLs?")) return;
+            }
 
             generateBtn.disabled = true;
             generateBtn.textContent = "Generating...";

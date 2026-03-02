@@ -107,7 +107,7 @@
     flex-direction: row;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 10px;
+    margin-bottom: 80px;
 }
 
 #lobby-container {
@@ -256,12 +256,14 @@
 
 .yaml-delete-btn {
     background: none;
-    border: none;
+    border: 1px solid transparent;
     color: #dc3545;
     cursor: pointer;
     font-size: 1.1rem;
     padding: 0 4px;
     line-height: 1;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .yaml-delete-btn:hover {
@@ -277,6 +279,8 @@
     border-radius: 3px;
     cursor: pointer;
     color: #856404;
+    box-sizing: border-box;
+    line-height: 1.2;
 }
 
 .kick-btn:hover {
@@ -383,10 +387,19 @@
 
 .chat-system-text {
     color: pink;
+    margin-left: 4px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.chat-text {
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 #chat-input-area {
     display: flex;
+    align-items: center;
     gap: 8px;
 }
 
@@ -410,6 +423,8 @@
     background: #fff;
     cursor: pointer;
     font-size: 0.9rem;
+    box-sizing: border-box;
+    line-height: 1.2;
 }
 
 .lobby-btn:hover {
@@ -616,6 +631,36 @@ a.lobby-btn-primary:hover {
     display: block;
 }
 
+.settings-tip.tip-upward .settings-tip-content {
+    top: auto;
+    bottom: 100%;
+}
+
+.server-password-row {
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.server-password-reveal {
+    cursor: help;
+    margin-left: 6px;
+}
+
+.server-password-reveal .password-value {
+    display: none;
+    color: #ffdd5a;
+    font-family: monospace;
+    user-select: all;
+}
+
+.server-password-reveal:hover .password-placeholder {
+    display: none;
+}
+
+.server-password-reveal:hover .password-value {
+    display: inline;
+}
+
 .lobby-info-right {
     display: flex;
     align-items: center;
@@ -736,6 +781,9 @@ a.lobby-btn-primary:hover {
 .ready-btn {
     font-size: 0.75rem;
     padding: 2px 8px;
+    min-height: 22px;
+    box-sizing: border-box;
+    line-height: 1.2;
     border: 1px solid #28a745;
     border-radius: 3px;
     background: none;
@@ -748,7 +796,12 @@ a.lobby-btn-primary:hover {
     color: #fff;
 }
 
-.ready-btn:hover { background: #28a745; color: #fff; }
+.ready-btn:hover:not(:disabled) { background: #28a745; color: #fff; }
+
+.ready-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
 .ready-indicator { font-size: 0.75rem; color: #28a745; }
 
 .custom-disclaimer {

@@ -10,7 +10,7 @@ from uuid import UUID
 
 from flask import request, session, jsonify, send_file
 from markupsafe import Markup
-from pony.orm import commit, select, flush
+from pony.orm import commit, count, select, flush
 
 from WebHostLib.api import api_endpoints
 from WebHostLib.check import get_yaml_data, roll_options
@@ -210,6 +210,13 @@ def lobby_status(lobby: UUID):
             result["seed_id"] = to_url(lobby.seed.id)
         if lobby.room:
             result["room_id"] = to_url(lobby.room.id)
+        session_id = session.get("_id")
+        is_member = session_id and any(p.session_id == session_id for p in player_rows)
+        if is_member:
+            meta = json.loads(lobby.meta)
+            pw = meta.get("server_options", {}).get("server_password")
+            if pw:
+                result["server_password"] = pw
 
     if lobby.state == LOBBY_GENERATING and lobby.generation_id:
         gen_id = lobby.generation_id
@@ -547,6 +554,9 @@ def lobby_toggle_ready(lobby: UUID):
     if not player:
         return jsonify({"error": "You are not in this lobby"}), 403
 
+    if not player.is_ready and not select(y for y in LobbyYaml if y.lobby == lobby and y.player == player).exists():
+        return jsonify({"error": "Upload at least one YAML before marking ready"}), 400
+
     player.is_ready = not player.is_ready
     lobby.last_activity = datetime.utcnow()
     commit()
@@ -666,7 +676,12 @@ def lobby_update_settings(lobby: UUID):
 
     if "max_players" in data:
         try:
-            lobby.max_players = max(0, min(int(data["max_players"]), 100))
+            new_max = max(0, min(int(data["max_players"]), 100))
+            if new_max > 0:
+                current_count = count(p for p in LobbyPlayer if p.lobby == lobby)
+                if new_max < current_count:
+                    return jsonify({"error": f"Cannot set max players to {new_max} — lobby already has {current_count} players."}), 400
+            lobby.max_players = new_max
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid max_players"}), 400
 

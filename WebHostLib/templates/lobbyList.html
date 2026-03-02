@@ -91,4 +91,15 @@
         </div>
     </div>
     {% include 'islandFooter.html' %}
+    <script>
+        document.querySelectorAll(".settings-tip").forEach(function(tip) {
+            tip.addEventListener("mouseenter", function() {
+                const content = tip.querySelector(".settings-tip-content");
+                if (!content) return;
+                const rect = content.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - tip.getBoundingClientRect().bottom;
+                tip.classList.toggle("tip-upward", spaceBelow < rect.height + 16);
+            });
+        });
+    </script>
 {% endblock %}
