@@ -779,6 +779,12 @@ a.lobby-btn-primary:hover {
 }
 
 .ready-btn {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     font-size: 0.75rem;
     padding: 2px 8px;
     height: 22px;
@@ -790,7 +796,6 @@ a.lobby-btn-primary:hover {
     color: #28a745;
     cursor: pointer;
     outline: none;
-    vertical-align: middle;
 }
 
 .ready-btn.ready-btn-on {
@@ -799,6 +804,13 @@ a.lobby-btn-primary:hover {
 }
 
 .ready-btn:hover:not(:disabled) { background: #28a745; color: #fff; }
+
+.ready-btn:active:not(:disabled) {
+    background: #28a745;
+    color: #fff;
+    transform: none;
+    box-shadow: none;
+}
 
 .ready-btn:disabled {
     opacity: 0.5;
