@@ -27,9 +27,9 @@
                         Collect: {{ server_opts.get('collect_mode', 'auto') }} &mdash;
                         Remaining: {{ server_opts.get('remaining_mode', 'goal') }} &mdash;
                         {% set hm = server_opts.get('hint_mode', 'default') %}
-                        Hints: {% if hm == 'default' %}Full{% elif hm == 'own' %}Hide Own{% elif hm == 'all' %}Hide All{% else %}{{ hm }}{% endif %}
-                        @ {% set hc = server_opts.get('hint_cost', 10) %}{% if hc > 100 %}Off{% else %}{{ hc }}%{% endif %} &mdash;
-                        Item Cheat: {{ 'On' if server_opts.get('item_cheat', True) else 'Off' }}
+                        Hints: {% if hm == 'default' %}full{% elif hm == 'own' %}hide own{% elif hm == 'all' %}hide all{% else %}{{ hm }}{% endif %}
+                        @ {% set hc = server_opts.get('hint_cost', 10) %}{% if hc > 100 %}off{% else %}{{ hc }}%{% endif %} &mdash;
+                        Item Cheat: {{ 'on' if server_opts.get('item_cheat', True) else 'off' }}
                     </p>
                 </div>
                 <div id="lobby-join">
@@ -105,9 +105,9 @@
                             Release: {{ server_opts.get('release_mode', '?') }} |
                             Collect: {{ server_opts.get('collect_mode', '?') }} |
                             Remaining: {{ server_opts.get('remaining_mode', '?') }} |
-                            Hints: {% set hm = server_opts.get('hint_mode', 'default') %}{% if hm == 'default' %}Full{% elif hm == 'own' %}Hide Own{% elif hm == 'all' %}Hide All{% else %}{{ hm }}{% endif %} @ {% set hc = server_opts.get('hint_cost', 5) %}{% if hc > 100 %}Off{% else %}{{ hc }}%{% endif %} |
-                            Item Cheat: {% if server_opts.get('item_cheat') %}On{% else %}Off{% endif %} |
-                            Spoiler: {% set sp = gen_opts.get('spoiler', 0) %}{% if sp == 0 %}Off{% elif sp == 1 %}On{% elif sp == 2 %}+Playthrough{% elif sp == 3 %}Full{% endif %}
+                            Hints: {% set hm = server_opts.get('hint_mode', 'default') %}{% if hm == 'default' %}full{% elif hm == 'own' %}hide own{% elif hm == 'all' %}hide all{% else %}{{ hm }}{% endif %} @ {% set hc = server_opts.get('hint_cost', 5) %}{% if hc > 100 %}off{% else %}{{ hc }}%{% endif %} |
+                            Item Cheat: {% if server_opts.get('item_cheat') %}on{% else %}off{% endif %} |
+                            Spoiler: {% set sp = gen_opts.get('spoiler', 0) %}{% if sp == 0 %}off{% elif sp == 1 %}on{% elif sp == 2 %}+playthrough{% elif sp == 3 %}full{% endif %}
                         </span>
                     </div>
                     {% if lobby.state == 0 %}
