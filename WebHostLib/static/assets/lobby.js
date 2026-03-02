@@ -17,6 +17,7 @@
     let pollInterval = 3000;
     let idleCycles = 0;
     let currentPlayerCount = 0;
+    let maxYamlsHeld = 0;
     let knownVersion = null;
     let pollErrorCount = 0;
     let lastReadyCount = 0;
@@ -136,6 +137,7 @@
         const playerList = document.getElementById("lobby-players");
         if (!playerList) return;
 
+        maxYamlsHeld = Math.max(0, ...players.map(p => p.yamls ? p.yamls.length : 0));
         playerList.innerHTML = "";
         players.forEach(p => {
             const li = document.createElement("li");
@@ -312,6 +314,18 @@
         else if (data.state === LOBBY_STATE_GENERATING) statusEl.textContent = "Generating...";
         else if (data.state === LOBBY_STATE_DONE) statusEl.textContent = "Seed created, Lobby locked";
         else if (data.state === LOBBY_STATE_CLOSED) statusEl.textContent = "Closed";
+
+        if (data.max_yamls_per_player != null) {
+            MAX_YAMLS_PER_PLAYER = data.max_yamls_per_player;
+        }
+
+        const metaMain = document.getElementById("lobby-meta-main");
+        if (metaMain && data.max_yamls_per_player != null) {
+            const maxP = data.max_players > 0 ? `/${data.max_players}` : "";
+            const race = data.race ? "Race Mode | " : "";
+            const customAP = data.allow_custom_apworlds ? "Custom APWorlds: enabled" : "Custom APWorlds: disabled";
+            metaMain.textContent = `Max YAMLs: ${data.max_yamls_per_player} | Players: ${data.player_count}${maxP} | Timeout: ${data.timeout_minutes} min | ${race}${customAP}`;
+        }
 
         const metaOpts = document.getElementById("lobby-meta-opts");
         if (metaOpts && data.server_opts) {
@@ -721,9 +735,15 @@
     if (settingsSaveBtn) {
         settingsSaveBtn.addEventListener("click", () => {
             const maxPlayersEl = document.getElementById("edit-max-players");
+            const newMaxYamls = parseInt(document.getElementById("edit-max-yamls").value);
+            if (newMaxYamls < maxYamlsHeld) {
+                alert(`Cannot lower max YAMLs below ${maxYamlsHeld} — a player already has that many.`);
+                return;
+            }
+
             const payload = {
                 title: document.getElementById("edit-title").value.trim(),
-                max_yamls_per_player: parseInt(document.getElementById("edit-max-yamls").value),
+                max_yamls_per_player: newMaxYamls,
                 timeout_minutes: parseInt(document.getElementById("edit-timeout").value),
                 max_players: maxPlayersEl ? parseInt(maxPlayersEl.value) || 0 : undefined,
                 release_mode: document.getElementById("edit-release-mode").value,

@@ -198,6 +198,7 @@ def lobby_status(lobby: UUID):
         "total_yamls": total_yamls,
         "max_yamls_per_player": lobby.max_yamls_per_player,
         "max_players": lobby.max_players,
+        "timeout_minutes": lobby.timeout_minutes,
         "allow_custom_apworlds": lobby.allow_custom_apworlds,
         "has_custom": has_custom,
         "server_opts": server_opts,
@@ -675,7 +676,14 @@ def lobby_update_settings(lobby: UUID):
 
     if "max_yamls_per_player" in data:
         try:
-            lobby.max_yamls_per_player = max(1, min(int(data["max_yamls_per_player"]), 20))
+            new_max_yamls = max(1, min(int(data["max_yamls_per_player"]), 20))
+            max_currently_held = max(
+                (len(p.yamls) for p in LobbyPlayer if p.lobby == lobby),
+                default=0
+            )
+            if new_max_yamls < max_currently_held:
+                return jsonify({"error": f"Cannot lower max YAMLs below {max_currently_held} — a player already has that many."}), 400
+            lobby.max_yamls_per_player = new_max_yamls
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid max_yamls_per_player"}), 400
 

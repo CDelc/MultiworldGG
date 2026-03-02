@@ -78,7 +78,7 @@
                 {# Main lobby interface #}
                 <div id="lobby-info">
                     <div class="lobby-info-row">
-                        <span class="lobby-meta">
+                        <span id="lobby-meta-main" class="lobby-meta">
                             Max YAMLs: {{ lobby.max_yamls_per_player }} |
                             Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} |
                             Timeout: {{ lobby.timeout_minutes }} min |
@@ -375,7 +375,7 @@
         let lastMessageId = {{ recent_messages[-1].id if recent_messages else 0 }};
         let currentState = {{ lobby.state }};
         let hasCustomYamls = {{ "true" if has_custom else "false" }};
-        const MAX_YAMLS_PER_PLAYER = {{ lobby.max_yamls_per_player }};
+        let MAX_YAMLS_PER_PLAYER = {{ lobby.max_yamls_per_player }};
     </script>
     <script src="{{ url_for('static', filename='assets/lobby.js') }}"></script>
     {% endif %}
