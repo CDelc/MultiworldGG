@@ -33,7 +33,6 @@
         return { fast: 3000, slow: 10000, idleThreshold: 5 };
     }
 
-    // Scroll chat to bottom
     function scrollChatToBottom() {
         if (chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -223,9 +222,6 @@
     }
 
     function insertMessageInOrder(div, msgId) {
-        // Find the first existing message with a higher ID and insert before it,
-        // so messages always appear in server-assigned ID order regardless of
-        // which client echoed them first.
         const existing = chatMessages.querySelectorAll(".chat-msg[data-message-id]");
         for (const el of existing) {
             if (parseInt(el.dataset.messageId, 10) > msgId) {
@@ -346,7 +342,6 @@
         resultDiv.style.display = "block";
     }
 
-    // Chat
     function sendChat() {
         if (!chatInput) return;
         const message = chatInput.value.trim();
@@ -753,6 +748,10 @@
         generateStandard.style.display = isCustomMode ? "none" : "";
         generateCustom.style.display = isCustomMode ? "" : "none";
     }
+
+    document.querySelectorAll(".chat-time[data-utc]").forEach(el => {
+        el.textContent = new Date(el.dataset.utc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    });
 
     pollStatus();
     pollTimer = setInterval(pingAndMaybePoll, pollInterval);

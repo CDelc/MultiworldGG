@@ -196,7 +196,7 @@
                                     {% if is_owner and msg.player is not none %}
                                         <button class="msg-delete-btn" data-message-id="{{ msg.id }}" title="Delete message">&times;</button>
                                     {% endif %}
-                                    <span class="chat-time">{{ msg.sent_at.strftime('%H:%M') }}</span>
+                                    <span class="chat-time" data-utc="{{ msg.sent_at.isoformat() }}Z"></span>
                                     {% if msg.player is none %}
                                         <span class="chat-system-text">{{ msg.content }}</span>
                                     {% else %}
