@@ -214,7 +214,7 @@ def uploads():
 def user_content():
     rooms = select(room for room in Room if room.owner == session["_id"])
     seeds = select(seed for seed in Seed if seed.owner == session["_id"])
-    lobbies = select(l for l in Lobby if l.owner == session["_id"]).order_by(lambda l: l.last_activity)[::]
+    lobbies = select(l for l in Lobby if l.owner == session["_id"] and l.state >= 0).order_by(lambda l: l.last_activity)[::]
     return render_template("userContent.html", rooms=rooms, seeds=seeds, lobbies=lobbies)
 
 

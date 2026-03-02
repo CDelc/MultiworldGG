@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import multiprocessing
+import os
 import typing
 from datetime import timedelta, datetime
 from threading import Event, Thread
@@ -140,16 +141,30 @@ def cleanup():
     if rooms or seeds or slots:
         logging.info(f"{rooms} Rooms, {seeds} Seeds and {slots} Slots have been deleted.")
 
-    # Clean up expired lobbies (closed for > 1 hour) and done lobbies (> 7 days old)
+    # Clean up expired lobbies (closed for > 1 hour) and done lobbies (> 3 days old)
     with db_session:
         now = datetime.utcnow()
         closed_cutoff = now - timedelta(hours=1)
-        done_cutoff = now - timedelta(days=7)
+        done_cutoff = now - timedelta(days=3)
         stale_lobbies = Lobby.select(
             lambda l: (l.state == LOBBY_CLOSED and l.last_activity < closed_cutoff) or
                       (l.state == LOBBY_DONE and l.last_activity < done_cutoff)
         )[:]
         for lobby in stale_lobbies:
+            # Delete apworld files and lobby subdirectory from filesystem
+            lobby_apworld_dir = None
+            for a in list(lobby.apworlds):
+                try:
+                    lobby_apworld_dir = os.path.dirname(a.storage_path)
+                    os.unlink(a.storage_path)
+                except OSError:
+                    pass
+                a.delete()
+            if lobby_apworld_dir:
+                try:
+                    os.rmdir(lobby_apworld_dir)
+                except OSError:
+                    pass  # not empty or already gone
             # Clear player references on messages first, then delete in dependency order
             for m in lobby.messages:
                 m.player = None
@@ -359,6 +374,6 @@ class MultiworldInstance():
         self.process = None
 
 
-from .models import Room, Generation, STATE_QUEUED, STATE_STARTED, STATE_ERROR, db, Seed, Slot, Lobby, LOBBY_OPEN, LOBBY_GENERATING, LOBBY_CLOSED, LOBBY_DONE
+from .models import Room, Generation, STATE_QUEUED, STATE_STARTED, STATE_ERROR, db, Seed, Slot, Lobby, LobbyApworld, LOBBY_OPEN, LOBBY_GENERATING, LOBBY_CLOSED, LOBBY_DONE
 from .customserver import run_server_process, get_static_server_data
 from .generate import gen_game

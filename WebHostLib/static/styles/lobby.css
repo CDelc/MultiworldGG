@@ -1,4 +1,3 @@
-/* Lobby List */
 #lobby-list-wrapper {
     display: flex;
     flex-direction: column;
@@ -58,7 +57,6 @@
     font-size: 24px;
 }
 
-/* Lobby Create */
 #lobby-create-wrapper {
     display: flex;
     flex-direction: row;
@@ -104,7 +102,6 @@
     margin: 30px 0;
 }
 
-/* Lobby View */
 #lobby-wrapper {
     display: flex;
     flex-direction: row;
@@ -152,12 +149,11 @@
     min-height: 400px;
 }
 
-/* Sidebar */
 #lobby-sidebar {
-    width: 400px;
+    width: 600px;
     flex-shrink: 0;
     border-right: 1px solid #ddd;
-    padding-right: 10px;
+    padding-right: 7px;
 }
 
 #lobby-sidebar h3 {
@@ -167,25 +163,31 @@
 
 #lobby-players {
     list-style: none;
-    padding: 8px;
+    padding: 7px;
     margin: 0;
-    max-height: 550px;
+    max-height: 410px;
     overflow-y: auto;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0.1, 0.1, 0.1, 0.4);
     border-radius: 4px;
 }
 
+.lobby-player-loading {
+    padding: 7px;
+    color: #aaa;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
 .lobby-player {
-    padding: 8px 8px;
+    padding: 7px 7px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0.2,0.2,0.2,0.3);
 }
 
 .lobby-player-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .lobby-player strong {
@@ -209,8 +211,8 @@
 }
 
 .yaml-slot-name {
-    width: 130px;
-    min-width: 130px;
+    width: 120px;
+    min-width: 120px;
     color: white;
     font-size: 0.85rem;
     cursor: default;
@@ -282,10 +284,9 @@
     color: #000;
 }
 
-/* YAML Upload */
 #yaml-upload-area {
-    margin-top: 30px;
-    padding-top: 20px;
+    margin-top: 10px;
+    padding-top: 10px;
     border-top: 2px solid #ddd;
 }
 
@@ -310,7 +311,7 @@
     padding: 10px;
     text-align: center;
     transition: all 0.3s ease;
-    background-color: rgba(61, 8, 50, 0.74);
+    background-color: rgba(0.1, 0.1, 0.1, 0.4);
 }
 
 .drop-zone.drag-over {
@@ -320,11 +321,10 @@
 
 .drop-zone p {
     margin: 0;
-    color: #ea166c;
+    color: #ffdd5a;
     font-size: 0.8rem;
 }
 
-/* Chat */
 #lobby-chat {
     flex-grow: 1;
     display: flex;
@@ -332,12 +332,10 @@
 }
 
 #chat-messages {
-    flex-grow: 1;
     overflow-y: auto;
-    max-height: 800px;
-    min-height: 500px;
+    height: 500px;
     padding: 10px;
-    background: rgba(0.1, 0.1, 0.1, 0.3);
+    background: rgba(0.1, 0.1, 0.1, 0.4);
     border: 1px solid #ddd;
     border-radius: 4px;
     margin-bottom: 10px;
@@ -347,11 +345,33 @@
     padding: 3px 0;
     line-height: 1.4;
     word-wrap: break-word;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.msg-delete-btn {
+    background: none;
+    border: none;
+    color: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0 4px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.chat-msg:hover .msg-delete-btn {
+    color: #888;
+}
+
+.msg-delete-btn:hover {
+    color: #dc3545 !important;
 }
 
 .chat-time {
     font-size: 0.75rem;
-    color: #ea166c;
+    color: white;
     margin-right: 6px;
 }
 
@@ -365,7 +385,7 @@
 }
 
 .chat-system-text {
-    color: #ea166c;
+    color: pink;
 }
 
 #chat-input-area {
@@ -386,7 +406,6 @@
     border-color: #652895;
 }
 
-/* Buttons */
 .lobby-btn {
     padding: 8px 16px;
     border-radius: 4px;
@@ -449,7 +468,6 @@ a.lobby-btn-primary:hover {
     background: #a71d2a;
 }
 
-/* Generate section */
 #lobby-generate {
     margin-top: 20px;
     padding-top: 15px;
@@ -470,7 +488,6 @@ a.lobby-btn-primary:hover {
     color: white;
 }
 
-/* Generating */
 #lobby-generating {
     margin-top: 20px;
     padding: 20px;
@@ -485,7 +502,6 @@ a.lobby-btn-primary:hover {
     font-weight: bold;
 }
 
-/* Result */
 #lobby-result {
     margin-top: 20px;
     padding: 20px;
@@ -505,7 +521,6 @@ a.lobby-btn-primary:hover {
     color: white;
 }
 
-/* Join form */
 #lobby-join {
     max-width: 400px;
     margin: 20px auto;
@@ -536,20 +551,12 @@ a.lobby-btn-primary:hover {
     text-align: center !important;
 }
 
-/* Leave button */
-#leave-btn {
-    margin-top: 15px;
-    width: 100%;
-}
-
-/* Info bar right cluster */
 .lobby-info-right {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-/* Settings modal */
 #settings-modal {
     display: none;
     position: fixed;
@@ -611,7 +618,96 @@ a.lobby-btn-primary:hover {
     margin-top: 24px;
 }
 
-/* Responsive */
+.badge-custom-apworlds {
+    background: #f0a500;
+    color: #000;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.yaml-custom-tag {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    cursor: default;
+    line-height: 1;
+}
+
+.yaml-game-custom {
+    color: #e07b00 !important;
+}
+
+.apworld-upload-btn {
+    background: none;
+    border: 1px solid #e07b00;
+    color: #e07b00;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.apworld-upload-btn:hover {
+    background: #e07b00;
+    color: #fff;
+}
+
+.apworld-status-ok {
+    color: #28a745;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.apworld-missing {
+    color: #ffc107;
+    font-size: 1rem;
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.ready-btn {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border: 1px solid #28a745;
+    border-radius: 3px;
+    background: none;
+    color: #28a745;
+    cursor: pointer;
+}
+
+.ready-btn.ready-btn-on {
+    background: #28a745;
+    color: #fff;
+}
+
+.ready-btn:hover { background: #28a745; color: #fff; }
+.ready-indicator { font-size: 0.75rem; color: #28a745; }
+
+.custom-disclaimer {
+    border: 2px solid #e07b00;
+    background: rgba(224, 123, 0, 0.12);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    color: #ffcc80;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.drop-zone-label {
+    color: pink;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#upload-game-zone.uploading {
+    border-color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
 @media (max-width: 768px) {
     #lobby-main {
         flex-direction: column;

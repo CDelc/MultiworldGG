@@ -51,7 +51,6 @@
                                     {% if lobby.state == 0 %}<span class="status-open">Open</span>
                                     {% elif lobby.state == 1 %}<span class="status-generating">Generating…</span>
                                     {% elif lobby.state == 2 %}<span class="status-done">Seed created</span>
-                                    {% elif lobby.state == -1 %}<span style="color:#dc3545">Expired</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ lobby.players | length }}</td>

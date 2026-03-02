@@ -14,6 +14,9 @@
             {% if lobby.state == -1 %}
                 <p class="lobby-expired">This lobby has expired.</p>
             {% elif not player and lobby.state == 0 %}
+                {% if is_full %}
+                    <p class="lobby-expired">This lobby is full.</p>
+                {% else %}
                 {# Join form #}
                 <div id="lobby-join">
                     <h2>Join Lobby</h2>
@@ -31,6 +34,7 @@
                         <button type="submit" class="lobby-btn">Join</button>
                     </form>
                 </div>
+                {% endif %}
             {% elif not player %}
                 {# Non-joined visitor viewing a non-open lobby #}
                 <p>This lobby is
@@ -44,12 +48,18 @@
                     <div class="lobby-info-row">
                         <span class="lobby-meta">
                             Max YAMLs: {{ lobby.max_yamls_per_player }} |
+                            Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} |
                             Timeout: {{ lobby.timeout_minutes }} min |
                             {% if lobby.race %}Race Mode{% else %}Standard{% endif %}
+                            {% if lobby.allow_custom_apworlds %} | <span class="badge-custom-apworlds">Custom APWorlds: Enabled</span>{% endif %}
                         </span>
                         <span class="lobby-info-right">
+                            {% if not is_owner and lobby.state == 0 %}
+                                <button id="leave-btn" class="lobby-btn lobby-btn-danger">Leave Lobby</button>
+                            {% endif %}
                             {% if is_owner and lobby.state == 0 %}
-                                <button id="settings-edit-btn" class="lobby-btn">&#9881; Edit Settings</button>
+                                <button id="close-btn" class="lobby-btn lobby-btn-danger">Close Lobby</button>
+                                <button id="settings-edit-btn" class="lobby-btn lobby-btn-primary">&#9881; Edit Settings</button>
                             {% endif %}
                             <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
                                 {% if lobby.state == 0 %}Open
@@ -76,57 +86,31 @@
                     <div id="lobby-sidebar">
                         <h3>Players</h3>
                         <ul id="lobby-players">
-                            {% for p in lobby.players | sort(attribute='joined_at') %}
-                                <li class="lobby-player" data-player-id="{{ p.id }}">
-                                    <div class="lobby-player-header">
-                                        <strong>{{ p.player_name }}{% if p.session_id == lobby.owner %} (Host){% endif %}</strong>
-                                        {% if is_owner and p.session_id != lobby.owner and lobby.state == 0 %}
-                                            <button class="kick-btn" data-player-id="{{ p.id }}" title="Kick player">Kick</button>
-                                        {% endif %}
-                                    </div>
-                                    <ul class="player-yamls">
-                                        {% for y in p.yamls | sort(attribute='uploaded_at') %}
-                                            <li data-yaml-id="{{ y.id }}">
-                                                <span class="yaml-slot-name" data-tooltip="{{ y.filename }}"><span>{{ y.yaml_player_name }}</span></span>
-                                                {% if y.yaml_game %}
-                                                    <a class="yaml-game-name" href="/games/{{ y.yaml_game | urlencode }}/player-options">{{ y.yaml_game }}</a>
-                                                {% else %}
-                                                    <span class="yaml-game-name">{{ y.filename }}</span>
-                                                {% endif %}
-                                                <a class="yaml-download-btn" href="/api/lobby/{{ lobby.id | suuid }}/yaml/{{ y.id }}" title="Download YAML" download>&#x2B07;</a>
-                                                {% if player and (p == player or is_owner) and lobby.state == 0 %}
-                                                    <button class="yaml-delete-btn" data-yaml-id="{{ y.id }}" title="Remove YAML">&times;</button>
-                                                {% endif %}
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </li>
-                            {% endfor %}
+                            <li class="lobby-player-loading">Loading players&hellip;</li>
                         </ul>
 
                         {% if player and lobby.state == 0 %}
                             <div id="yaml-upload-area">
                                 <h3>Upload YAML</h3>
-                                <form id="yaml-upload-form" enctype="multipart/form-data">
-                                    <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple>
-                                    <button type="button" id="yaml-upload-btn" class="lobby-btn">Upload</button>
-                                </form>
                                 <div id="yaml-upload-drop" class="drop-zone">
-                                    <p>or drag & drop files here</p>
+                                    <p>Drop .yaml / .zip files here, or
+                                        <label for="yaml-file-input" class="drop-zone-label">browse</label>
+                                    </p>
+                                    <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple style="display:none">
                                 </div>
                             </div>
                         {% endif %}
 
-                        {% if not is_owner and player and lobby.state == 0 %}
-                            <button id="leave-btn" class="lobby-btn lobby-btn-danger">Leave Lobby</button>
-                        {% endif %}
                     </div>
 
                     {# Center: Chat #}
                     <div id="lobby-chat">
                         <div id="chat-messages">
                             {% for msg in recent_messages %}
-                                <div class="chat-msg {% if msg.player is none %}chat-system{% endif %}">
+                                <div class="chat-msg {% if msg.player is none %}chat-system{% endif %}" data-message-id="{{ msg.id }}">
+                                    {% if is_owner and msg.player is not none %}
+                                        <button class="msg-delete-btn" data-message-id="{{ msg.id }}" title="Delete message">&times;</button>
+                                    {% endif %}
                                     <span class="chat-time">{{ msg.sent_at.strftime('%H:%M') }}</span>
                                     {% if msg.player is none %}
                                         <span class="chat-system-text">{{ msg.content }}</span>
@@ -147,16 +131,37 @@
                 </div>
 
                 {# Generation controls #}
+                {% if lobby.state == 0 %}
+                <div id="ready-count-label" style="font-size:0.85rem; color:#aaa; text-align:center; margin-bottom:6px;"></div>
+                {% endif %}
                 {% if lobby.state == 0 and is_owner %}
                     <div id="lobby-generate">
-                        <button id="generate-btn" class="lobby-btn lobby-btn-primary"
-                                {% if yaml_count == 0 %}disabled{% endif %}>
-                            Generate Seed
-                        </button>
+                        <div id="generate-standard">
+                            <button id="generate-btn" class="lobby-btn lobby-btn-primary"
+                                    {% if yaml_count == 0 %}disabled{% endif %}>
+                                Generate Seed
+                            </button>
+                        </div>
+                        <div id="generate-custom" style="display:none">
+                            <div class="custom-disclaimer">
+                                &#9888; This lobby contains custom APWorlds. The server cannot generate this seed.
+                                Download the package, generate locally with the {{ instance_name }} launcher, then upload the result (AP_12345.zip) here.
+                                <div id="missing-apworlds-notice" style="display:none; margin-top:8px;">
+                                    <strong>Missing APWorlds:</strong>
+                                    <ul id="missing-apworlds-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>
+                                </div>
+                            </div>
+                            <button id="download-package-btn" class="lobby-btn lobby-btn-primary">&#x2B07; Download Package</button>
+                            <div id="upload-game-zone" class="drop-zone" style="margin-top:10px">
+                                <p>Drop AP_*.zip file here, or
+                                    <label for="game-file-input" class="drop-zone-label">browse</label>
+                                </p>
+                                <input type="file" id="game-file-input" accept=".zip" style="display:none">
+                            </div>
+                        </div>
                         <span id="generate-info">
                             {{ yaml_count }} YAML(s) from {{ player_count }} player(s)
                         </span>
-                        <button id="close-btn" class="lobby-btn lobby-btn-danger">Close Lobby</button>
                     </div>
                 {% endif %}
 
@@ -212,6 +217,16 @@
                                             </select>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td><label for="edit-max-players">Max Players:
+                                            <span class="interactive" data-tooltip="0 = unlimited">(?)
+                                            </span>
+                                        </label></td>
+                                        <td>
+                                            <input type="number" id="edit-max-players" min="0" max="100"
+                                                   value="{{ lobby.max_players }}" style="width:80px">
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -242,9 +257,9 @@
                                     <tr>
                                         <td><label for="edit-remaining-mode">Remaining:</label></td>
                                         <td>
-                                            <select id="edit-remaining-mode">
+                                            <select id="edit-remaining-mode" {% if lobby.race %}disabled{% endif %}>
                                                 {% for val, lbl in [('goal','After goal'),('enabled','Manual'),('disabled','Disabled')] %}
-                                                    <option value="{{ val }}" {% if val == server_opts.get('remaining_mode') %}selected{% endif %}>{{ lbl }}</option>
+                                                    <option value="{{ val }}" {% if lobby.race and val == 'disabled' %}selected{% elif not lobby.race and val == server_opts.get('remaining_mode') %}selected{% endif %}>{{ lbl }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
@@ -282,22 +297,23 @@
                                     <tr>
                                         <td><label for="edit-item-cheat">Item Cheat:</label></td>
                                         <td>
-                                            <select id="edit-item-cheat">
-                                                <option value="1" {% if server_opts.get('item_cheat') %}selected{% endif %}>Enabled</option>
-                                                <option value="0" {% if not server_opts.get('item_cheat') %}selected{% endif %}>Disabled</option>
+                                            <select id="edit-item-cheat" {% if lobby.race %}disabled{% endif %}>
+                                                <option value="1" {% if not lobby.race and server_opts.get('item_cheat') %}selected{% endif %}>Enabled</option>
+                                                <option value="0" selected>Disabled</option>
                                             </select>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td><label for="edit-spoiler">Spoiler Log:</label></td>
                                         <td>
-                                            <select id="edit-spoiler">
+                                            <select id="edit-spoiler" {% if lobby.race %}disabled{% endif %}>
                                                 {% for val, lbl in [(0,'Disabled'),(1,'Enabled'),(2,'+ Playthrough'),(3,'Full')] %}
-                                                    <option value="{{ val }}" {% if val == gen_opts.get('spoiler', 0) %}selected{% endif %}>{{ lbl }}</option>
+                                                    <option value="{{ val }}" {% if lobby.race and val == 0 %}selected{% elif not lobby.race and val == gen_opts.get('spoiler', 0) %}selected{% endif %}>{{ lbl }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
                                     </tr>
+                                    {% if lobby.race %}<tr><td colspan="2" style="font-size:0.8rem;color:#ffc107;padding-top:4px;">⚠ Remaining, Item Cheat, and Spoiler Log are locked in race mode.</td></tr>{% endif %}
                                 </tbody>
                             </table>
                         </div>
@@ -327,6 +343,7 @@
         const LOBBY_STATE_CLOSED = -1;
         let lastMessageId = {{ recent_messages[-1].id if recent_messages else 0 }};
         let currentState = {{ lobby.state }};
+        let hasCustomYamls = {{ "true" if has_custom else "false" }};
     </script>
     <script src="{{ url_for('static', filename='assets/lobby.js') }}"></script>
     {% endif %}

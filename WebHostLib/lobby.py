@@ -5,8 +5,9 @@ from flask import flash, redirect, render_template, request, session, url_for, a
 from pony.orm import commit, db_session, select, desc, count
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import Utils
 from Utils import __version__
-from WebHostLib import app
+from WebHostLib import app, limiter
 from WebHostLib.generate import get_meta
 from WebHostLib.models import (
     Lobby, LobbyPlayer, LobbyMessage, LobbyYaml,
@@ -34,7 +35,6 @@ def lobby_list():
         l for l in Lobby if l.state == LOBBY_OPEN
     ).order_by(lambda l: desc(l.last_activity))[:50]
 
-    # Expire stale lobbies on read, only commit if something changed
     any_expired = False
     for lobby in lobbies:
         old_state = lobby.state
@@ -46,7 +46,6 @@ def lobby_list():
 
     active_lobbies = [l for l in lobbies if l.state != LOBBY_CLOSED]
 
-    # Pre-compute counts to avoid N+1 queries in template
     lobby_ids = [l.id for l in active_lobbies]
     player_counts = {}
     yaml_counts = {}
@@ -88,6 +87,13 @@ def lobby_create():
 
         race = bool(request.form.get('race'))
 
+        try:
+            max_players = max(0, min(int(request.form.get('max_players', 0) or 0), 100))
+        except (ValueError, TypeError):
+            max_players = 0
+
+        allow_custom_apworlds = bool(request.form.get('allow_custom_apworlds'))
+
         owned_active = count(
             l for l in Lobby
             if l.owner == session["_id"] and l.state in (LOBBY_OPEN, LOBBY_GENERATING)
@@ -105,12 +111,13 @@ def lobby_create():
             timeout_minutes=timeout_minutes,
             max_yamls_per_player=max_yamls,
             race=race,
+            max_players=max_players,
+            allow_custom_apworlds=allow_custom_apworlds,
             meta=json.dumps(meta),
             state=LOBBY_OPEN,
         )
         commit()
 
-        # Auto-join the creator
         creator_name = request.form.get('player_name', '').strip() or 'Host'
         player = LobbyPlayer(
             lobby=lobby,
@@ -157,9 +164,10 @@ def lobby_view(lobby: UUID):
         m for m in LobbyMessage if m.lobby == lobby
     ).order_by(lambda m: desc(m.id))[:200])[::-1]
 
-    # Pre-compute counts to avoid N+1 in template
     yaml_count = count(y for y in LobbyYaml if y.lobby == lobby)
     player_count = count(p for p in LobbyPlayer if p.lobby == lobby)
+    has_custom = bool(count(y for y in LobbyYaml if y.lobby == lobby and y.is_custom))
+    is_full = lobby.max_players > 0 and player_count >= lobby.max_players
 
     meta = json.loads(lobby.meta)
     server_opts = meta.get("server_options", {})
@@ -174,12 +182,16 @@ def lobby_view(lobby: UUID):
         recent_messages=recent_messages,
         yaml_count=yaml_count,
         player_count=player_count,
+        has_custom=has_custom,
+        is_full=is_full,
         server_opts=server_opts,
         gen_opts=gen_opts,
+        instance_name=Utils.instance_name or "Archipelago",
     )
 
 
 @app.route('/lobby/<suuid:lobby>/join', methods=['POST'])
+@limiter.limit("5 per minute")
 def lobby_join(lobby: UUID):
     lobby = Lobby.get(id=lobby)
     if not lobby:
@@ -194,12 +206,10 @@ def lobby_join(lobby: UUID):
         flash('This lobby is no longer accepting new players.')
         return redirect(url_for('lobby_view', lobby=lobby.id))
 
-    # Check if already joined
     existing = _get_player_in_lobby(lobby)
     if existing:
         return redirect(url_for('lobby_view', lobby=lobby.id))
 
-    # Check membership limit
     active_memberships = count(
         p for p in LobbyPlayer
         if p.session_id == session["_id"] and p.lobby.state in (LOBBY_OPEN, LOBBY_GENERATING)
@@ -208,7 +218,12 @@ def lobby_join(lobby: UUID):
         flash('You can only be part of up to 5 active lobbies at a time.')
         return redirect(url_for('lobby_view', lobby=lobby.id))
 
-    # Verify password
+    if lobby.max_players > 0:
+        current_player_count = count(p for p in LobbyPlayer if p.lobby == lobby)
+        if current_player_count >= lobby.max_players:
+            flash('This lobby is full.')
+            return redirect(url_for('lobby_view', lobby=lobby.id))
+
     if lobby.password_hash:
         password = request.form.get('password', '')
         if not check_password_hash(lobby.password_hash, password):
@@ -223,7 +238,6 @@ def lobby_join(lobby: UUID):
         flash('Display name must be 32 characters or fewer.')
         return redirect(url_for('lobby_view', lobby=lobby.id))
 
-    # Check for duplicate names in lobby
     existing_names = select(p.player_name for p in LobbyPlayer if p.lobby == lobby)[:]
     if player_name in existing_names:
         flash('That name is already taken in this lobby.')
