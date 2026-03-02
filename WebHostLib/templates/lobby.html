@@ -20,7 +20,7 @@
                         Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
                         Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
                         Timeout: {{ lobby.timeout_minutes }} min &mdash;
-                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: Enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: Disabled' }}
+                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
                     </p>
                     <p class="lobby-preview-meta">
                         Release: {{ server_opts.get('release_mode', 'auto') }} &mdash;
@@ -65,7 +65,7 @@
                         Host: <strong>{{ owner_name }}</strong> &mdash;
                         Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
                         Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
-                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: Enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: Disabled' }}
+                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
                     </p>
                 </div>
                 <p>This lobby is
@@ -82,7 +82,7 @@
                             Max YAMLs: {{ lobby.max_yamls_per_player }} |
                             Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} |
                             Timeout: {{ lobby.timeout_minutes }} min |
-                            {% if lobby.race %}Race Mode | {% endif %}{{ 'Custom APWorlds: Enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: Disabled' }}
+                            {% if lobby.race %}Race Mode | {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
                         </span>
                         <span class="lobby-info-right">
                             {% if not is_owner and lobby.state == 0 %}
@@ -133,7 +133,7 @@
                             <h3>Upload YAML</h3>
                             <div id="yaml-upload-drop" class="drop-zone">
                                 <p>Drop .yaml / .zip files here, or
-                                    <label for="yaml-file-input" class="drop-zone-label">browse</label>
+                                    <label for="yaml-file-input" class="drop-zone-label">browse...</label>
                                 </p>
                                 <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple style="display:none">
                             </div>
@@ -161,7 +161,7 @@
                                 <button id="download-package-btn" class="lobby-btn lobby-btn-primary">&#x2B07; Download Package</button>
                                 <div id="upload-game-zone" class="drop-zone" style="margin-top:10px">
                                     <p>Drop AP_*.zip file here, or
-                                        <label for="game-file-input" class="drop-zone-label">browse</label>
+                                        <label for="game-file-input" class="drop-zone-label">browse...</label>
                                     </p>
                                     <input type="file" id="game-file-input" accept=".zip" style="display:none">
                                 </div>

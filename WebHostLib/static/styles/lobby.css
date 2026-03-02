@@ -271,6 +271,11 @@
     color: #a71d2a;
 }
 
+.yaml-delete-btn:active {
+    padding: 0 4px;
+    margin: 0;
+}
+
 .kick-btn {
     -webkit-appearance: none;
     appearance: none;
@@ -294,6 +299,10 @@
 .kick-btn:active {
     background: #e0a800;
     color: #000;
+    padding: 2px 8px;
+    margin-top: 4px;
+    margin-right: 0;
+    margin-bottom: 0;
 }
 
 #yaml-upload-area {
@@ -443,6 +452,8 @@
 
 .lobby-btn:active {
     background: #e0e0e0;
+    padding: 8px 16px;
+    margin: 0;
 }
 
 .lobby-btn-primary,
@@ -822,6 +833,8 @@ a.lobby-btn-primary:hover {
 .ready-btn:active:not(:disabled) {
     background: #1e7e34;
     color: #fff;
+    padding: 2px 8px;
+    margin: 0;
 }
 
 .ready-btn:disabled {
