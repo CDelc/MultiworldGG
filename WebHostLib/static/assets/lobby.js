@@ -21,6 +21,7 @@
     let pollErrorCount = 0;
     let lastReadyCount = 0;
     let lastTotalCount = 0;
+    const renderedMessageIds = new Set();
 
     // Returns { fast, slow, idleThreshold } based on lobby size.
     // Small lobby  (<20 players): 3s → 10s after ~15s idle
@@ -207,23 +208,23 @@
     function appendMessages(messages) {
         if (!chatMessages || !messages.length) return;
         messages.forEach(msg => {
-            if (msg.id > lastMessageId) {
-                lastMessageId = msg.id;
-                const div = document.createElement("div");
-                div.className = "chat-msg" + (msg.system ? " chat-system" : "");
-                div.dataset.messageId = msg.id;
-                const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const isTrueSystem = msg.system && msg.sender === "System";
-                const deleteBtn = (!isTrueSystem && IS_OWNER)
-                    ? `<button class="msg-delete-btn" data-message-id="${msg.id}" title="Delete message">&times;</button>`
-                    : "";
-                if (isTrueSystem) {
-                    div.innerHTML = `<span class="chat-time">${time}</span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
-                } else {
-                    div.innerHTML = `${deleteBtn}<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span>`;
-                }
-                chatMessages.appendChild(div);
+            if (msg.id > lastMessageId) lastMessageId = msg.id;
+            if (renderedMessageIds.has(msg.id)) return;
+            renderedMessageIds.add(msg.id);
+            const div = document.createElement("div");
+            div.className = "chat-msg" + (msg.system ? " chat-system" : "");
+            div.dataset.messageId = msg.id;
+            const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const isTrueSystem = msg.system && msg.sender === "System";
+            const deleteBtn = (!isTrueSystem && IS_OWNER)
+                ? `<button class="msg-delete-btn" data-message-id="${msg.id}" title="Delete message">&times;</button>`
+                : "";
+            if (isTrueSystem) {
+                div.innerHTML = `<span class="chat-time">${time}</span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
+            } else {
+                div.innerHTML = `${deleteBtn}<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span>`;
             }
+            chatMessages.appendChild(div);
         });
         scrollChatToBottom();
     }
@@ -298,6 +299,10 @@
         if (generatingDiv) {
             generatingDiv.style.display = data.state === LOBBY_STATE_GENERATING ? "block" : "none";
         }
+
+        if (leaveBtn) {
+            leaveBtn.style.display = data.state === LOBBY_STATE_OPEN ? "" : "none";
+        }
     }
 
     function showResult(data) {
@@ -340,11 +345,12 @@
                 if (!data.error) {
                     chatInput.value = "";
 
-                    if (data.id > lastMessageId) {
-                        lastMessageId = data.id;
+                    if (!renderedMessageIds.has(data.id)) {
+                        renderedMessageIds.add(data.id);
                         const div = document.createElement("div");
                         div.className = "chat-msg";
-                        const time = new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                        div.dataset.messageId = data.id;
+                        const time = new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         div.innerHTML = `<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(data.sender)}:</strong> <span class="chat-text">${escapeHtml(data.content)}</span>`;
                         chatMessages.appendChild(div);
                         scrollChatToBottom();

@@ -174,7 +174,7 @@ def lobby_status(lobby: UUID):
         "id": m.id,
         "sender": m.sender_name,
         "content": m.content,
-        "time": m.sent_at.isoformat(),
+        "time": m.sent_at.isoformat() + "Z",
         "system": m.player is None,
     } for m in messages]
 
@@ -535,7 +535,7 @@ def lobby_chat(lobby: UUID):
         "id": msg.id,
         "sender": msg.sender_name,
         "content": msg.content,
-        "time": msg.sent_at.isoformat(),
+        "time": msg.sent_at.isoformat() + "Z",
         "system": False,
     }), 201
 
@@ -755,6 +755,9 @@ def lobby_leave(lobby: UUID):
     player = _get_player_in_lobby(lobby)
     if not player:
         return jsonify({"error": "You are not in this lobby"}), 400
+
+    if lobby.state != LOBBY_OPEN:
+        return jsonify({"error": "Cannot leave after generation has started"}), 400
 
     # Owner cannot leave (they should close the lobby instead)
     if lobby.owner == session["_id"]:

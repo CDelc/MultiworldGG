@@ -781,14 +781,16 @@ a.lobby-btn-primary:hover {
 .ready-btn {
     font-size: 0.75rem;
     padding: 2px 8px;
-    min-height: 22px;
+    height: 22px;
     box-sizing: border-box;
-    line-height: 1.2;
+    line-height: 1;
     border: 1px solid #28a745;
     border-radius: 3px;
     background: none;
     color: #28a745;
     cursor: pointer;
+    outline: none;
+    vertical-align: middle;
 }
 
 .ready-btn.ready-btn-on {
