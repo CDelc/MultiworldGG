@@ -677,10 +677,11 @@ def lobby_update_settings(lobby: UUID):
     if "max_yamls_per_player" in data:
         try:
             new_max_yamls = max(1, min(int(data["max_yamls_per_player"]), 20))
-            max_currently_held = max(
-                (len(p.yamls) for p in LobbyPlayer if p.lobby == lobby),
-                default=0
-            )
+            counts = select(
+                (y.player.id, count(y))
+                for y in LobbyYaml if y.lobby == lobby and y.player is not None
+            )[:]
+            max_currently_held = max((c for _, c in counts), default=0)
             if new_max_yamls < max_currently_held:
                 return jsonify({"error": f"Cannot lower max YAMLs below {max_currently_held} — a player already has that many."}), 400
             lobby.max_yamls_per_player = new_max_yamls
