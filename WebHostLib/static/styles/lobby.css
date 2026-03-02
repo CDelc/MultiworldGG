@@ -326,6 +326,7 @@
 }
 
 .drop-zone {
+    margin-top: 5px;
     border: 2px dashed #ccc;
     border-radius: 6px;
     padding: 10px;
