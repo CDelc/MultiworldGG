@@ -774,6 +774,8 @@ a.lobby-btn-primary:hover {
 }
 
 .apworld-upload-btn {
+    -webkit-appearance: none;
+    appearance: none;
     background: none;
     border: 1px solid #e07b00;
     color: #e07b00;
@@ -787,6 +789,14 @@ a.lobby-btn-primary:hover {
 .apworld-upload-btn:hover {
     background: #e07b00;
     color: #fff;
+}
+
+.apworld-upload-btn:active {
+    background: #b85e00;
+    color: #fff;
+    padding: 1px 6px;
+    margin: 0;
+    border: 1px solid #b85e00;
 }
 
 .apworld-status-ok {
@@ -830,11 +840,12 @@ a.lobby-btn-primary:hover {
 
 .ready-btn:hover:not(:disabled) { background: #28a745; color: #fff; }
 
-.ready-btn:active:not(:disabled) {
+.ready-btn:active {
     background: #1e7e34;
     color: #fff;
     padding: 2px 8px;
     margin: 0;
+    border: 1px solid #1e7e34;
 }
 
 .ready-btn:disabled {
