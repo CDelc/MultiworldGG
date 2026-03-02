@@ -183,6 +183,10 @@ def lobby_status(lobby: UUID):
     latest_msg_id = select(max(m.id) for m in LobbyMessage if m.lobby == lobby).first() or 0
     version = f"{int(lobby.last_activity.timestamp() * 1000)}-{latest_msg_id}"
 
+    meta = json.loads(lobby.meta)
+    server_opts = meta.get("server_options", {})
+    gen_opts = meta.get("generator_options", {})
+
     result = {
         "state": lobby.state,
         "title": lobby.title,
@@ -196,6 +200,8 @@ def lobby_status(lobby: UUID):
         "max_players": lobby.max_players,
         "allow_custom_apworlds": lobby.allow_custom_apworlds,
         "has_custom": has_custom,
+        "server_opts": server_opts,
+        "gen_opts": gen_opts,
         "apworlds": [
             {"yaml_id": a.yaml.id, "game_name": a.game_name,
              "filename": a.original_filename, "file_size": a.file_size,
@@ -213,8 +219,7 @@ def lobby_status(lobby: UUID):
         session_id = session.get("_id")
         is_member = session_id and any(p.session_id == session_id for p in player_rows)
         if is_member:
-            meta = json.loads(lobby.meta)
-            pw = meta.get("server_options", {}).get("server_password")
+            pw = server_opts.get("server_password")
             if pw:
                 result["server_password"] = pw
 

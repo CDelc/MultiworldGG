@@ -144,7 +144,8 @@
 
             let html = '<div class="lobby-player-header">';
             const yamlCount = p.yamls ? p.yamls.length : 0;
-            const yamlCountLabel = ` <span class="player-yaml-count">${yamlCount}/${MAX_YAMLS_PER_PLAYER}</span>`;
+            const readyTick = p.is_ready ? ' <span class="ready-indicator" title="Ready">✓</span>' : '';
+            const yamlCountLabel = ` <span class="player-yaml-count">${yamlCount}/${MAX_YAMLS_PER_PLAYER}${readyTick}</span>`;
             html += `<strong>${escapeHtml(p.name)}${p.is_owner ? " (Host)" : ""}${yamlCountLabel}</strong>`;
             if (IS_OWNER && !p.is_owner && currentState === LOBBY_STATE_OPEN) {
                 html += `<button class="kick-btn" data-player-id="${p.id}" title="Kick player">Kick</button>`;
@@ -155,8 +156,6 @@
                 const hasYamls = p.yamls && p.yamls.length > 0;
                 const disabledAttr = hasYamls ? "" : " disabled title=\"Upload at least one YAML first\"";
                 html += `<button class="ready-btn${readyClass}"${disabledAttr} data-player-id="${p.id}">${readyLabel}</button>`;
-            } else if (p.is_ready) {
-                html += `<span class="ready-indicator" title="Ready">✓</span>`;
             }
             html += '</div>';
             html += '<ul class="player-yamls">';
@@ -294,6 +293,16 @@
         }
     }
 
+    function formatMetaOpts(s, g) {
+        const hm = s.hint_mode || 'default';
+        const hmLabel = hm === 'default' ? 'full' : hm === 'own' ? 'hide own' : hm === 'all' ? 'hide all' : hm;
+        const hc = s.hint_cost != null ? s.hint_cost : 5;
+        const hcLabel = hc > 100 ? 'off' : hc + '%';
+        const sp = g.spoiler != null ? g.spoiler : 0;
+        const spLabel = sp === 0 ? 'off' : sp === 1 ? 'on' : sp === 2 ? '+playthrough' : 'full';
+        return `Release: ${s.release_mode || '?'} | Collect: ${s.collect_mode || '?'} | Remaining: ${s.remaining_mode || '?'} | Hints: ${hmLabel} @ ${hcLabel} | Item Cheat: ${s.item_cheat ? 'on' : 'off'} | Spoiler: ${spLabel}`;
+    }
+
     function updateStatusDisplay(data) {
         const statusEl = document.getElementById("lobby-status");
         if (!statusEl) return;
@@ -303,6 +312,11 @@
         else if (data.state === LOBBY_STATE_GENERATING) statusEl.textContent = "Generating...";
         else if (data.state === LOBBY_STATE_DONE) statusEl.textContent = "Seed created, Lobby locked";
         else if (data.state === LOBBY_STATE_CLOSED) statusEl.textContent = "Closed";
+
+        const metaOpts = document.getElementById("lobby-meta-opts");
+        if (metaOpts && data.server_opts) {
+            metaOpts.textContent = formatMetaOpts(data.server_opts, data.gen_opts || {});
+        }
 
         const uploadArea = document.getElementById("yaml-upload-area");
         if (uploadArea) {
