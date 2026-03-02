@@ -196,6 +196,12 @@
     flex: 1;
 }
 
+.player-yaml-count {
+    font-size: 0.75rem;
+    font-weight: normal;
+    color: #aaa;
+}
+
 .player-yamls {
     list-style: none;
     padding: 0 0 0 15px;
@@ -229,7 +235,7 @@
 
 .yaml-game-name {
     flex: 1;
-    color: #618d63;
+    color: #ea166c;
     font-weight: bold;
     font-size: 0.85rem;
     overflow: hidden;
@@ -238,7 +244,7 @@
     text-decoration: none;
 }
 
-.yaml-game-name:hover {
+a.yaml-game-name:hover {
     text-decoration: underline;
 }
 
@@ -770,9 +776,6 @@ a.lobby-btn-primary:hover {
     line-height: 1;
 }
 
-.yaml-game-custom {
-    color: #e07b00 !important;
-}
 
 .apworld-upload-btn {
     -webkit-appearance: none;

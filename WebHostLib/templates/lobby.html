@@ -375,6 +375,7 @@
         let lastMessageId = {{ recent_messages[-1].id if recent_messages else 0 }};
         let currentState = {{ lobby.state }};
         let hasCustomYamls = {{ "true" if has_custom else "false" }};
+        const MAX_YAMLS_PER_PLAYER = {{ lobby.max_yamls_per_player }};
     </script>
     <script src="{{ url_for('static', filename='assets/lobby.js') }}"></script>
     {% endif %}

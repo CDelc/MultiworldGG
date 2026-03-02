@@ -143,7 +143,9 @@
             li.dataset.playerId = p.id;
 
             let html = '<div class="lobby-player-header">';
-            html += `<strong>${escapeHtml(p.name)}${p.is_owner ? " (Host)" : ""}</strong>`;
+            const yamlCount = p.yamls ? p.yamls.length : 0;
+            const yamlCountLabel = ` <span class="player-yaml-count">${yamlCount}/${MAX_YAMLS_PER_PLAYER}</span>`;
+            html += `<strong>${escapeHtml(p.name)}${p.is_owner ? " (Host)" : ""}${yamlCountLabel}</strong>`;
             if (IS_OWNER && !p.is_owner && currentState === LOBBY_STATE_OPEN) {
                 html += `<button class="kick-btn" data-player-id="${p.id}" title="Kick player">Kick</button>`;
             }
