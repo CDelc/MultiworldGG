@@ -319,6 +319,9 @@
             MAX_YAMLS_PER_PLAYER = data.max_yamls_per_player;
         }
 
+        const titleEl = document.getElementById("lobby-title");
+        if (titleEl && data.title) titleEl.textContent = data.title;
+
         const metaMain = document.getElementById("lobby-meta-main");
         if (metaMain && data.max_yamls_per_player != null) {
             const maxP = data.max_players > 0 ? `/${data.max_players}` : "";

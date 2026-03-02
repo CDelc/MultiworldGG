@@ -9,7 +9,7 @@
     {% include 'header/grassHeader.html' %}
     <div id="lobby-wrapper">
         <div id="lobby-container" class="grass-island">
-            <h1>{{ lobby.title }}</h1>
+            <h1 id="lobby-title">{{ lobby.title }}</h1>
 
             {% if lobby.state == -1 %}
                 <p class="lobby-expired">This lobby has expired.</p>
