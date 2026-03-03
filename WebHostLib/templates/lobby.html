@@ -197,15 +197,16 @@
                         <div id="chat-messages">
                             {% for msg in recent_messages %}
                                 <div class="chat-msg {% if msg.player is none %}chat-system{% endif %}" data-message-id="{{ msg.id }}">
-                                    {% if is_owner and msg.player is not none %}
-                                        <button class="msg-delete-btn" data-message-id="{{ msg.id }}" title="Delete message">&times;</button>
-                                    {% endif %}
-                                    <span class="chat-time" data-utc="{{ msg.sent_at.isoformat() }}Z"></span>
+                                    <span class="chat-time-col">
+                                        <span class="chat-time" data-utc="{{ msg.sent_at.isoformat() }}Z"></span>
+                                        {% if is_owner and msg.player is not none %}
+                                            <button class="msg-delete-btn" data-message-id="{{ msg.id }}" title="Delete message">&times;</button>
+                                        {% endif %}
+                                    </span>
                                     {% if msg.player is none %}
                                         <span class="chat-system-text">{{ msg.content }}</span>
                                     {% else %}
-                                        <strong class="chat-sender">{{ msg.sender_name }}:</strong>
-                                        <span class="chat-text">{{ msg.content }}</span>
+                                        <span class="chat-content"><strong class="chat-sender">{{ msg.sender_name }}:</strong> <span class="chat-text">{{ msg.content }}</span></span>
                                     {% endif %}
                                 </div>
                             {% endfor %}

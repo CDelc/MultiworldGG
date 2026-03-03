@@ -398,11 +398,23 @@ a.yaml-game-name:hover {
     color: #ea166c !important;
 }
 
+.chat-time-col {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    white-space: nowrap;
+}
+
 .chat-time {
     font-size: 0.75rem;
     color: white;
     white-space: nowrap;
     text-align: left;
+}
+
+.chat-content {
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .chat-sender {

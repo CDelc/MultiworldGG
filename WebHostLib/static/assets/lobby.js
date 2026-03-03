@@ -253,9 +253,9 @@
             ? `<button class="msg-delete-btn" data-message-id="${msg.id}" title="Delete message">&times;</button>`
             : "";
         if (isTrueSystem) {
-            div.innerHTML = `<span class="chat-time">${time}</span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
+            div.innerHTML = `<span class="chat-time-col"><span class="chat-time">${time}</span></span><span class="chat-system-text">${escapeHtml(msg.content)}</span>`;
         } else {
-            div.innerHTML = `${deleteBtn}<span class="chat-time">${time}</span><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span>`;
+            div.innerHTML = `<span class="chat-time-col"><span class="chat-time">${time}</span>${deleteBtn}</span><span class="chat-content"><strong class="chat-sender">${escapeHtml(msg.sender)}:</strong> <span class="chat-text">${escapeHtml(msg.content)}</span></span>`;
         }
         return div;
     }
@@ -486,8 +486,9 @@
                         const div = chatMessages.querySelector(`[data-message-id="${messageId}"]`);
                         if (div) {
                             div.className = "chat-msg chat-system";
-                            const time = div.querySelector(".chat-time").outerHTML;
-                            div.innerHTML = `${time}<span class="chat-system-text">${escapeHtml(data.content)}</span>`;
+                            const timeEl = div.querySelector(".chat-time");
+                            const timeHtml = timeEl ? timeEl.outerHTML : "";
+                            div.innerHTML = `<span class="chat-time-col">${timeHtml}</span><span class="chat-system-text">${escapeHtml(data.content)}</span>`;
                         }
                     }
                 })
