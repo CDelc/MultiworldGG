@@ -6,6 +6,8 @@
     const chatSendBtn = document.getElementById("chat-send-btn");
     const generateBtn = document.getElementById("generate-btn");
     const leaveBtn = document.getElementById("leave-btn");
+    const closeBtn = document.getElementById("close-btn");
+    const settingsEditBtn = document.getElementById("settings-edit-btn");
     const yamlFileInput = document.getElementById("yaml-file-input");
     const dropZone = document.getElementById("yaml-upload-drop");
     const generateStandard = document.getElementById("generate-standard");
@@ -398,8 +400,15 @@
             generatingDiv.style.display = data.state === LOBBY_STATE_GENERATING ? "block" : "none";
         }
 
+        const isLocked = data.state !== LOBBY_STATE_OPEN;
         if (leaveBtn) {
-            leaveBtn.style.display = data.state === LOBBY_STATE_OPEN ? "" : "none";
+            leaveBtn.style.display = isLocked ? "none" : "";
+        }
+        if (closeBtn) {
+            closeBtn.style.display = isLocked ? "none" : "";
+        }
+        if (settingsEditBtn) {
+            settingsEditBtn.style.display = isLocked ? "none" : "";
         }
     }
 
@@ -709,7 +718,6 @@
         });
     }
 
-    const closeBtn = document.getElementById("close-btn");
     if (closeBtn) {
         closeBtn.addEventListener("click", () => {
             if (!confirm("Close this lobby? This cannot be undone.")) return;
@@ -763,7 +771,6 @@
     }
 
     const settingsModal = document.getElementById("settings-modal");
-    const settingsEditBtn = document.getElementById("settings-edit-btn");
     const settingsSaveBtn = document.getElementById("settings-save-btn");
     const settingsCancelBtn = document.getElementById("settings-cancel-btn");
 

@@ -388,11 +388,20 @@
 # Peaks of Yore
 /worlds/peaks_of_yore/ @c0der23
 
+# Peggle Deluxe
+/worlds/peggle_deluxe/ @SerpentAI
+
+# Peggle Nights
+/worlds/peggle_nights/ @SerpentAI
+
 # Phantom Hourglass
 /worlds/tloz_ph/ @carrotinator
 
 # Phoenotopia
 /worlds/phoa/ @Amphyros
+
+# Pinball FX3
+/worlds/pinball_fx3/ @SerpentAI
 
 # Placid Plastic Duck Simulator
 /worlds/placidplasticducksim/ @SWCreeperKing

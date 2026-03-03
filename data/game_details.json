@@ -3594,6 +3594,49 @@
         "keywords": [],
         "release_date": 2023
     },
+    "Peggle Deluxe": {
+        "igdb_id": "28975",
+        "world_name": "Peggle Deluxe",
+        "igdb_name": "Peggle Deluxe",
+        "us_rating": [],
+        "player_perspectives": [
+            "Side view"
+        ],
+        "genres": [
+            "Puzzle"
+        ],
+        "themes": [],
+        "keywords": [],
+        "release_date": 2007
+    },
+    "Peggle Nights": {
+        "igdb_id": "14813",
+        "world_name": "Peggle Nights",
+        "igdb_name": "Peggle Nights",
+        "us_rating": [],
+        "player_perspectives": [
+            "Side view"
+        ],
+        "genres": [
+            "Puzzle"
+        ],
+        "themes": [],
+        "keywords": [
+            "steam",
+            "abstract",
+            "high score",
+            "talking animals",
+            "block-breaking",
+            "floating blocks",
+            "pictographic level design",
+            "ea app",
+            "steam play",
+            "color blind assist",
+            "fireworks",
+            "remote play"
+        ],
+        "release_date": 2008
+    },
     "Phantom Hourglass": {
         "igdb_id": "1037",
         "world_name": "The Legend of Zelda: Phantom Hourglass",
@@ -3704,6 +3747,48 @@
             "zelda-like"
         ],
         "release_date": 2020
+    },
+    "Pinball FX3": {
+        "igdb_id": "41051",
+        "world_name": "Pinball FX3",
+        "igdb_name": "Pinball FX3",
+        "us_rating": [],
+        "player_perspectives": [
+            "Bird view / Isometric"
+        ],
+        "genres": [
+            "Simulator",
+            "Pinball",
+            "Arcade"
+        ],
+        "themes": [
+            "Fantasy",
+            "Science fiction"
+        ],
+        "keywords": [
+            "pinball",
+            "steam",
+            "achievements",
+            "online",
+            "free-to-play",
+            "tournament",
+            "steam achievements",
+            "digital distribution",
+            "steam cloud",
+            "xenomorph",
+            "genie",
+            "leveling up",
+            "voice acting",
+            "xbox play anywhere",
+            "digital pinball",
+            "downloadable content",
+            "xbox live",
+            "octopus",
+            "leaderboard",
+            "predator",
+            "xbox live local multiplayer"
+        ],
+        "release_date": 2017
     },
     "Placid Plastic Duck Simulator": {
         "igdb_id": "204122",

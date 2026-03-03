@@ -133,7 +133,10 @@ Currently, the following games are supported:
 * Path of Exile
 * PEAK
 * Peaks of Yore
+* Peggle Deluxe
+* Peggle Nights
 * Phoenotopia: Awakening
+* Pinball FX3
 * Placid Plastic Duck Simulator
 * Pokémon Crystal
 * Pokémon Emerald
