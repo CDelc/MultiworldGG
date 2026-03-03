@@ -12,9 +12,10 @@
             <h1>Game Lobbies</h1>
             <p>
                 Lobbies let you gather a group before generating a multiworld.
-                Instead of collecting everyone's YAML files yourself, create a lobby and share the link &mdash;
+                Instead of collecting everyone's YAML files yourself, create a lobby and share the link - 
                 each player joins, uploads their own config, and the host generates the seed once everyone is ready.
                 Lobbies include a chat so you can coordinate settings and sort out any issues before rolling.
+                Depending on the host's choice, custom worlds not hosted on this website will be allowed or not.
             </p>
             <div id="lobby-actions">
                 <a href="{{ url_for('lobby_create') }}">
@@ -88,6 +89,12 @@
             {% else %}
                 <p class="no-lobbies">No active lobbies. Create one to get started!</p>
             {% endif %}
+        </div>
+        <div id="lobby-credits">
+            <p>
+                Our lobby feature was inspired by the <a href="https://ap-lobby.bananium.fr/">Bananium AP Lobby</a>
+                created by <a href="https://github.com/Eijebong/Archipelago-lobby">Eijebong</a>. Thanks for the great work!
+            </p>
         </div>
     </div>
     {% include 'islandFooter.html' %}

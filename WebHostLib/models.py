@@ -114,6 +114,7 @@ class LobbyYaml(db.Entity):
     yaml_player_name = Optional(str)  # resolved "name" field from the YAML
     yaml_game = Optional(str)  # resolved "game" field from the YAML
     is_custom = Required(bool, default=False)  # game not in AutoWorldRegister
+    requires_game_version = Optional(str, nullable=True)  # JSON-encoded version constraint from requires.game
     content = Required(bytes, lazy=True)
     uploaded_at = Required(datetime, default=lambda: datetime.utcnow())
     apworld = Optional('LobbyApworld')
@@ -147,6 +148,7 @@ def migrate_lobby_schema():
         ("Lobby", "allow_custom_apworlds", "BOOLEAN NOT NULL DEFAULT 0"),
         ("LobbyYaml", "is_custom", "BOOLEAN NOT NULL DEFAULT 0"),
         ("LobbyApworld", "world_version", "TEXT"),
+        ("LobbyYaml", "requires_game_version", "TEXT"),
         ("LobbyPlayer", "is_ready", "BOOLEAN NOT NULL DEFAULT 0"),
     ]:
         try:

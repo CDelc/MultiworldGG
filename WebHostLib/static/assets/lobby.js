@@ -168,8 +168,25 @@
                 const customTag = isCustom
                     ? `<span class="yaml-custom-tag${apwMissing ? ' yaml-custom-tag-missing' : ''}" title="${apwMissing ? 'APWorld missing' : 'Custom APWorld'}">&#x1F9E9;</span>`
                     : '';
+                // Server world version tag for standard worlds — hidden once an upgrade apworld is uploaded
+                const hasUpgradeApworld = !isCustom && !!y.apworld;
+                const serverVer = !isCustom && y.server_world_version && !hasUpgradeApworld
+                    ? `<span class="yaml-world-version" title="World version on this server">v${escapeHtml(y.server_world_version)}</span>`
+                    : '';
+                const versionWarn = y.version_warning && !hasUpgradeApworld
+                    ? `<span class="yaml-version-warning" title="${escapeHtml(y.version_warning)}">&#9888;</span>`
+                    : '';
+                // Puzzle-piece tag for upgrade apworlds, with dual-version tooltip
+                const upgradeTag = hasUpgradeApworld ? (() => {
+                    const uploadedVer = y.apworld.world_version ? `v${y.apworld.world_version}` : null;
+                    const srvVer = y.server_world_version ? `v${y.server_world_version}` : null;
+                    const tip = (uploadedVer && srvVer)
+                        ? `Upgraded APWorld: ${uploadedVer} (server: ${srvVer})`
+                        : 'Upgraded APWorld';
+                    return `<span class="yaml-custom-tag" title="${escapeHtml(tip)}">&#x1F9E9;</span>`;
+                })() : '';
                 const gameDisplay = y.game
-                    ? (isCustom
+                    ? (isCustom || hasUpgradeApworld
                         ? `<span class="yaml-game-name yaml-game-custom">${escapeHtml(y.game)}</span>`
                         : `<a class="yaml-game-name" href="/games/${encodeURIComponent(y.game)}/player-options">${escapeHtml(y.game)}</a>`)
                     : `<span class="yaml-game-name">${escapeHtml(y.filename)}</span>`;
@@ -177,7 +194,10 @@
                 html += `<li data-yaml-id="${y.id}">`;
                 html += `<span class="yaml-slot-name" data-tooltip="${escapeHtml(y.filename)}"><span>${slotName}</span></span>`;
                 html += customTag;
+                html += upgradeTag;
                 html += gameDisplay;
+                html += serverVer;
+                html += versionWarn;
                 html += `<a class="yaml-download-btn" href="${downloadHref}" title="Download YAML" download>&#x2B07;</a>`;
 
                 if (isCustom && currentState === LOBBY_STATE_OPEN) {
@@ -189,6 +209,17 @@
                         html += `<button class="apworld-upload-btn" data-yaml-id="${y.id}" title="Upload APWorld for this game">&#x2B06; APWorld</button>`;
                     } else {
                         html += `<span class="apworld-missing" title="APWorld not yet uploaded">&#9888;</span>`;
+                    }
+                }
+
+                if (!isCustom && currentState === LOBBY_STATE_OPEN) {
+                    if (hasUpgradeApworld) {
+                        const verLabel = y.apworld.world_version ? `v${escapeHtml(y.apworld.world_version)}` : "APWorld";
+                        html += `<span class="apworld-status-ok" title="${escapeHtml(y.apworld.filename)}">&#10003; ${verLabel}</span>`;
+                    } else if (y.version_upgrade_available) {
+                        if (p.id === MY_PLAYER_ID) {
+                            html += `<button class="apworld-upload-btn" data-yaml-id="${y.id}" title="Upload newer APWorld to override server version">&#x2B06; Upgrade</button>`;
+                        }
                     }
                 }
 
@@ -261,16 +292,22 @@
 
         const missingNotice = document.getElementById("missing-apworlds-notice");
         const missingList = document.getElementById("missing-apworlds-list");
-        if (missingNotice && missingList) {
-            if (isCustomMode) {
-                const missingGames = new Set();
-                (data.players || []).forEach(p => {
-                    (p.yamls || []).forEach(y => {
-                        if (y.is_custom && !y.apworld) {
-                            missingGames.add(y.game || y.filename);
-                        }
-                    });
+        const upgradeNotice = document.getElementById("upgrade-apworlds-notice");
+        const upgradeList = document.getElementById("upgrade-apworlds-list");
+        if (isCustomMode) {
+            const missingGames = new Set();
+            const upgradeGames = new Map(); // game name → version_warning string
+            (data.players || []).forEach(p => {
+                (p.yamls || []).forEach(y => {
+                    if (y.is_custom && !y.apworld) {
+                        missingGames.add(y.game || y.filename);
+                    }
+                    if (y.version_upgrade_available && !y.apworld) {
+                        upgradeGames.set(y.game || y.filename, y.version_warning || null);
+                    }
                 });
+            });
+            if (missingNotice && missingList) {
                 if (missingGames.size > 0) {
                     missingList.innerHTML = [...missingGames]
                         .map(g => `<li>${escapeHtml(g)}</li>`).join("");
@@ -278,9 +315,20 @@
                 } else {
                     missingNotice.style.display = "none";
                 }
-            } else {
-                missingNotice.style.display = "none";
             }
+            if (upgradeNotice && upgradeList) {
+                if (upgradeGames.size > 0) {
+                    upgradeList.innerHTML = [...upgradeGames]
+                        .map(([g, warn]) => `<li>${escapeHtml(g)}${warn ? ` <span style="opacity:0.75">(${escapeHtml(warn)})</span>` : ''}</li>`)
+                        .join("");
+                    upgradeNotice.style.display = "";
+                } else {
+                    upgradeNotice.style.display = "none";
+                }
+            }
+        } else {
+            if (missingNotice) missingNotice.style.display = "none";
+            if (upgradeNotice) upgradeNotice.style.display = "none";
         }
 
         if (generateBtn) {
@@ -461,6 +509,9 @@
                         alert(`Uploaded ${customUploaded.length} custom game YAML(s). ` +
                               `Please upload the corresponding .apworld file(s) using the ` +
                               `"⬆ APWorld" button next to each custom YAML.`);
+                    }
+                    if (data.version_warnings && data.version_warnings.length > 0) {
+                        alert("Version mismatch detected:\n" + data.version_warnings.join("\n"));
                     }
                     resetPollRate();
                     pollStatus();

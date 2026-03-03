@@ -12,6 +12,7 @@ from flask import request, session, jsonify, send_file
 from markupsafe import Markup
 from pony.orm import commit, count, select, flush
 
+from Utils import tuplize_version, Version
 from WebHostLib.api import api_endpoints
 from WebHostLib.check import get_yaml_data, roll_options
 from WebHostLib.models import (
@@ -59,8 +60,12 @@ def _cleanup_yaml_apworld(yaml_record: LobbyYaml) -> None:
         yaml_record.apworld.delete()
 
 
-def _extract_game_info(content) -> tuple[str, str]:
-    """Parse YAML content (bytes or str) and return (player_name, game)."""
+def _extract_game_info(content) -> tuple[str, str, str | None]:
+    """Parse YAML content (bytes or str) and return (player_name, game, requires_game_version_json).
+
+    requires_game_version_json is a JSON-encoded dict like {"min": "1.2.3"} or {"max": "1.2.3"},
+    representing the version constraint from the YAML's requires.game section for the detected game.
+    """
     from Utils import parse_yamls
     try:
         if isinstance(content, str):
@@ -74,10 +79,94 @@ def _extract_game_info(content) -> tuple[str, str]:
                 game = next(iter(game.keys()), '')
             if isinstance(name, dict):
                 name = next(iter(name.keys()), '')
-            return str(name).strip(), str(game).strip()
+            game = str(game).strip()
+            name = str(name).strip()
+
+            # Extract requires.game version constraint for this specific game
+            requires_version = None
+            requires = yaml_data.get('requires', {})
+            if requires and isinstance(requires, dict):
+                games_req = requires.get('game', {})
+                if games_req and isinstance(games_req, dict) and game in games_req:
+                    constraint = games_req[game]
+                    if isinstance(constraint, str):
+                        # A bare version string means "designed for this exact version"
+                        requires_version = json.dumps({"exact": constraint})
+                    elif isinstance(constraint, dict):
+                        # Explicit min/max dict from the YAML
+                        requires_version = json.dumps(constraint)
+
+            return name, game, requires_version
     except Exception:
         pass
-    return '', ''
+    return '', '', None
+
+
+def _version_mismatch_direction(requires_json: str, server_version: Version) -> str | None:
+    """Return 'newer' if the YAML needs a newer world than the server has,
+    'older' if it needs an older one, or None if the constraint is satisfied."""
+    try:
+        constraint = json.loads(requires_json)
+        if "exact" in constraint:
+            exact_ver = tuplize_version(str(constraint["exact"]))
+            if exact_ver > server_version:
+                return "newer"
+            if exact_ver < server_version:
+                return "older"
+        if "min" in constraint:
+            if tuplize_version(str(constraint["min"])) > server_version:
+                return "newer"
+        if "max" in constraint:
+            if tuplize_version(str(constraint["max"])) < server_version:
+                return "older"
+    except Exception:
+        pass
+    return None
+
+
+def _required_version_label(requires_json: str) -> str:
+    """Return a readable version string from a constraint JSON blob."""
+    try:
+        c = json.loads(requires_json)
+        if "exact" in c:
+            return str(c["exact"])
+        if "min" in c:
+            return f"{c['min']}+"
+        if "max" in c:
+            return f"≤{c['max']}"
+    except Exception:
+        pass
+    return "?"
+
+
+def _check_version_constraint(requires_json: str | None, server_version: Version) -> str | None:
+    """Return a human-readable warning string if the stored requires constraint is violated, else None."""
+    if not requires_json:
+        return None
+    try:
+        constraint = json.loads(requires_json)
+        if "exact" in constraint:
+            exact_ver = tuplize_version(str(constraint["exact"]))
+            if exact_ver > server_version:
+                return (f"designed for v{constraint['exact']}, "
+                        f"server has v{server_version.as_simple_string()}")
+            if exact_ver < server_version:
+                return (f"designed for v{constraint['exact']}, server has "
+                        f"v{server_version.as_simple_string()} — consider regenerating your YAML "
+                        f"from the player options page.")
+        if "min" in constraint:
+            min_ver = tuplize_version(str(constraint["min"]))
+            if min_ver > server_version:
+                return f"requires v{constraint['min']}+, server has v{server_version.as_simple_string()}"
+        if "max" in constraint:
+            max_ver = tuplize_version(str(constraint["max"]))
+            if max_ver < server_version:
+                return (f"requires ≤v{constraint['max']}, server has "
+                        f"v{server_version.as_simple_string()} — consider regenerating your YAML "
+                        f"from the player options page.")
+    except Exception:
+        pass
+    return None
 
 
 def _expire_lobby_if_needed(lobby: Lobby) -> None:
@@ -124,11 +213,12 @@ def lobby_status(lobby: UUID):
         p for p in LobbyPlayer if p.lobby == lobby
     ).order_by(LobbyPlayer.joined_at)[:]
 
+    from worlds.AutoWorld import AutoWorldRegister
     yamls_by_player: dict[int, list] = {}
     yaml_player_map = select(
-        (y.id, y.filename, y.yaml_player_name, y.yaml_game, y.player.id, y.is_custom)
+        (y.id, y.filename, y.yaml_player_name, y.yaml_game, y.player.id, y.is_custom, y.requires_game_version)
         for y in LobbyYaml if y.lobby == lobby
-    ).order_by(lambda i, f, n, g, p, ic: i)[:]
+    ).order_by(lambda i, f, n, g, p, ic, rv: i)[:]
 
     apworlds_list = select(a for a in LobbyApworld if a.lobby == lobby)[:]
     apworld_by_yaml_id = {}
@@ -140,8 +230,11 @@ def lobby_status(lobby: UUID):
         apworld_by_game.setdefault(a.game_name, entry)
 
     has_custom = False
-    for y_id, y_filename, y_pname, y_game, p_id, y_is_custom in yaml_player_map:
+    for y_id, y_filename, y_pname, y_game, p_id, y_is_custom, y_requires_version in yaml_player_map:
         if y_is_custom:
+            has_custom = True
+        elif y_id in apworld_by_yaml_id:
+            # Standard YAML with an upgrade apworld uploaded — also requires local generation
             has_custom = True
         yaml_info = {"id": y_id, "filename": y_filename, "is_custom": y_is_custom}
         if y_pname:
@@ -153,6 +246,19 @@ def lobby_status(lobby: UUID):
             yaml_info["apworld"] = apworld_by_yaml_id[y_id]
         elif y_is_custom and y_game and y_game in apworld_by_game:
             yaml_info["apworld"] = apworld_by_game[y_game]
+        # For standard worlds, include server-side world version and check requires constraint
+        if y_game and not y_is_custom and y_game in AutoWorldRegister.world_types:
+            server_wv = AutoWorldRegister.world_types[y_game].world_version
+            if server_wv != Version(0, 0, 0):
+                yaml_info["server_world_version"] = server_wv.as_simple_string()
+            warning = _check_version_constraint(y_requires_version, server_wv)
+            if warning:
+                yaml_info["version_warning"] = warning
+            # Offer optional apworld upgrade if YAML needs a newer version and none uploaded yet
+            if (lobby.allow_custom_apworlds and y_requires_version
+                    and _version_mismatch_direction(y_requires_version, server_wv) == "newer"
+                    and y_id not in apworld_by_yaml_id):
+                yaml_info["version_upgrade_available"] = True
         yamls_by_player.setdefault(p_id, []).append(yaml_info)
 
     players = []
@@ -317,9 +423,13 @@ def lobby_upload_yaml(lobby: UUID):
     from worlds.AutoWorld import AutoWorldRegister
     standard_options: dict[str, bytes] = {}
     custom_info: dict[str, tuple[str, str]] = {}  # filename -> (player_name, game)
+    requires_versions: dict[str, str | None] = {}  # filename -> requires_game_version JSON
     for filename, content in options.items():
-        player_name, game = _extract_game_info(content)
+        player_name, game, requires_version = _extract_game_info(content)
+        requires_versions[filename] = requires_version
+
         if game and game not in AutoWorldRegister.world_types:
+            # Completely unknown game — always requires custom APWorld
             if not lobby.allow_custom_apworlds:
                 return jsonify({
                     "error": f"Game '{game}' is not supported on this server. "
@@ -328,6 +438,33 @@ def lobby_upload_yaml(lobby: UUID):
             if not player_name:
                 return jsonify({"error": f"Could not find player name in '{filename}'"}), 400
             custom_info[filename] = (player_name, game)
+
+        elif game and requires_version:
+            # Known game but YAML declares a version requirement — check it
+            server_wv = AutoWorldRegister.world_types[game].world_version
+            direction = _version_mismatch_direction(requires_version, server_wv)
+
+            if direction == "newer":
+                # YAML needs a newer world than the server has — accept as standard but warn.
+                # If custom APWorlds are enabled, the player gets an optional upgrade button.
+                if not lobby.allow_custom_apworlds:
+                    req_label = _required_version_label(requires_version)
+                    return jsonify({
+                        "error": f"'{filename}' requires {game} v{req_label} but the server has "
+                                 f"v{server_wv.as_simple_string()}. The lobby owner must enable "
+                                 f"custom APWorlds so you can upload the matching world."
+                    }), 400
+                standard_options[filename] = content
+
+            elif direction == "older":
+                # YAML was built for an older world than the server has — accept it either way,
+                # the version_warning in status will surface the mismatch to the user.
+                standard_options[filename] = content
+
+            else:
+                # Constraint satisfied
+                standard_options[filename] = content
+
         else:
             standard_options[filename] = content
 
@@ -336,6 +473,7 @@ def lobby_upload_yaml(lobby: UUID):
     new_names: dict[str, str] = {}
     new_games: dict[str, str] = {}
     new_custom: dict[str, bool] = {}
+    new_requires: dict[str, str | None] = {}
 
     if standard_options:
         results, rolled = roll_options(standard_options, plando_options)
@@ -347,11 +485,13 @@ def lobby_upload_yaml(lobby: UUID):
             new_names[filename] = name
             new_games[filename] = getattr(rolled_opts, 'game', '')
             new_custom[filename] = False
+            new_requires[filename] = requires_versions.get(filename)
 
     for filename, (player_name, game) in custom_info.items():
         new_names[filename] = player_name
         new_games[filename] = game
         new_custom[filename] = True
+        new_requires[filename] = requires_versions.get(filename)
 
     # Check for duplicates within the uploaded batch
     seen_names: dict[str, str] = {}
@@ -379,23 +519,36 @@ def lobby_upload_yaml(lobby: UUID):
             }), 400
 
     uploaded = []
+    version_warnings: list[str] = []
     for filename, content in options.items():
         if isinstance(content, str):
             content = content.encode('utf-8')
+        game = new_games.get(filename, '')
+        is_custom = new_custom.get(filename, False)
+        requires_json = new_requires.get(filename)
+
+        # Check requires.game constraint against server's world version
+        if requires_json and game and not is_custom and game in AutoWorldRegister.world_types:
+            server_wv = AutoWorldRegister.world_types[game].world_version
+            warning = _check_version_constraint(requires_json, server_wv)
+            if warning:
+                version_warnings.append(f"'{new_names.get(filename, filename)}' ({game}): {warning}")
+
         yaml_record = LobbyYaml(
             lobby=lobby,
             player=player,
             filename=filename,
             yaml_player_name=new_names.get(filename),
-            yaml_game=new_games.get(filename, ''),
-            is_custom=new_custom.get(filename, False),
+            yaml_game=game,
+            is_custom=is_custom,
+            requires_game_version=requires_json,
             content=content,
         )
         commit()
         uploaded.append({
             "id": yaml_record.id,
             "filename": filename,
-            "is_custom": new_custom.get(filename, False),
+            "is_custom": is_custom,
         })
 
     yaml_summaries = [
@@ -411,7 +564,10 @@ def lobby_upload_yaml(lobby: UUID):
     lobby.last_activity = datetime.utcnow()
     commit()
 
-    return jsonify({"uploaded": uploaded}), 201
+    result: dict = {"uploaded": uploaded}
+    if version_warnings:
+        result["version_warnings"] = version_warnings
+    return jsonify(result), 201
 
 
 @api_endpoints.route('/lobby/<suuid:lobby>/yaml/<int:yaml_id>', methods=['GET'])
@@ -582,9 +738,10 @@ def lobby_generate(lobby: UUID):
     if lobby.state != LOBBY_OPEN:
         return jsonify({"error": "Lobby is not in a state to generate"}), 400
 
-    # Block generation when custom YAMLs are present
+    # Block generation when custom YAMLs are present, or when any YAML has an upgrade apworld
     custom_yamls = select(y for y in LobbyYaml if y.lobby == lobby and y.is_custom)[:]
-    if custom_yamls:
+    upgrade_apworlds = select(a for a in LobbyApworld if a.lobby == lobby and not a.yaml.is_custom)[:]
+    if custom_yamls or upgrade_apworlds:
         return jsonify({
             "error": "Cannot generate: lobby contains custom APWorld YAMLs. "
                      "Use 'Download Package' to generate locally, then upload the result."
@@ -879,7 +1036,19 @@ def lobby_upload_apworld(lobby: UUID, yaml_id: int):
         return jsonify({"error": "You can only upload an APWorld for your own YAML"}), 403
 
     if not yaml_record.is_custom:
-        return jsonify({"error": "This YAML does not require a custom APWorld"}), 400
+        # Also allow apworld uploads for standard worlds where the YAML requires a newer version
+        from worlds.AutoWorld import AutoWorldRegister as _AWR
+        is_version_upgrade = (
+            yaml_record.requires_game_version
+            and yaml_record.yaml_game
+            and yaml_record.yaml_game in _AWR.world_types
+            and _version_mismatch_direction(
+                yaml_record.requires_game_version,
+                _AWR.world_types[yaml_record.yaml_game].world_version
+            ) == "newer"
+        )
+        if not is_version_upgrade:
+            return jsonify({"error": "This YAML does not require a custom APWorld"}), 400
 
     if not yaml_record.apworld:
         existing = select(
@@ -926,6 +1095,10 @@ def lobby_upload_apworld(lobby: UUID, yaml_id: int):
                     world_version = str(wv)
     except Exception:
         pass
+
+    # Upgrade apworlds must declare a world_version so we can display and validate the upgrade
+    if not yaml_record.is_custom and world_version is None:
+        return jsonify({"error": "Upgrade APWorlds must have a world_version defined in archipelago.json"}), 400
 
     apworld_dir = os.path.abspath(os.path.join(app.config["LOBBY_APWORLD_PATH"], str(lobby.id)))
     os.makedirs(apworld_dir, exist_ok=True)

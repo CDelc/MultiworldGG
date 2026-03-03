@@ -38,7 +38,7 @@
                     {% else %}
                         <h2>Join Lobby</h2>
                         <p class="lobby-join-explainer">
-                            Pick a display name and join the lobby. Once inside, upload your YAML config file &mdash;
+                            Pick a display name and join the lobby. Once inside, upload your YAML config file - 
                             one per game you want to play. The host will generate the seed when everyone is ready.
                             {% if needs_password %}This lobby is password-protected.{% endif %}
                         </p>
@@ -156,6 +156,10 @@
                                     <div id="missing-apworlds-notice" style="display:none; margin-top:8px;">
                                         <strong>Missing APWorlds:</strong>
                                         <ul id="missing-apworlds-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>
+                                    </div>
+                                    <div id="upgrade-apworlds-notice" style="display:none; margin-top:8px;">
+                                        <strong>Upgrade APWorlds needed</strong> (version mismatch):
+                                        <ul id="upgrade-apworlds-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>
                                     </div>
                                 </div>
                                 <button id="download-package-btn" class="lobby-btn lobby-btn-primary">&#x2B07; Download Package</button>
