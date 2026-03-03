@@ -46,10 +46,13 @@ def get_app() -> "Flask":
         app.config["HOST_ADDRESS"] = Utils.get_public_ipv4()
         logging.info(f"HOST_ADDRESS was set to {app.config['HOST_ADDRESS']}")
 
+    os.makedirs(app.config["LOBBY_APWORLD_PATH"], exist_ok=True)
     register()
     cache.init_app(app)
     db.bind(**app.config["PONY"])
     db.generate_mapping(create_tables=True)
+    from WebHostLib.models import migrate_lobby_schema
+    migrate_lobby_schema()
     return app
 
 

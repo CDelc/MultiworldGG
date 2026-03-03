@@ -1271,10 +1271,11 @@ class HintLog(MDRecycleView):
                     "type": "location_id",
                     "text": hint["location"],
                     "player": hint["finding_player"],
-                })},
+                }) if not hint.get("hidden") else "Hidden"},
                 "entrance": {"text": self.parser.handle_node({"type": "color" if hint["entrance"] else "text",
                                                               "color": 'entrancecolor', "text": hint["entrance"]
-                                                              if hint["entrance"] else "Vanilla"})},
+                                                              if hint["entrance"] else "Vanilla"})
+                             if not hint.get("hidden") else "Hidden"},
                 "status": {
                     "text": hint_status_node,
                     "hint": hint,

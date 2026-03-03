@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID, uuid4
-from pony.orm import Database, PrimaryKey, Required, Set, Optional, buffer, LongStr
+from pony.orm import Database, PrimaryKey, Required, Set, Optional, buffer, LongStr, db_session
 
 db = Database()
 
@@ -31,6 +31,7 @@ class Room(db.Entity):
     tracker = Optional(UUID, index=True)
     # Port special value -1 means the server errored out. Another attempt can be made with a page refresh
     last_port = Optional(int, default=lambda: 0)
+    lobby = Optional('Lobby')  # back-reference from Lobby.room
 
 
 class Seed(db.Entity):
@@ -42,6 +43,7 @@ class Seed(db.Entity):
     slots = Set(Slot)
     spoiler = Optional(LongStr, lazy=True)
     meta = Required(LongStr, default=lambda: "{\"race\": false}")  # additional meta information/tags
+    lobbies = Set('Lobby')  # back-reference from Lobby.seed
 
 
 class Command(db.Entity):
@@ -61,3 +63,96 @@ class Generation(db.Entity):
 class GameDataPackage(db.Entity):
     checksum = PrimaryKey(str)
     data = Required(bytes)
+
+
+# Lobby states
+LOBBY_OPEN = 0
+LOBBY_GENERATING = 1
+LOBBY_DONE = 2
+LOBBY_CLOSED = -1
+
+
+class Lobby(db.Entity):
+    id = PrimaryKey(UUID, default=uuid4)
+    title = Required(str)
+    owner = Required(UUID, index=True)
+    password_hash = Optional(str)
+    creation_time = Required(datetime, default=lambda: datetime.utcnow(), index=True)
+    last_activity = Required(datetime, default=lambda: datetime.utcnow(), index=True)
+    timeout_minutes = Required(int, default=30)  # max 2880 (2 days)
+    max_yamls_per_player = Required(int, default=1)
+    race = Required(bool, default=False)
+    meta = Required(LongStr, default=lambda: "{}")  # generation settings (server_options, plando_options, etc.)
+    state = Required(int, default=0, index=True)  # LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED
+    max_players = Required(int, default=0) # 0 = unlimited
+    allow_custom_apworlds = Required(bool, default=False)
+    seed = Optional('Seed')
+    room = Optional(Room)
+    players = Set('LobbyPlayer')
+    messages = Set('LobbyMessage')
+    yamls = Set('LobbyYaml')
+    apworlds = Set('LobbyApworld')
+    generation_id = Optional(UUID)  # ID of the Generation/Seed (they share the same UUID)
+
+
+class LobbyPlayer(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    session_id = Required(UUID, index=True)
+    player_name = Required(str)
+    joined_at = Required(datetime, default=lambda: datetime.utcnow())
+    is_ready = Required(bool, default=False)
+    yamls = Set('LobbyYaml')
+    messages = Set('LobbyMessage')
+
+
+class LobbyYaml(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    player = Required(LobbyPlayer, index=True)
+    filename = Required(str)
+    yaml_player_name = Optional(str)  # resolved "name" field from the YAML
+    yaml_game = Optional(str)  # resolved "game" field from the YAML
+    is_custom = Required(bool, default=False)  # game not in AutoWorldRegister
+    requires_game_version = Optional(str, nullable=True)  # JSON-encoded version constraint from requires.game
+    content = Required(bytes, lazy=True)
+    uploaded_at = Required(datetime, default=lambda: datetime.utcnow())
+    apworld = Optional('LobbyApworld')
+
+
+class LobbyApworld(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    yaml = Required(LobbyYaml)
+    game_name = Required(str, index=True)
+    original_filename = Required(str)
+    storage_path = Required(str)
+    file_size = Required(int, default=0)
+    world_version = Optional(str, nullable=True) # extracted from archipelago.json in the apworld
+    uploaded_at = Required(datetime, default=lambda: datetime.utcnow())
+
+
+class LobbyMessage(db.Entity):
+    id = PrimaryKey(int, auto=True)
+    lobby = Required(Lobby, index=True)
+    player = Optional(LobbyPlayer)  # null = system message
+    sender_name = Required(str)
+    content = Required(str)
+    sent_at = Required(datetime, default=lambda: datetime.utcnow())
+
+
+def migrate_lobby_schema():
+    """Add new Lobby/LobbyYaml columns that Pony ORM cannot auto-add to existing tables."""
+    for table, col, typedef in [
+        ("Lobby", "max_players", "INTEGER NOT NULL DEFAULT 0"),
+        ("Lobby", "allow_custom_apworlds", "BOOLEAN NOT NULL DEFAULT 0"),
+        ("LobbyYaml", "is_custom", "BOOLEAN NOT NULL DEFAULT 0"),
+        ("LobbyApworld", "world_version", "TEXT"),
+        ("LobbyYaml", "requires_game_version", "TEXT"),
+        ("LobbyPlayer", "is_ready", "BOOLEAN NOT NULL DEFAULT 0"),
+    ]:
+        try:
+            with db_session:
+                db.execute(f'ALTER TABLE "{table}" ADD COLUMN "{col}" {typedef}')
+        except Exception:
+            pass

@@ -1,4 +1,5 @@
 .idea
+.claude
 .vscode
 
 *_Spoiler.txt
@@ -223,13 +224,6 @@ data/sprites/remote/*.zspr
 # SMO
 /atmosphere
 
-# gzDoom
-gzdoom/*
-gzdoom/cache/*
-data/gzdoom/cache/*
-data/gzdoom/ipc/*
-data/gzdoom/gzdoom.log
-
 # Minecraft
 minecraft_versions.json
 
@@ -242,3 +236,6 @@ jdk*/*
 
 # SM64Hacks
 data/sm64hacks/**/*
+
+# lobby uploads
+uploads

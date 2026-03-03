@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import multiprocessing
+import os
 import typing
 from datetime import timedelta, datetime
 from threading import Event, Thread
@@ -129,7 +130,7 @@ def init_generator(config: dict[str, Any]) -> None:
 
 
 def cleanup():
-    """delete unowned user-content"""
+    """delete unowned user-content and expired lobbies"""
     with db_session:
         # >>> bool(uuid.UUID(int=0))
         # True
@@ -139,6 +140,60 @@ def cleanup():
         # Command gets deleted by ponyorm Cascade Delete, as Room is Required
     if rooms or seeds or slots:
         logging.info(f"{rooms} Rooms, {seeds} Seeds and {slots} Slots have been deleted.")
+
+    # Clean up expired lobbies (closed for > 1 hour) and done lobbies (> 3 days old)
+    with db_session:
+        now = datetime.utcnow()
+        closed_cutoff = now - timedelta(hours=1)
+        done_cutoff = now - timedelta(days=3)
+        stale_lobbies = Lobby.select(
+            lambda l: (l.state == LOBBY_CLOSED and l.last_activity < closed_cutoff) or
+                      (l.state == LOBBY_DONE and l.last_activity < done_cutoff)
+        )[:]
+        for lobby in stale_lobbies:
+            # Delete apworld files and lobby subdirectory from filesystem
+            lobby_apworld_dir = None
+            for a in list(lobby.apworlds):
+                try:
+                    lobby_apworld_dir = os.path.dirname(a.storage_path)
+                    os.unlink(a.storage_path)
+                except OSError:
+                    pass
+                a.delete()
+            if lobby_apworld_dir:
+                try:
+                    os.rmdir(lobby_apworld_dir)
+                except OSError:
+                    pass  # not empty or already gone
+            # Clear player references on messages first, then delete in dependency order
+            for m in lobby.messages:
+                m.player = None
+            for y in lobby.yamls:
+                y.delete()
+            for m in lobby.messages:
+                m.delete()
+            for p in lobby.players:
+                p.delete()
+            lobby.delete()
+        if stale_lobbies:
+            logging.info(f"{len(stale_lobbies)} stale lobbies cleaned up.")
+
+
+def expire_lobbies():
+    """Expire lobbies that have been inactive beyond their timeout."""
+    with db_session:
+        now = datetime.utcnow()
+        stale_lobbies = Lobby.select(
+            lambda l: l.state in (LOBBY_OPEN, LOBBY_GENERATING)
+        )[:]
+        expired_count = 0
+        for lobby in stale_lobbies:
+            if now - lobby.last_activity > timedelta(minutes=lobby.timeout_minutes):
+                lobby.state = LOBBY_CLOSED
+                expired_count += 1
+        if expired_count:
+            commit()
+            logging.info(f"{expired_count} lobbies expired due to inactivity.")
 
 
 def autohost(config: dict):
@@ -153,6 +208,8 @@ def autohost(config: dict):
                     hosters.append(hoster)
                     hoster.start()
 
+                last_lobby_check = datetime.utcnow()
+
                 while not stop_event.wait(0.1):
                     with db_session:
                         rooms = select(
@@ -162,6 +219,15 @@ def autohost(config: dict):
                             # we have to filter twice, as the per-room timeout can't currently be PonyORM transpiled.
                             if room.last_activity >= datetime.utcnow() - timedelta(seconds=room.timeout + 5):
                                 hosters[room.id.int % len(hosters)].start_room(room.id)
+
+                    # Check for expired lobbies every 5 minutes
+                    now = datetime.utcnow()
+                    if now - last_lobby_check > timedelta(minutes=5):
+                        last_lobby_check = now
+                        try:
+                            expire_lobbies()
+                        except Exception as e:
+                            logging.exception(e)
 
         except AlreadyRunningException:
             logging.info("Autohost reports as already running, not starting another.")
@@ -308,6 +374,6 @@ class MultiworldInstance():
         self.process = None
 
 
-from .models import Room, Generation, STATE_QUEUED, STATE_STARTED, STATE_ERROR, db, Seed, Slot
+from .models import Room, Generation, STATE_QUEUED, STATE_STARTED, STATE_ERROR, db, Seed, Slot, Lobby, LobbyApworld, LOBBY_OPEN, LOBBY_GENERATING, LOBBY_CLOSED, LOBBY_DONE
 from .customserver import run_server_process, get_static_server_data
 from .generate import gen_game
