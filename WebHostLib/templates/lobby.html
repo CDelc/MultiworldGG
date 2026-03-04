@@ -263,6 +263,20 @@
                                                    value="{{ lobby.max_players }}" style="width:80px">
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td><label for="edit-allow-custom-apworlds">Custom APWorlds:
+                                            <span class="interactive" data-tooltip="Once enabled, this cannot be disabled.">(?)
+                                            </span>
+                                        </label></td>
+                                        <td>
+                                            {% if lobby.allow_custom_apworlds %}
+                                                <input type="checkbox" id="edit-allow-custom-apworlds" checked disabled>
+                                                <span style="font-size:0.85rem;color:#aaa;">Already enabled</span>
+                                            {% else %}
+                                                <input type="checkbox" id="edit-allow-custom-apworlds">
+                                            {% endif %}
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

@@ -825,11 +825,20 @@ def lobby_update_settings(lobby: UUID):
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
+    newly_enabled_custom_apworlds = False
+
     if "title" in data:
         title = str(data["title"]).strip()
         if not title or len(title) > 48:
             return jsonify({"error": "Title must be 1–48 characters"}), 400
         lobby.title = title
+
+    if "allow_custom_apworlds" in data:
+        if data["allow_custom_apworlds"] and not lobby.allow_custom_apworlds:
+            lobby.allow_custom_apworlds = True
+            newly_enabled_custom_apworlds = True
+        elif not data["allow_custom_apworlds"] and lobby.allow_custom_apworlds:
+            return jsonify({"error": "Custom APWorlds cannot be disabled once enabled."}), 400
 
     if "max_yamls_per_player" in data:
         try:
@@ -910,7 +919,11 @@ def lobby_update_settings(lobby: UUID):
         lobby=lobby,
         player=None,
         sender_name="System",
-        content="Lobby settings were updated by the host.",
+        content=(
+            "Lobby settings were updated by the host. Custom APWorlds have been enabled."
+            if newly_enabled_custom_apworlds else
+            "Lobby settings were updated by the host."
+        ),
     )
     commit()
 

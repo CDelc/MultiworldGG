@@ -803,6 +803,7 @@
                 return;
             }
 
+            const allowCustomEl = document.getElementById("edit-allow-custom-apworlds");
             const payload = {
                 title: document.getElementById("edit-title").value.trim(),
                 max_yamls_per_player: newMaxYamls,
@@ -816,6 +817,7 @@
                 hint_cost: parseInt(document.getElementById("edit-hint-cost").value),
                 item_cheat: document.getElementById("edit-item-cheat").value === "1",
                 spoiler: parseInt(document.getElementById("edit-spoiler").value),
+                allow_custom_apworlds: allowCustomEl ? allowCustomEl.checked : undefined,
             };
 
             settingsSaveBtn.disabled = true;
