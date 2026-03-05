@@ -823,6 +823,12 @@ a.lobby-btn-primary:hover {
     border: 1px solid #b85e00;
 }
 
+.apworld-upload-btn--drag {
+    background: #3a1f00;
+    border: 1px dashed #e07b00;
+    color: #e07b00;
+}
+
 .apworld-status-ok {
     color: #28a745;
     font-size: 0.75rem;

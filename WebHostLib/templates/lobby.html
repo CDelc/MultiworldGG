@@ -135,7 +135,7 @@
                                 <p>Drop .yaml / .zip files here, or
                                     <label for="yaml-file-input" class="drop-zone-label">browse...</label>
                                 </p>
-                                <input type="file" id="yaml-file-input" name="file" accept=".yaml,.yml,.json,.txt,.zip" multiple style="display:none">
+                                <input type="file" id="yaml-file-input" name="file" multiple style="display:none">
                             </div>
                         </div>
                     {% endif %}
@@ -153,6 +153,7 @@
                                 <div class="custom-disclaimer">
                                     &#9888; This lobby contains custom APWorlds. The server cannot generate this seed.
                                     Download the package, generate locally with the {{ instance_name }} launcher, then upload the result (AP_12345.zip) here.
+                                    <span id="package-incomplete-notice" style="display:none;">The package is currently incomplete, see below - download is possible either way:</span>
                                     <div id="missing-apworlds-notice" style="display:none; margin-top:8px;">
                                         <strong>Missing APWorlds:</strong>
                                         <ul id="missing-apworlds-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>

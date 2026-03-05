@@ -172,8 +172,10 @@
                     : '';
                 // Server world version tag for standard worlds — hidden once an upgrade apworld is uploaded
                 const hasUpgradeApworld = !isCustom && !!y.apworld;
-                const serverVer = !isCustom && y.server_world_version && !hasUpgradeApworld
-                    ? `<span class="yaml-world-version" title="World version on this server">v${escapeHtml(y.server_world_version)}</span>`
+                const versionSatisfied = !isCustom && y.required_version && !y.version_warning
+                    && !y.version_upgrade_available && !hasUpgradeApworld;
+                const serverVer = !isCustom && y.server_world_version && !hasUpgradeApworld && !versionSatisfied
+                    ? `<span class="yaml-world-version" title="Server has v${escapeHtml(y.server_world_version)} — compatibility unverified (YAML has no version requirement)">v${escapeHtml(y.server_world_version)}</span>`
                     : '';
                 const versionWarn = y.version_warning && !hasUpgradeApworld
                     ? `<span class="yaml-version-warning" title="${escapeHtml(y.version_warning)}">&#9888;</span>`
@@ -200,15 +202,21 @@
                 html += gameDisplay;
                 html += serverVer;
                 html += versionWarn;
-                html += `<a class="yaml-download-btn" href="${downloadHref}" title="Download YAML" download>&#x2B07;</a>`;
 
                 if (isCustom && currentState === LOBBY_STATE_OPEN) {
                     const apw = y.apworld;
                     if (apw) {
                         const verLabel = apw.world_version ? `v${escapeHtml(apw.world_version)}` : "APWorld";
-                        html += `<span class="apworld-status-ok" title="${escapeHtml(apw.filename)}">&#10003; ${verLabel}</span>`;
+                        let apwTip = escapeHtml(apw.filename);
+                        if (apw.world_version && y.required_version) {
+                            apwTip += ` — v${escapeHtml(apw.world_version)} satisfies requirement v${escapeHtml(y.required_version)}`;
+                        } else if (apw.world_version) {
+                            apwTip += ` — v${escapeHtml(apw.world_version)}, compatibility unverified (YAML has no version requirement)`;
+                        }
+                        html += `<span class="apworld-status-ok" title="${apwTip}">&#10003; ${verLabel}</span>`;
                     } else if (p.id === MY_PLAYER_ID) {
-                        html += `<button class="apworld-upload-btn" data-yaml-id="${y.id}" title="Upload APWorld for this game">&#x2B06; APWorld</button>`;
+                        const reqVer = y.required_version ? ` (requires v${escapeHtml(y.required_version)})` : "";
+                        html += `<button class="apworld-upload-btn" data-yaml-id="${y.id}" title="Upload APWorld for this game${reqVer}">&#x2B06; APWorld</button>`;
                     } else {
                         html += `<span class="apworld-missing" title="APWorld not yet uploaded">&#9888;</span>`;
                     }
@@ -216,15 +224,27 @@
 
                 if (!isCustom && currentState === LOBBY_STATE_OPEN) {
                     if (hasUpgradeApworld) {
-                        const verLabel = y.apworld.world_version ? `v${escapeHtml(y.apworld.world_version)}` : "APWorld";
-                        html += `<span class="apworld-status-ok" title="${escapeHtml(y.apworld.filename)}">&#10003; ${verLabel}</span>`;
+                        const apw = y.apworld;
+                        const verLabel = apw.world_version ? `v${escapeHtml(apw.world_version)}` : "APWorld";
+                        let apwTip = escapeHtml(apw.filename);
+                        if (apw.world_version && y.required_version) {
+                            apwTip += ` — v${escapeHtml(apw.world_version)} satisfies requirement v${escapeHtml(y.required_version)}`;
+                            if (y.server_world_version) {
+                                apwTip += ` (server has v${escapeHtml(y.server_world_version)})`;
+                            }
+                        }
+                        html += `<span class="apworld-status-ok" title="${apwTip}">&#10003; ${verLabel}</span>`;
+                    } else if (versionSatisfied) {
+                        html += `<span class="apworld-status-ok" title="Server v${escapeHtml(y.server_world_version)} satisfies requirement v${escapeHtml(y.required_version)}">&#10003; v${escapeHtml(y.server_world_version)}</span>`;
                     } else if (y.version_upgrade_available) {
                         if (p.id === MY_PLAYER_ID) {
-                            html += `<button class="apworld-upload-btn" data-yaml-id="${y.id}" title="Upload newer APWorld to override server version">&#x2B06; Upgrade</button>`;
+                            const reqVer = y.required_version ? ` (requires v${escapeHtml(y.required_version)})` : "";
+                            html += `<button class="apworld-upload-btn" data-yaml-id="${y.id}" title="Upload newer APWorld to override server version${reqVer}">&#x2B06; Upgrade</button>`;
                         }
                     }
                 }
 
+                html += `<a class="yaml-download-btn" href="${downloadHref}" title="Download YAML" download>&#x2B07;</a>`;
                 if (currentState === LOBBY_STATE_OPEN && (IS_OWNER || p.id === MY_PLAYER_ID)) {
                     html += `<button class="yaml-delete-btn" data-yaml-id="${y.id}" title="Remove YAML">&times;</button>`;
                 }
@@ -292,6 +312,7 @@
         if (generateStandard) generateStandard.style.display = isCustomMode ? "none" : "";
         if (generateCustom) generateCustom.style.display = isCustomMode ? "" : "none";
 
+        const incompleteNotice = document.getElementById("package-incomplete-notice");
         const missingNotice = document.getElementById("missing-apworlds-notice");
         const missingList = document.getElementById("missing-apworlds-list");
         const upgradeNotice = document.getElementById("upgrade-apworlds-notice");
@@ -309,6 +330,8 @@
                     }
                 });
             });
+            const isIncomplete = missingGames.size > 0 || upgradeGames.size > 0;
+            if (incompleteNotice) incompleteNotice.style.display = isIncomplete ? "" : "none";
             if (missingNotice && missingList) {
                 if (missingGames.size > 0) {
                     missingList.innerHTML = [...missingGames]
@@ -329,6 +352,7 @@
                 }
             }
         } else {
+            if (incompleteNotice) incompleteNotice.style.display = "none";
             if (missingNotice) missingNotice.style.display = "none";
             if (upgradeNotice) upgradeNotice.style.display = "none";
         }
@@ -516,9 +540,28 @@
                     if (yamlFileInput) yamlFileInput.value = "";
                     const customUploaded = (data.uploaded || []).filter(u => u.is_custom);
                     if (customUploaded.length > 0) {
-                        alert(`Uploaded ${customUploaded.length} custom game YAML(s). ` +
-                              `Please upload the corresponding .apworld file(s) using the ` +
-                              `"⬆ APWorld" button next to each custom YAML.`);
+                        const lines = customUploaded.map(u => {
+                            const ver = u.required_version ? ` v${u.required_version}` : "";
+                            return `  • ${u.game}${ver}`;
+                        });
+                        alert(
+                            `Uploaded ${customUploaded.length} custom game YAML(s):\n` +
+                            lines.join("\n") + "\n\n" +
+                            `Please upload the corresponding .apworld file(s) using the ` +
+                            `"⬆ APWorld" button next to each custom YAML. ` +
+                            `You can also drag and drop an .apworld file directly onto the button.`
+                        );
+                    }
+                    if (data.upgrades_needed && data.upgrades_needed.length > 0) {
+                        const lines = data.upgrades_needed.map(u =>
+                            `  • ${u.game} (requires v${u.required_version})`
+                        );
+                        alert(
+                            "Your YAML requires a newer version of the following game(s):\n" +
+                            lines.join("\n") + "\n\n" +
+                            "Please upload an updated APWorld using the \"⬆ Upgrade\" button next to your YAML. " +
+                            "You can also drag and drop an .apworld file directly onto the button."
+                        );
                     }
                     if (data.version_warnings && data.version_warnings.length > 0) {
                         alert("Version mismatch detected:\n" + data.version_warnings.join("\n"));
@@ -561,8 +604,9 @@
 
     function bindApworldUploadButtons() {
         document.querySelectorAll(".apworld-upload-btn").forEach(btn => {
+            const yamlId = btn.dataset.yamlId;
+
             btn.addEventListener("click", function () {
-                const yamlId = this.dataset.yamlId;
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = ".apworld";
@@ -571,6 +615,30 @@
                     if (file) uploadApworld(yamlId, file);
                 };
                 input.click();
+            });
+
+            btn.addEventListener("dragenter", e => {
+                e.preventDefault();
+                e.stopPropagation();
+                btn.classList.add("apworld-upload-btn--drag");
+            });
+
+            btn.addEventListener("dragover", e => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = "copy";
+            });
+
+            btn.addEventListener("dragleave", () => {
+                btn.classList.remove("apworld-upload-btn--drag");
+            });
+
+            btn.addEventListener("drop", e => {
+                e.preventDefault();
+                e.stopPropagation();
+                btn.classList.remove("apworld-upload-btn--drag");
+                const file = e.dataTransfer.files[0];
+                if (file) uploadApworld(yamlId, file);
             });
         });
     }

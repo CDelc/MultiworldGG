@@ -246,6 +246,8 @@ def lobby_status(lobby: UUID):
             yaml_info["apworld"] = apworld_by_yaml_id[y_id]
         elif y_is_custom and y_game and y_game in apworld_by_game:
             yaml_info["apworld"] = apworld_by_game[y_game]
+        if y_requires_version:
+            yaml_info["required_version"] = _required_version_label(y_requires_version)
         # For standard worlds, include server-side world version and check requires constraint
         if y_game and not y_is_custom and y_game in AutoWorldRegister.world_types:
             server_wv = AutoWorldRegister.world_types[y_game].world_version
@@ -415,6 +417,12 @@ def lobby_upload_yaml(lobby: UUID):
     if len(files) > remaining:
         return jsonify({"error": f"You can only upload {remaining} more YAML(s)"}), 400
 
+    # Reject zip files — zips are only accepted at the pregenerated-game upload step.
+    for f in files:
+        if f.filename.endswith(".zip"):
+            return jsonify({"error": f"'{f.filename}' is a .zip file. "
+                                     "Use the pregenerated game upload instead."}), 400
+
     # Validate using existing pipeline
     options = get_yaml_data(files)
     if isinstance(options, (str, Markup)):
@@ -423,6 +431,7 @@ def lobby_upload_yaml(lobby: UUID):
     from worlds.AutoWorld import AutoWorldRegister
     standard_options: dict[str, bytes] = {}
     custom_info: dict[str, tuple[str, str]] = {}  # filename -> (player_name, game)
+    upgrade_info: dict[str, tuple[str, str]] = {}  # filename -> (player_name, game) for version upgrades
     requires_versions: dict[str, str | None] = {}  # filename -> requires_game_version JSON
     for filename, content in options.items():
         player_name, game, requires_version = _extract_game_info(content)
@@ -445,8 +454,7 @@ def lobby_upload_yaml(lobby: UUID):
             direction = _version_mismatch_direction(requires_version, server_wv)
 
             if direction == "newer":
-                # YAML needs a newer world than the server has — accept as standard but warn.
-                # If custom APWorlds are enabled, the player gets an optional upgrade button.
+                # YAML needs a newer world than the server has
                 if not lobby.allow_custom_apworlds:
                     req_label = _required_version_label(requires_version)
                     return jsonify({
@@ -454,7 +462,10 @@ def lobby_upload_yaml(lobby: UUID):
                                  f"v{server_wv.as_simple_string()}. The lobby owner must enable "
                                  f"custom APWorlds so you can upload the matching world."
                     }), 400
-                standard_options[filename] = content
+                # Custom APWorlds enabled: skip validation to avoid the version exception.
+                if not player_name:
+                    return jsonify({"error": f"Could not find player name in '{filename}'"}), 400
+                upgrade_info[filename] = (player_name, game)
 
             elif direction == "older":
                 # YAML was built for an older world than the server has — accept it either way,
@@ -493,6 +504,12 @@ def lobby_upload_yaml(lobby: UUID):
         new_custom[filename] = True
         new_requires[filename] = requires_versions.get(filename)
 
+    for filename, (player_name, game) in upgrade_info.items():
+        new_names[filename] = player_name
+        new_games[filename] = game
+        new_custom[filename] = False
+        new_requires[filename] = requires_versions.get(filename)
+
     # Check for duplicates within the uploaded batch
     seen_names: dict[str, str] = {}
     for filename, name in new_names.items():
@@ -520,6 +537,7 @@ def lobby_upload_yaml(lobby: UUID):
 
     uploaded = []
     version_warnings: list[str] = []
+    upgrades_needed: list[dict] = []
     for filename, content in options.items():
         if isinstance(content, str):
             content = content.encode('utf-8')
@@ -527,8 +545,13 @@ def lobby_upload_yaml(lobby: UUID):
         is_custom = new_custom.get(filename, False)
         requires_json = new_requires.get(filename)
 
-        # Check requires.game constraint against server's world version
-        if requires_json and game and not is_custom and game in AutoWorldRegister.world_types:
+        # Check requires.game constraint against server's world version.
+        if filename in upgrade_info:
+            upgrades_needed.append({
+                "game": game,
+                "required_version": _required_version_label(requires_json) if requires_json else "?",
+            })
+        elif requires_json and game and not is_custom and game in AutoWorldRegister.world_types:
             server_wv = AutoWorldRegister.world_types[game].world_version
             warning = _check_version_constraint(requires_json, server_wv)
             if warning:
@@ -545,11 +568,10 @@ def lobby_upload_yaml(lobby: UUID):
             content=content,
         )
         commit()
-        uploaded.append({
-            "id": yaml_record.id,
-            "filename": filename,
-            "is_custom": is_custom,
-        })
+        entry: dict = {"id": yaml_record.id, "filename": filename, "is_custom": is_custom, "game": game}
+        if requires_json:
+            entry["required_version"] = _required_version_label(requires_json)
+        uploaded.append(entry)
 
     yaml_summaries = [
         f"{new_names.get(fn, fn)} ({new_games.get(fn, '?')})" for fn in options
@@ -567,6 +589,8 @@ def lobby_upload_yaml(lobby: UUID):
     result: dict = {"uploaded": uploaded}
     if version_warnings:
         result["version_warnings"] = version_warnings
+    if upgrades_needed:
+        result["upgrades_needed"] = upgrades_needed
     return jsonify(result), 201
 
 
@@ -1095,6 +1119,7 @@ def lobby_upload_apworld(lobby: UUID, yaml_id: int):
         return jsonify({"error": "File is not a valid .apworld (must be a ZIP archive)"}), 400
 
     world_version = None
+    apworld_game = None
     try:
         with zipfile.ZipFile(io.BytesIO(apworld_data)) as apzip:
             manifest_path = next(
@@ -1106,12 +1131,29 @@ def lobby_upload_apworld(lobby: UUID, yaml_id: int):
                 wv = manifest.get("world_version")
                 if wv is not None:
                     world_version = str(wv)
+                apworld_game = manifest["game"]
     except Exception:
         pass
 
-    # Upgrade apworlds must declare a world_version so we can display and validate the upgrade
+    if apworld_game is not None and apworld_game != yaml_record.yaml_game:
+        return jsonify({
+            "error": f"APWorld is for '{apworld_game}', but this YAML is for '{yaml_record.yaml_game}'. "
+                     f"Please upload the correct APWorld."
+        }), 400
+
+    # Upgrade apworlds must declare a world_version so we can display and validate the upgrade.
     if not yaml_record.is_custom and world_version is None:
         return jsonify({"error": "Upgrade APWorlds must have a world_version defined in archipelago.json"}), 400
+
+    # Check that the uploaded APWorld satisfies the YAML's version requirement
+    if yaml_record.requires_game_version and world_version is not None:
+        apworld_ver = tuplize_version(world_version)
+        if _version_mismatch_direction(yaml_record.requires_game_version, apworld_ver) == "newer":
+            req_label = _required_version_label(yaml_record.requires_game_version)
+            return jsonify({
+                "error": f"The uploaded APWorld is v{world_version}, but your YAML requires "
+                         f"{yaml_record.yaml_game} v{req_label}. Please upload a newer version."
+            }), 400
 
     apworld_dir = os.path.abspath(os.path.join(app.config["LOBBY_APWORLD_PATH"], str(lobby.id)))
     os.makedirs(apworld_dir, exist_ok=True)
