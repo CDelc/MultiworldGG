@@ -61,15 +61,11 @@ class SM64HackWorld(World):
         create_json_folders(get_settings()["sm64hacks_options"]["auto_update"] and not hasattr(multiworld, "generation_is_fake"))
 
     def generate_early(self):
-        # Get filename from TextChoice option value
-        json_filename = self.options.json_file.get_filename_from_value(self.options.json_file.value)
-        if json_filename is None:
-            # Fallback: try using value as string (for custom values or legacy support)
-            if isinstance(self.options.json_file.value, str):
-                json_filename = self.options.json_file.value
-            else:
-                # Try to get from current_key
-                json_filename = self.options.json_file.current_key + ".json"
+        value = self.options.json_file.value
+        if isinstance(value, str):
+            json_filename = value if value.endswith(".json") else value + ".json"
+        else:
+            json_filename = self.options.json_file.current_key  # name_lookup[value] = filename with .json
         self.data.import_json(json_filename, self.settings.auto_update)
         self.progressive_keys = self.options.progressive_keys.value
         if isinstance(self.data.locations["Other"]["Settings"], list):

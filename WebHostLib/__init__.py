@@ -4,9 +4,10 @@ import socket
 import typing
 import uuid
 
-from flask import Flask
+from flask import Flask, session
 from flask_caching import Cache
 from flask_compress import Compress
+from flask_limiter import Limiter
 from pony.flask import Pony
 from werkzeug.routing import BaseConverter
 
@@ -15,6 +16,8 @@ from Utils import title_sorted, get_file_safe_name,world_list_sorted
 UPLOAD_FOLDER = os.path.relpath('uploads')
 LOGS_FOLDER = os.path.relpath('logs')
 os.makedirs(LOGS_FOLDER, exist_ok=True)
+LOBBY_APWORLD_FOLDER = os.path.join(UPLOAD_FOLDER, "lobby_apworlds")                                                   
+os.makedirs(LOBBY_APWORLD_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
 Pony(app)
@@ -27,6 +30,7 @@ app.jinja_env.filters['get_file_safe_name'] = get_file_safe_name
 app.config["DEBUG"] = False
 app.config["PORT"] = 80
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["LOBBY_APWORLD_PATH"] = os.path.abspath(LOBBY_APWORLD_FOLDER)
 app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024  # 64 megabyte limit
 # if you want to deploy, make sure you have a non-guessable secret key
 app.config["SECRET_KEY"] = bytes(socket.gethostname(), encoding="utf-8")
@@ -70,6 +74,12 @@ app.config["MONITORING_ADMIN_TOKEN"] = None  # Admin token for monitoring API en
 
 cache = Cache()
 Compress(app)
+limiter = Limiter(
+    key_func=lambda s=session: s.get("_id", "") or "",
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
 
 
 def to_python(value: str) -> uuid.UUID:

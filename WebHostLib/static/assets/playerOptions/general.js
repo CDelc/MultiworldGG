@@ -7,11 +7,27 @@ window.addEventListener("load", async () => {
   // Fetch presets if available
   await fetchPresets();
 
+  // Handle changes to range value number inputs (plain Range only, not NamedRange)
+  document.querySelectorAll(".range-container .range-value").forEach((valueInput) => {
+    const optionName = valueInput.id.replace(/-value$/, "");
+    const rangeInput = document.getElementById(optionName);
+
+    valueInput.addEventListener("change", () => {
+      let val = parseInt(valueInput.value, 10);
+      if (isNaN(val)) val = parseInt(rangeInput.min, 10);
+      val = Math.max(parseInt(rangeInput.min, 10), Math.min(parseInt(rangeInput.max, 10), val));
+      valueInput.value = val;
+      rangeInput.value = val;
+    });
+  });
+
   // Handle changes to range inputs
   document.querySelectorAll("input[type=range]").forEach((range) => {
     const optionName = range.getAttribute("id");
     range.addEventListener("change", () => {
-      document.getElementById(`${optionName}-value`).innerText = range.value;
+      const valueEl = document.getElementById(`${optionName}-value`);
+      if (valueEl.tagName === "INPUT") valueEl.value = range.value;
+      else valueEl.innerText = range.value;
 
       // Handle updating named range selects to "custom" if appropriate
       const select = document.querySelector(
@@ -53,17 +69,24 @@ window.addEventListener("load", async () => {
         `select[data-option-name=${optionName}]`
       );
       const customInput = document.getElementById(`${optionName}-custom`);
+      const valueInput = document.getElementById(`${optionName}-value`);
       if (checkbox.checked) {
         optionInput.setAttribute("disabled", "1");
         namedRangeSelect?.setAttribute("disabled", "1");
         if (customInput) {
           customInput.setAttribute("disabled", "1");
         }
+        if (valueInput && valueInput.tagName === "INPUT") {
+          valueInput.setAttribute("disabled", "1");
+        }
       } else {
         optionInput.removeAttribute("disabled");
         namedRangeSelect?.removeAttribute("disabled");
         if (customInput) {
           customInput.removeAttribute("disabled");
+        }
+        if (valueInput && valueInput.tagName === "INPUT") {
+          valueInput.removeAttribute("disabled");
         }
       }
     });
@@ -172,7 +195,8 @@ const loadSettings = (importObj = null) => {
         document.getElementById(key).value = options.inputs[key];
         const rangeValue = document.getElementById(`${key}-value`);
         if (rangeValue) {
-          rangeValue.innerText = options.inputs[key];
+          if (rangeValue.tagName === "INPUT") rangeValue.value = options.inputs[key];
+          else rangeValue.innerText = options.inputs[key];
         }
       } catch (err) {
         console.error(`Unable to restore value to input with id ${key}`);
@@ -353,7 +377,8 @@ const applyPresets = (presetName) => {
         customInput.setAttribute("disabled", "1");
       }
       if (rangeValue) {
-        rangeValue.innerText = normalInput.value;
+        if (rangeValue.tagName === "INPUT") rangeValue.value = normalInput.value;
+        else rangeValue.innerText = normalInput.value;
       }
       if (namedRangeSelect) {
         namedRangeSelect.setAttribute("disabled", "1");
@@ -371,7 +396,8 @@ const applyPresets = (presetName) => {
         .removeAttribute("disabled");
     }
     if (rangeValue) {
-      rangeValue.innerText = trueValue;
+      if (rangeValue.tagName === "INPUT") rangeValue.value = trueValue;
+      else rangeValue.innerText = trueValue;
     }
   });
 

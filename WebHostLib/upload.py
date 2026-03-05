@@ -19,7 +19,7 @@ from Utils import VersionException, __version__
 from worlds.Files import AutoPatchRegister
 from worlds.AutoWorld import data_package_checksum
 from . import app
-from .models import Seed, Room, Slot, GameDataPackage
+from .models import Seed, Room, Slot, GameDataPackage, Lobby
 
 banned_extensions = (".sfc", ".z64", ".n64", ".nes", ".smc", ".sms", ".gb", ".gbc", ".gba")
 allowed_options_extensions = (".yaml", ".json", ".yml", ".txt", ".zip")
@@ -214,7 +214,8 @@ def uploads():
 def user_content():
     rooms = select(room for room in Room if room.owner == session["_id"])
     seeds = select(seed for seed in Seed if seed.owner == session["_id"])
-    return render_template("userContent.html", rooms=rooms, seeds=seeds)
+    lobbies = select(l for l in Lobby if l.owner == session["_id"] and l.state >= 0).order_by(lambda l: l.last_activity)[::]
+    return render_template("userContent.html", rooms=rooms, seeds=seeds, lobbies=lobbies)
 
 
 @app.route("/disown_seed/<suuid:seed>", methods=["GET"])

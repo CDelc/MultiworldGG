@@ -18,6 +18,7 @@ Currently, the following games are supported:
 * Adventure
 * Against the Storm
 * A Hat in Time
+* AM2R
 * Animal Well
 * Ape Escape
 * APQuest
@@ -132,7 +133,10 @@ Currently, the following games are supported:
 * Path of Exile
 * PEAK
 * Peaks of Yore
+* Peggle Deluxe
+* Peggle Nights
 * Phoenotopia: Awakening
+* Pinball FX3
 * Placid Plastic Duck Simulator
 * Pokémon Crystal
 * Pokémon Emerald
@@ -166,6 +170,7 @@ Currently, the following games are supported:
 * Sonic Adventure 2: Battle
 * Sonic Adventure DX
 * Sonic Heroes
+* Sonic Robo Blast 2
 * Spongebob Squarepants: Battle for Bikini Bottom
 * Spyro 3: Year of the Dragon
 * StarCraft II

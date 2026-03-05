@@ -30,8 +30,13 @@ if baseclasses_loaded:
     def is_webhost_mode() -> bool:
         """Detect whether this import is happening in WebHost/dedicated web runtime."""
         argv0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
-        argv = [arg.lower() for arg in sys.argv]
-        return ("webhost.py" in argv0)
+        # "WebHost" will already be in sys.modules when gunicorn imports WebHost:get_app()
+        if "WebHost" in sys.modules:
+            return True
+        # Direct invocation: python WebHost.py or python -m gunicorn
+        if "webhost.py" in argv0 or "gunicorn" in argv0:
+            return True
+        return False
 
     def display_error_box(title: str, text: str) -> bool | None:
         """Display an error message box."""
@@ -73,12 +78,10 @@ if baseclasses_loaded:
                     # Write the ZIP file to the destination
                     with open(zip_dest, "wb") as f:
                         f.write(zip_data)
-                    print(f"Copied {zip_path} to {zip_dest}")
 
                     # Extract the ZIP file
                     with zipfile.ZipFile(zip_dest, "r") as zip_ref:
                         zip_ref.extractall(temp_dir)
-                    print(f"Extracted {zip_dest} into {temp_dir}")
 
         except PermissionError:
             display_error_box("Permission Error", "Unable to install Dependencies to AP, please try to install AP as an admin.")
@@ -298,7 +301,7 @@ if baseclasses_loaded:
 
         theme = "jungle"
 
-        setup_en = Tutorial("Multiworld Setup Guide", "A guide to setting up the Donkey Kong 64 randomizer connected to a MultiworldGG Multiworld.", "English", "setup_en.md", "setup/en", ["PoryGone"])
+        setup_en = Tutorial("Multiworld Setup Guide", "A guide to setting up the Donkey Kong 64 randomizer connected to an Archipelago Multiworld.", "English", "setup_en.md", "setup/en", ["PoryGone"])
 
         tutorials = [setup_en]
         option_groups = dk64_option_groups

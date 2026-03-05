@@ -44,9 +44,16 @@
                 value="{{ option.default | default(option.range_start) if option.default != "random" else option.range_start }}"
                 {{ "disabled" if option.default == "random" }}
         />
-        <span id="{{ option_name }}-value" class="range-value js-required">
-            {{ option.default | default(option.range_start) if option.default != "random" else option.range_start }}
-        </span>
+        <input
+                type="number"
+                id="{{ option_name }}-value"
+                class="range-value js-required"
+                min="{{ option.range_start }}"
+                max="{{ option.range_end }}"
+                value="{{ option.default | default(option.range_start) if option.default != "random" else option.range_start }}"
+                style="width: {{ ([option.range_end | string | length, option.range_start | string | length] | max) + 2 }}ch"
+                {{ "disabled" if option.default == "random" }}
+        />
         {{ RandomizeButton(option_name, option) }}
     </div>
 {% endmacro %}

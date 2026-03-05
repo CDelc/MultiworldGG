@@ -20,7 +20,7 @@ from ..AutoWorld import WebWorld, World
 class SpireWeb(WebWorld):
     tutorials = [Tutorial(
         "Multiworld Setup Guide",
-        "A guide to setting up Slay the Spire for Archipelago. "
+        "A guide to setting up Slay the Spire for MultiworldGG. "
         "This guide covers single-player, multiworld, and related software.",
         "English",
         "slay-the-spire_en.md",
@@ -276,7 +276,7 @@ class SpireWorld(World):
 
                 if config.final_act:
                     remaining_checks += 4
-                if config.ascension >= 20:
+                if config.ascension >= 20 and config.ascension_down == 0:
                     remaining_checks += 1
 
                 traps: list[bool] = [self.random.randint(0, 100) < self.options.trap_chance for _ in range(remaining_checks)]
@@ -401,6 +401,7 @@ class SpireWorld(World):
         return slot_data
 
     def _setup_ut(self, slot_data: dict[str, Any]) -> None:
+        self.options.shop_card_slots.value = slot_data["shop_sanity_options"]["card_slots"]
         self.options.shop_remove_slots.value = slot_data["shop_sanity_options"]["card_remove"]
         self.options.shop_neutral_card_slots.value = slot_data["shop_sanity_options"]["neutral_slots"]
         self.options.shop_relic_slots.value = slot_data["shop_sanity_options"]["relic_slots"]

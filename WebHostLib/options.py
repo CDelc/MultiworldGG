@@ -207,6 +207,12 @@ def player_options(game: str):
         return abort(404)
 
 
+# Alias for player-options
+@app.route("/games/<string:game>/player-settings")
+def player_settings(game: str):
+    return redirect(f"/games/{game}/player-options", code=301)
+
+
 # YAML generator for player-options
 @app.route("/games/<string:game>/generate-yaml", methods=["POST"])
 def generate_yaml(game: str):

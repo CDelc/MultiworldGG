@@ -258,6 +258,38 @@
         ],
         "release_date": 2023
     },
+    "AM2R: Return of Samus": {
+        "igdb_id": "27238",
+        "world_name": "AM2R",
+        "igdb_name": "AM2R: Return of Samus",
+        "us_rating": [],
+        "player_perspectives": [
+            "Side view"
+        ],
+        "genres": [
+            "Platform",
+            "Adventure",
+            "Indie"
+        ],
+        "themes": [
+            "Action",
+            "Science fiction"
+        ],
+        "keywords": [
+            "exploration",
+            "metroidvania",
+            "action-adventure",
+            "side-scrolling",
+            "freeware",
+            "unofficial",
+            "exploration driven",
+            "copyright infringement",
+            "metroid",
+            "fangame",
+            "unofficial remake"
+        ],
+        "release_date": 2016
+    },
     "An Untitled Story": {
         "igdb_id": "72926",
         "world_name": "An Untitled Story",
@@ -3562,6 +3594,49 @@
         "keywords": [],
         "release_date": 2023
     },
+    "Peggle Deluxe": {
+        "igdb_id": "28975",
+        "world_name": "Peggle Deluxe",
+        "igdb_name": "Peggle Deluxe",
+        "us_rating": [],
+        "player_perspectives": [
+            "Side view"
+        ],
+        "genres": [
+            "Puzzle"
+        ],
+        "themes": [],
+        "keywords": [],
+        "release_date": 2007
+    },
+    "Peggle Nights": {
+        "igdb_id": "14813",
+        "world_name": "Peggle Nights",
+        "igdb_name": "Peggle Nights",
+        "us_rating": [],
+        "player_perspectives": [
+            "Side view"
+        ],
+        "genres": [
+            "Puzzle"
+        ],
+        "themes": [],
+        "keywords": [
+            "steam",
+            "abstract",
+            "high score",
+            "talking animals",
+            "block-breaking",
+            "floating blocks",
+            "pictographic level design",
+            "ea app",
+            "steam play",
+            "color blind assist",
+            "fireworks",
+            "remote play"
+        ],
+        "release_date": 2008
+    },
     "Phantom Hourglass": {
         "igdb_id": "1037",
         "world_name": "The Legend of Zelda: Phantom Hourglass",
@@ -3672,6 +3747,48 @@
             "zelda-like"
         ],
         "release_date": 2020
+    },
+    "Pinball FX3": {
+        "igdb_id": "41051",
+        "world_name": "Pinball FX3",
+        "igdb_name": "Pinball FX3",
+        "us_rating": [],
+        "player_perspectives": [
+            "Bird view / Isometric"
+        ],
+        "genres": [
+            "Simulator",
+            "Pinball",
+            "Arcade"
+        ],
+        "themes": [
+            "Fantasy",
+            "Science fiction"
+        ],
+        "keywords": [
+            "pinball",
+            "steam",
+            "achievements",
+            "online",
+            "free-to-play",
+            "tournament",
+            "steam achievements",
+            "digital distribution",
+            "steam cloud",
+            "xenomorph",
+            "genie",
+            "leveling up",
+            "voice acting",
+            "xbox play anywhere",
+            "digital pinball",
+            "downloadable content",
+            "xbox live",
+            "octopus",
+            "leaderboard",
+            "predator",
+            "xbox live local multiplayer"
+        ],
+        "release_date": 2017
     },
     "Placid Plastic Duck Simulator": {
         "igdb_id": "204122",
@@ -4920,6 +5037,28 @@
             "retroachievements"
         ],
         "release_date": 2003
+    },
+    "Sonic Robo Blast 2": {
+        "igdb_id": "341762",
+        "world_name": "Sonic Robo Blast 2",
+        "igdb_name": "Sonic Robo Blast 2",
+        "us_rating": [],
+        "player_perspectives": [
+            "Third person"
+        ],
+        "genres": [
+            "Platform"
+        ],
+        "themes": [
+            "Action"
+        ],
+        "keywords": [
+            "homebrew",
+            "unofficial",
+            "fangame",
+            "retroachievements"
+        ],
+        "release_date": 2024
     },
     "Spyro 3": {
         "igdb_id": "1578",
