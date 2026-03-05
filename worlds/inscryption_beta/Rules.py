@@ -163,7 +163,7 @@ class InscryptionRules:
     }
 
     act1_progressive_values: Dict[str, list[int]] = {
-        "More Difficult Challenge": [4, 4],
+        "More Difficult Challenge": [5, 4],
         "Progressive Candle": [3, 3],
         "Progressive Squirrel": [2, 3],
         "Tipped Scales Challenge": [5, 4, 3]
@@ -236,7 +236,7 @@ class InscryptionRules:
     def has_wetlands_requirements(self, state: CollectionState) -> bool:
         if self.world.options.randomize_nodes and \
             self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
-            return self.act1_battle_requirements(state, 12, True, True) and self.has_prospector_requirements(state)
+            return self.act1_battle_requirements(state, 13, True, True) and self.has_prospector_requirements(state)
         elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
             return self.act1_battle_requirements(state, 8, True, True) and self.has_prospector_requirements(state)
         elif self.world.options.randomize_nodes:
@@ -251,7 +251,7 @@ class InscryptionRules:
                 extra_points = 10
         if self.world.options.randomize_nodes and \
             self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
-            return self.act1_battle_requirements(state, 17 + extra_points, True, True) and \
+            return self.act1_battle_requirements(state, 18 + extra_points, True, True) and \
                 self.bypass_grizzly_requirements(state, 2)
         elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
             return self.act1_battle_requirements(state, 13 + extra_points, True, True) and \
@@ -263,9 +263,9 @@ class InscryptionRules:
     def has_snow_line_requirements(self, state: CollectionState) -> bool:
         if self.world.options.randomize_nodes and \
             self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
-            return self.act1_battle_requirements(state, 21, True, True) and self.has_angler_requirements(state)
+            return self.act1_battle_requirements(state, 23, True, True) and self.has_angler_requirements(state)
         elif self.world.options.randomize_challenges != RandomizeChallenges.option_disable:
-            return self.act1_battle_requirements(state, 16, True, True) and self.has_angler_requirements(state)
+            return self.act1_battle_requirements(state, 17, True, True) and self.has_angler_requirements(state)
         elif self.world.options.randomize_nodes:
             return self.act1_battle_requirements(state, 8, True, True) and self.has_angler_requirements(state)
         return True

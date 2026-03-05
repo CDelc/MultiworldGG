@@ -3,7 +3,7 @@ import sys
 import subprocess
 import multiprocessing
 import warnings
-
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated as an API") # temporarily disable that warning as pkg_resources can't easily be updated right now.
 
 if sys.platform in ("win32", "darwin") and not (3, 12, 0) <= sys.version_info < (3, 14, 0):
     # Official micro version updates. This should match the number in docs/running from source.md.

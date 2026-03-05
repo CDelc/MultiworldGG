@@ -192,7 +192,7 @@ class TTYDContext(cmmCtx):
             return TTYDManager
         class TrackerManager(super().make_gui()):
             logging_pairs = [("Client", "Archipelago")]
-            base_title = f"{apname}  TTYD Client with {UT_VERSION}"
+            base_title = f"{apname} TTYD Client with {UT_VERSION}"
         return TrackerManager
 
     async def receive_items(self):

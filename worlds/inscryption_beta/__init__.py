@@ -87,7 +87,7 @@ class InscryptionWorld(World):
         else:
             self.required_epitaph_pieces_name = "Epitaph Pieces"
             self.required_epitaph_pieces_count = 1
-        if not self.options.randomize_nodes:
+        if self.options.randomize_nodes or self.options.randomize_challenges != RandomizeChallenges.option_disable:
             self.all_items[6]["classification"] = ItemClassification.progression
             self.all_items[11]["classification"] = ItemClassification.progression
             self.all_items[12]["classification"] = ItemClassification.progression
