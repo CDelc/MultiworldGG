@@ -51,8 +51,6 @@ def get_app() -> "Flask":
     cache.init_app(app)
     db.bind(**app.config["PONY"])
     db.generate_mapping(create_tables=True)
-    from WebHostLib.models import migrate_lobby_schema
-    migrate_lobby_schema()
     return app
 
 

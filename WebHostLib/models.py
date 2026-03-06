@@ -139,20 +139,3 @@ class LobbyMessage(db.Entity):
     sender_name = Required(str)
     content = Required(str)
     sent_at = Required(datetime, default=lambda: datetime.utcnow())
-
-
-def migrate_lobby_schema():
-    """Add new Lobby/LobbyYaml columns that Pony ORM cannot auto-add to existing tables."""
-    for table, col, typedef in [
-        ("Lobby", "max_players", "INTEGER NOT NULL DEFAULT 0"),
-        ("Lobby", "allow_custom_apworlds", "BOOLEAN NOT NULL DEFAULT 0"),
-        ("LobbyYaml", "is_custom", "BOOLEAN NOT NULL DEFAULT 0"),
-        ("LobbyApworld", "world_version", "TEXT"),
-        ("LobbyYaml", "requires_game_version", "TEXT"),
-        ("LobbyPlayer", "is_ready", "BOOLEAN NOT NULL DEFAULT 0"),
-    ]:
-        try:
-            with db_session:
-                db.execute(f'ALTER TABLE "{table}" ADD COLUMN "{col}" {typedef}')
-        except Exception:
-            pass

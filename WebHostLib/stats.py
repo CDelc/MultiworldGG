@@ -141,7 +141,7 @@ def stats():
     total = sum(total_games.values())
     pie = figure(title=f"Games Played in the Last 30 Days (Total: {total})", toolbar_location=None,
                  tools="hover", tooltips=[("Game:", "@games"), ("Played:", "@count")],
-                 sizing_mode="scale_both", width=PLOT_WIDTH * 2, height=1000,, x_range=(-0.5, 1.2),
+                 sizing_mode="scale_both", width=PLOT_WIDTH * 2, height=1000, x_range=(-0.5, 1.2),
                  background_fill_color="#2b2b2b",
                  border_fill_color="#2b2b2b")
     

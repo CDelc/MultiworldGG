@@ -55,7 +55,6 @@ def process_multidata(compressed_multidata, files={}):
     slots: typing.Set[Slot] = set()
     if "datapackage" in decompressed_multidata:
         # strip datapackage from multidata, leaving only the checksums
-        game_data_packages: typing.List[GameDataPackage] = []
         for game, game_data in decompressed_multidata["datapackage"].items():
             if game_data.get("checksum"):
                 original_checksum = game_data.pop("checksum")
@@ -67,18 +66,18 @@ def process_multidata(compressed_multidata, files={}):
                                     f"calculated checksum {game_data['checksum']} "
                                     f"for game {game}.")
 
-                game_data_package = GameDataPackage(checksum=game_data["checksum"],
-                                                    data=pickle.dumps(game_data))
                 decompressed_multidata["datapackage"][game] = {
                     "version": game_data.get("version", 0),
                     "checksum": game_data["checksum"],
                 }
-                try:
-                    commit()  # commit game data package
-                    game_data_packages.append(game_data_package)
-                except TransactionIntegrityError:
-                    del game_data_package
-                    rollback()
+                if not GameDataPackage.get(checksum=game_data["checksum"]):
+                    game_data_package = GameDataPackage(checksum=game_data["checksum"],
+                                                        data=pickle.dumps(game_data))
+                    try:
+                        commit()  # commit game data package
+                    except TransactionIntegrityError:
+                        del game_data_package
+                        rollback()
 
     if "slot_info" in decompressed_multidata:
         for slot, slot_info in decompressed_multidata["slot_info"].items():
