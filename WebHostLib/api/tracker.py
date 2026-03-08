@@ -249,9 +249,9 @@ def tracker_slot_data(tracker: UUID) -> list[PlayerSlotData]:
     all_players: dict[int, list[int]] = tracker_data.get_all_players()
 
     def stringify_keys(obj: Any) -> Any:
-        """Recursively convert integer dict keys to strings for JSON serialization compatibility."""
+        """Recursively convert all non-string dict keys to strings for JSON serialization compatibility."""
         if isinstance(obj, dict):
-            return {str(k) if isinstance(k, int) else k: stringify_keys(v) for k, v in obj.items()}
+            return {str(k) if not isinstance(k, str) else k: stringify_keys(v) for k, v in obj.items()}
         if isinstance(obj, list):
             return [stringify_keys(item) for item in obj]
         return obj
