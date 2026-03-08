@@ -7,7 +7,7 @@
 
 {% block body %}
 {%- macro fmt_timeout(m) -%}
-{%- if m < 60 -%}{{ m }} min{%- elif m < 1440 -%}{{ (m // 60) }} hr{%- else -%}{{ (m // 1440) }} days{%- endif -%}
+{%- if m < 60 -%}{{ m }} min{%- elif m < 1440 -%}{{ (m // 60) }} hr{%- else -%}{{ (m // 1440) }} day{%- if (m // 1440) != 1 -%}s{%- endif -%}{%- endif -%}
 {%- endmacro -%}
     {% include 'header/grassHeader.html' %}
     <div id="lobby-wrapper">
