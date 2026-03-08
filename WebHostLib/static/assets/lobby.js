@@ -6,7 +6,8 @@
     const chatSendBtn = document.getElementById("chat-send-btn");
     const generateBtn = document.getElementById("generate-btn");
     const leaveBtn = document.getElementById("leave-btn");
-    const closeBtn = document.getElementById("close-btn");
+    const abandonBtn = document.getElementById("abandon-btn");
+    const lockBtn = document.getElementById("lock-btn");
     const settingsEditBtn = document.getElementById("settings-edit-btn");
     const yamlFileInput = document.getElementById("yaml-file-input");
     const dropZone = document.getElementById("yaml-upload-drop");
@@ -55,13 +56,8 @@
                 updateGenerateButton(data);
                 updateStatusDisplay(data);
 
-                const readyLabel = document.getElementById("ready-count-label");
-                if (readyLabel) {
-                    readyLabel.textContent = `${data.ready_count} / ${data.player_count} players ready`;
-                }
-
                 if (MY_PLAYER_ID !== null &&
-                    (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_GENERATING)) {
+                    (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED || currentState === LOBBY_STATE_GENERATING)) {
                     const stillMember = data.players.some(p => p.id === MY_PLAYER_ID);
                     if (!stillMember) {
                         clearInterval(pollTimer);
@@ -104,7 +100,7 @@
                 const stateChanged = data.state !== currentState;
                 const versionChanged = data.version !== knownVersion;
                 knownVersion = data.version;
-                if (currentState === LOBBY_STATE_GENERATING || stateChanged || versionChanged) {
+                if (currentState === LOBBY_STATE_GENERATING || currentState === LOBBY_STATE_LOCKED || stateChanged || versionChanged) {
                     idleCycles = 0;
                     pollStatus();
                 } else {
@@ -151,10 +147,10 @@
             const readyTick = p.is_ready ? ' <span class="ready-indicator" title="Ready">✓</span>' : '';
             const yamlCountLabel = ` <span class="player-yaml-count">${yamlCount}/${MAX_YAMLS_PER_PLAYER}${readyTick}</span>`;
             html += `<strong>${escapeHtml(p.name)}${p.is_owner ? " (Host)" : ""}${yamlCountLabel}</strong>`;
-            if (IS_OWNER && !p.is_owner && currentState === LOBBY_STATE_OPEN) {
+            if (IS_OWNER && !p.is_owner && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
                 html += `<button class="kick-btn" data-player-id="${p.id}" title="Kick player">Kick</button>`;
             }
-            if (p.id === MY_PLAYER_ID && currentState === LOBBY_STATE_OPEN) {
+            if (p.id === MY_PLAYER_ID && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
                 const readyClass = p.is_ready ? " ready-btn-on" : "";
                 const readyLabel = p.is_ready ? "Ready ✓" : "Mark Ready";
                 const hasYamls = p.yamls && p.yamls.length > 0;
@@ -203,7 +199,7 @@
                 html += serverVer;
                 html += versionWarn;
 
-                if (isCustom && currentState === LOBBY_STATE_OPEN) {
+                if (isCustom && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
                     const apw = y.apworld;
                     if (apw) {
                         const verLabel = apw.world_version ? `v${escapeHtml(apw.world_version)}` : "APWorld";
@@ -222,7 +218,7 @@
                     }
                 }
 
-                if (!isCustom && currentState === LOBBY_STATE_OPEN) {
+                if (!isCustom && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
                     if (hasUpgradeApworld) {
                         const apw = y.apworld;
                         const verLabel = apw.world_version ? `v${escapeHtml(apw.world_version)}` : "APWorld";
@@ -244,10 +240,13 @@
                     }
                 }
 
+                html += `<span class="yaml-actions">`;
                 html += `<a class="yaml-download-btn" href="${downloadHref}" title="Download YAML" download>&#x2B07;</a>`;
-                if (currentState === LOBBY_STATE_OPEN && (IS_OWNER || p.id === MY_PLAYER_ID)) {
+                html += `<button class="yaml-view-btn" data-yaml-id="${y.id}" data-filename="${escapeHtml(y.filename)}" title="View YAML">&#128065;</button>`;
+                if ((currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED) && (IS_OWNER || p.id === MY_PLAYER_ID)) {
                     html += `<button class="yaml-delete-btn" data-yaml-id="${y.id}" title="Remove YAML">&times;</button>`;
                 }
+                html += `</span>`;
                 html += '</li>';
             });
             html += '</ul>';
@@ -256,11 +255,12 @@
             playerList.appendChild(li);
         });
 
-        // Re-bind delete, kick, apworld upload, and ready buttons
+        // Re-bind delete, kick, apworld upload, ready, and view buttons
         bindYamlDeleteButtons();
         bindKickButtons();
         bindApworldUploadButtons();
         bindReadyButtons();
+        bindYamlViewButtons();
     }
 
     function buildMessageDiv(msg) {
@@ -305,10 +305,11 @@
     function updateGenerateButton(data) {
         const info = document.getElementById("generate-info");
         if (info) {
-            info.textContent = `${data.total_yamls} YAML(s) from ${data.player_count} player(s)`;
+            const maxP = data.max_players > 0 ? `/${data.max_players}` : "";
+            info.textContent = `Players: ${data.player_count}${maxP} | YAMLs: ${data.total_yamls} | Ready: ${data.ready_count}/${data.player_count}`;
         }
 
-        const isCustomMode = hasCustomYamls && currentState === LOBBY_STATE_OPEN;
+        const isCustomMode = hasCustomYamls && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED);
         if (generateStandard) generateStandard.style.display = isCustomMode ? "none" : "";
         if (generateCustom) generateCustom.style.display = isCustomMode ? "" : "none";
 
@@ -359,7 +360,7 @@
 
         if (generateBtn) {
             const hasYamls = data.total_yamls > 0;
-            generateBtn.disabled = !hasYamls || currentState !== LOBBY_STATE_OPEN;
+            generateBtn.disabled = !hasYamls || (currentState !== LOBBY_STATE_OPEN && currentState !== LOBBY_STATE_LOCKED);
             if (currentState === LOBBY_STATE_GENERATING) {
                 generateBtn.textContent = "Generating...";
                 generateBtn.disabled = true;
@@ -367,6 +368,12 @@
                 generateBtn.textContent = "Generate Seed";
             }
         }
+    }
+
+    function formatTimeout(minutes) {
+        if (minutes < 60) return minutes + ' min';
+        if (minutes < 1440) return Math.round(minutes / 60) + ' hr';
+        return Math.round(minutes / 1440) + ' days';
     }
 
     function formatMetaOpts(s, g) {
@@ -388,9 +395,13 @@
         else if (data.state === LOBBY_STATE_GENERATING) statusEl.textContent = "Generating...";
         else if (data.state === LOBBY_STATE_DONE) statusEl.textContent = "Seed created, Lobby locked";
         else if (data.state === LOBBY_STATE_CLOSED) statusEl.textContent = "Closed";
+        else if (data.state === LOBBY_STATE_LOCKED) statusEl.textContent = "Locked";
 
         if (data.max_yamls_per_player != null) {
             MAX_YAMLS_PER_PLAYER = data.max_yamls_per_player;
+        }
+        if (data.timeout_minutes != null) {
+            TIMEOUT_MINUTES = data.timeout_minutes;
         }
 
         const titleEl = document.getElementById("lobby-title");
@@ -398,10 +409,15 @@
 
         const metaMain = document.getElementById("lobby-meta-main");
         if (metaMain && data.max_yamls_per_player != null) {
-            const maxP = data.max_players > 0 ? `/${data.max_players}` : "";
             const race = data.race ? "Race Mode | " : "";
             const customAP = data.allow_custom_apworlds ? "Custom APWorlds: enabled" : "Custom APWorlds: disabled";
-            metaMain.textContent = `Max YAMLs: ${data.max_yamls_per_player} | Players: ${data.player_count}${maxP} | Timeout: ${data.timeout_minutes} min | ${race}${customAP}`;
+            metaMain.textContent = `Max YAMLs: ${data.max_yamls_per_player} | Timeout: ${formatTimeout(data.timeout_minutes)} | ${race}${customAP}`;
+        }
+
+        const playerBadge = document.getElementById("player-count-badge");
+        if (playerBadge && data.player_count != null) {
+            const maxP = data.max_players > 0 ? `/${data.max_players}` : "";
+            playerBadge.textContent = `(${data.player_count}${maxP})`;
         }
 
         const metaOpts = document.getElementById("lobby-meta-opts");
@@ -409,14 +425,25 @@
             metaOpts.textContent = formatMetaOpts(data.server_opts, data.gen_opts || {});
         }
 
+        const expiryEl = document.getElementById("lobby-expiry");
+        if (expiryEl && data.last_activity) {
+            const expiryMs = new Date(data.last_activity).getTime() + TIMEOUT_MINUTES * 60000;
+            expiryEl.textContent = "Expires: " + new Date(expiryMs).toLocaleString();
+        }
+
+        const isActiveState = data.state === LOBBY_STATE_OPEN || data.state === LOBBY_STATE_LOCKED;
+
+        const generateInfo = document.getElementById("generate-info");
+        if (generateInfo) generateInfo.style.display = isActiveState ? "" : "none";
+
         const uploadArea = document.getElementById("yaml-upload-area");
         if (uploadArea) {
-            uploadArea.style.display = data.state === LOBBY_STATE_OPEN ? "" : "none";
+            uploadArea.style.display = isActiveState ? "" : "none";
         }
 
         const genSection = document.getElementById("lobby-generate");
         if (genSection) {
-            genSection.style.display = data.state === LOBBY_STATE_OPEN ? "" : "none";
+            genSection.style.display = isActiveState ? "" : "none";
         }
 
         const generatingDiv = document.getElementById("lobby-generating");
@@ -424,15 +451,23 @@
             generatingDiv.style.display = data.state === LOBBY_STATE_GENERATING ? "block" : "none";
         }
 
-        const isLocked = data.state !== LOBBY_STATE_OPEN;
+        const isGeneratingOrDone = data.state === LOBBY_STATE_GENERATING || data.state === LOBBY_STATE_DONE;
         if (leaveBtn) {
-            leaveBtn.style.display = isLocked ? "none" : "";
+            leaveBtn.style.display = data.state === LOBBY_STATE_OPEN ? "" : "none";
         }
-        if (closeBtn) {
-            closeBtn.style.display = isLocked ? "none" : "";
+        if (abandonBtn) {
+            abandonBtn.style.display = isGeneratingOrDone ? "none" : "";
+        }
+        if (lockBtn) {
+            lockBtn.style.display = isActiveState ? "" : "none";
+            if (data.state === LOBBY_STATE_LOCKED) {
+                lockBtn.textContent = "Unlock Lobby";
+            } else {
+                lockBtn.textContent = "Lock Lobby";
+            }
         }
         if (settingsEditBtn) {
-            settingsEditBtn.style.display = isLocked ? "none" : "";
+            settingsEditBtn.style.display = isActiveState ? "" : "none";
         }
     }
 
@@ -787,9 +822,9 @@
         });
     }
 
-    if (closeBtn) {
-        closeBtn.addEventListener("click", () => {
-            if (!confirm("Close this lobby? This cannot be undone.")) return;
+    if (abandonBtn) {
+        abandonBtn.addEventListener("click", () => {
+            if (!confirm("Abandon this lobby? This will permanently shut it down and all uploaded files will be lost. This cannot be undone.")) return;
 
             fetch(API_BASE + "/close", { method: "POST" })
                 .then(res => res.json())
@@ -797,7 +832,25 @@
                     if (data.error) alert(data.error);
                     else window.location.href = "/lobbies";
                 })
-                .catch(err => console.error("Close error:", err));
+                .catch(err => console.error("Abandon error:", err));
+        });
+    }
+
+    if (lockBtn) {
+        lockBtn.addEventListener("click", () => {
+            const isLocking = currentState === LOBBY_STATE_OPEN;
+            const msg = isLocking
+                ? "Lock this lobby? New players will no longer be able to join."
+                : "Unlock this lobby? New players will be able to join again.";
+            if (!confirm(msg)) return;
+
+            fetch(API_BASE + "/lock", { method: "POST" })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) alert(data.error);
+                    else { resetPollRate(); pollStatus(); }
+                })
+                .catch(err => console.error("Lock error:", err));
         });
     }
 
@@ -915,14 +968,68 @@
     }
 
     if (generateStandard && generateCustom) {
-        const isCustomMode = hasCustomYamls && currentState === LOBBY_STATE_OPEN;
+        const isCustomMode = hasCustomYamls && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED);
         generateStandard.style.display = isCustomMode ? "none" : "";
         generateCustom.style.display = isCustomMode ? "" : "none";
     }
 
+    // Set initial expiry display from server-rendered values
+    (function () {
+        const expiryEl = document.getElementById("lobby-expiry");
+        if (expiryEl && typeof LOBBY_LAST_ACTIVITY !== "undefined" && typeof TIMEOUT_MINUTES !== "undefined") {
+            const expiryMs = new Date(LOBBY_LAST_ACTIVITY).getTime() + TIMEOUT_MINUTES * 60000;
+            expiryEl.textContent = "Expires: " + new Date(expiryMs).toLocaleString();
+        }
+    })();
+
     document.querySelectorAll(".chat-time[data-utc]").forEach(el => {
         el.textContent = new Date(el.dataset.utc).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     });
+
+    // YAML viewer modal
+    const yamlViewModal = document.getElementById("yaml-view-modal");
+    const yamlViewClose = document.getElementById("yaml-view-close");
+    const yamlViewFilename = document.getElementById("yaml-view-filename");
+    const yamlViewBody = document.getElementById("yaml-view-body");
+
+    function openYamlViewModal(yamlId, filename) {
+        fetch(`${API_BASE}/yaml/${yamlId}?view=1`)
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to load YAML");
+                return res.text();
+            })
+            .then(text => {
+                if (yamlViewFilename) yamlViewFilename.textContent = filename;
+                if (yamlViewBody) yamlViewBody.textContent = text;
+                if (yamlViewModal) yamlViewModal.classList.add("open");
+            })
+            .catch(err => {
+                console.error("YAML view error:", err);
+                alert("Could not load YAML content.");
+            });
+    }
+
+    function closeYamlViewModal() {
+        if (yamlViewModal) yamlViewModal.classList.remove("open");
+    }
+
+    if (yamlViewClose) {
+        yamlViewClose.addEventListener("click", closeYamlViewModal);
+    }
+    if (yamlViewModal) {
+        yamlViewModal.addEventListener("click", e => {
+            if (e.target === yamlViewModal) closeYamlViewModal();
+        });
+    }
+
+    function bindYamlViewButtons() {
+        document.querySelectorAll(".yaml-view-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                openYamlViewModal(this.dataset.yamlId, this.dataset.filename);
+            });
+        });
+    }
+    bindYamlViewButtons();
 
     pollStatus();
     pollTimer = setInterval(pingAndMaybePoll, pollInterval);

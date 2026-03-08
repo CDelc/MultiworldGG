@@ -40,7 +40,7 @@
                                 <tr>
                                     <td>
                                         <label for="timeout_minutes">Inactivity Timeout:
-                                            <span class="interactive" data-tooltip="Lobby will expire after this many minutes of no activity. Max 2880 (2 days).">(?)
+                                            <span class="interactive" data-tooltip="Lobby will expire after this much time of no activity (player joining/leaving, chat, yaml changes). Max 4 weeks.">(?)
                                             </span>
                                         </label>
                                     </td>
@@ -48,12 +48,16 @@
                                         <select name="timeout_minutes" id="timeout_minutes">
                                             <option value="15">15 minutes</option>
                                             <option value="30">30 minutes</option>
-                                            <option selected value="60">1 hour</option>
+                                            <option value="60">1 hour</option>
                                             <option value="120">2 hours</option>
-                                            <option value="360">6 hours</option>
+                                            <option selected value="360">6 hours</option>
                                             <option value="720">12 hours</option>
                                             <option value="1440">1 day</option>
                                             <option value="2880">2 days</option>
+                                            <option value="4320">3 days</option>
+                                            <option value="10080">7 days</option>
+                                            <option value="20160">2 weeks</option>
+                                            <option value="40320">4 weeks</option>
                                         </select>
                                     </td>
                                 </tr>

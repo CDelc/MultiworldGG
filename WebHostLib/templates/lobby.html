@@ -6,10 +6,13 @@
 {% endblock %}
 
 {% block body %}
+{%- macro fmt_timeout(m) -%}
+{%- if m < 60 -%}{{ m }} min{%- elif m < 1440 -%}{{ (m // 60) }} hr{%- else -%}{{ (m // 1440) }} days{%- endif -%}
+{%- endmacro -%}
     {% include 'header/grassHeader.html' %}
     <div id="lobby-wrapper">
         <div id="lobby-container" class="grass-island">
-            <h1 id="lobby-title">{{ lobby.title }}</h1>
+            <h2 id="lobby-title">{{ lobby.title }}</h1>
 
             {% if lobby.state == -1 %}
                 <p class="lobby-expired">This lobby has expired.</p>
@@ -19,7 +22,7 @@
                         Host: <strong>{{ owner_name }}</strong> &mdash;
                         Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
                         Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
-                        Timeout: {{ lobby.timeout_minutes }} min &mdash;
+                        Timeout: {{ fmt_timeout(lobby.timeout_minutes) }} &mdash;
                         {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
                     </p>
                     <p class="lobby-preview-meta">
@@ -38,7 +41,7 @@
                     {% else %}
                         <h2>Join Lobby</h2>
                         <p class="lobby-join-explainer">
-                            Pick a display name and join the lobby. Once inside, upload your YAML config file - 
+                            Pick a display name and join the lobby. Once inside, upload your YAML config file -
                             one per game you want to play. The host will generate the seed when everyone is ready.
                             {% if needs_password %}This lobby is password-protected.{% endif %}
                         </p>
@@ -58,6 +61,18 @@
                     {% endif %}
                     <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
                 </div>
+            {% elif not player and lobby.state == 3 %}
+                {# Non-joined visitor viewing a LOCKED lobby #}
+                <div class="lobby-preview grass-island">
+                    <p class="lobby-preview-meta">
+                        Host: <strong>{{ owner_name }}</strong> &mdash;
+                        Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
+                        Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
+                        {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
+                    </p>
+                </div>
+                <p class="lobby-expired">This lobby is locked and no longer accepting new players.</p>
+                <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
             {% elif not player %}
                 {# Non-joined visitor viewing a non-open lobby #}
                 <div class="lobby-preview grass-island">
@@ -80,22 +95,23 @@
                     <div class="lobby-info-row">
                         <span id="lobby-meta-main" class="lobby-meta">
                             Max YAMLs: {{ lobby.max_yamls_per_player }} |
-                            Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} |
-                            Timeout: {{ lobby.timeout_minutes }} min |
+                            Timeout: {{ fmt_timeout(lobby.timeout_minutes) }} |
                             {% if lobby.race %}Race Mode | {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
                         </span>
                         <span class="lobby-info-right">
                             {% if not is_owner and lobby.state == 0 %}
                                 <button id="leave-btn" class="lobby-btn lobby-btn-danger">Leave Lobby</button>
                             {% endif %}
-                            {% if is_owner and lobby.state == 0 %}
-                                <button id="close-btn" class="lobby-btn lobby-btn-danger">Close Lobby</button>
+                            {% if is_owner and lobby.state in (0, 3) %}
                                 <button id="settings-edit-btn" class="lobby-btn lobby-btn-purple">&#9881; Edit Settings</button>
+                                <button id="lock-btn" class="lobby-btn lobby-btn-warning">{% if lobby.state == 3 %}Unlock Lobby{% else %}Lock Lobby{% endif %}</button>
+                                <button id="abandon-btn" class="lobby-btn lobby-btn-danger">Abandon Lobby</button>
                             {% endif %}
                             <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
                                 {% if lobby.state == 0 %}Open
                                 {% elif lobby.state == 1 %}Generating...
                                 {% elif lobby.state == 2 %}Seed created, Lobby locked
+                                {% elif lobby.state == 3 %}Locked
                                 {% endif %}
                             </span>
                         </span>
@@ -110,25 +126,23 @@
                             Spoiler: {% set sp = gen_opts.get('spoiler', 0) %}{% if sp == 0 %}off{% elif sp == 1 %}on{% elif sp == 2 %}+playthrough{% elif sp == 3 %}full{% endif %}
                         </span>
                     </div>
-                    {% if lobby.state == 0 %}
                     <div class="lobby-info-row">
-                        <span id="generate-info" class="lobby-meta">{{ yaml_count }} YAML(s) from {{ player_count }} player(s)</span>
-                        <span id="ready-count-label" class="lobby-meta"></span>
+                        <span id="lobby-meta-expiry" class="lobby-meta"><span id="lobby-expiry"></span></span>
+                        <span id="generate-info" class="lobby-meta">Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} | YAMLs: {{ yaml_count }} | Ready: 0/{{ player_count }}</span>
                     </div>
-                    {% endif %}
                 </div>
 
                 <div id="lobby-main">
                     {# Left: Players #}
                     <div id="lobby-sidebar">
-                        <h3>Players</h3>
+                        <h3>Players <span id="player-count-badge" class="player-count-badge">({{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %})</span></h3>
                         <ul id="lobby-players">
                             <li class="lobby-player-loading">Loading players&hellip;</li>
                         </ul>
                     </div>
 
                     {# YAML Upload #}
-                    {% if player and lobby.state == 0 %}
+                    {% if player and lobby.state in (0, 3) %}
                         <div id="yaml-upload-area">
                             <h3>Upload YAML</h3>
                             <div id="yaml-upload-drop" class="drop-zone">
@@ -141,7 +155,7 @@
                     {% endif %}
 
                     {# Generation controls #}
-                    {% if lobby.state == 0 and is_owner %}
+                    {% if lobby.state in (0, 3) and is_owner %}
                         <div id="lobby-generate">
                             <div id="generate-standard">
                                 <button id="generate-btn" class="lobby-btn lobby-btn-primary"
@@ -220,7 +234,7 @@
                         {% endif %}
                     </div>
                 </div>
-            {% if is_owner and lobby.state == 0 %}
+            {% if is_owner and lobby.state in (0, 3) %}
             {# Settings modal #}
             <div id="settings-modal">
                 <div id="settings-modal-content" class="grass-island">
@@ -248,7 +262,7 @@
                                         <td><label for="edit-timeout">Timeout:</label></td>
                                         <td>
                                             <select id="edit-timeout">
-                                                {% for val, label in [(15,'15 minutes'),(30,'30 minutes'),(60,'1 hour'),(120,'2 hours'),(360,'6 hours'),(720,'12 hours'),(1440,'1 day'),(2880,'2 days')] %}
+                                                {% for val, label in [(15,'15 minutes'),(30,'30 minutes'),(60,'1 hour'),(120,'2 hours'),(360,'6 hours'),(720,'12 hours'),(1440,'1 day'),(2880,'2 days'),(4320,'3 days'),(10080,'7 days'),(20160,'2 weeks'),(40320,'4 weeks')] %}
                                                     <option value="{{ val }}" {% if val == lobby.timeout_minutes %}selected{% endif %}>{{ label }}</option>
                                                 {% endfor %}
                                             </select>
@@ -383,6 +397,18 @@
     {% include 'islandFooter.html' %}
 
     {% if player %}
+    <div id="yaml-view-modal">
+        <div id="yaml-view-modal-content" class="grass-island">
+            <div id="yaml-view-header">
+                <span id="yaml-view-filename"></span>
+                <button id="yaml-view-close">&times;</button>
+            </div>
+            <pre id="yaml-view-body"></pre>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if player %}
     <script>
         const LOBBY_ID = "{{ lobby.id | suuid }}";
         const API_BASE = "/api/lobby/" + LOBBY_ID;
@@ -392,10 +418,13 @@
         const LOBBY_STATE_GENERATING = 1;
         const LOBBY_STATE_DONE = 2;
         const LOBBY_STATE_CLOSED = -1;
+        const LOBBY_STATE_LOCKED = 3;
+        const LOBBY_LAST_ACTIVITY = "{{ lobby.last_activity.isoformat() }}Z";
         let lastMessageId = {{ recent_messages[-1].id if recent_messages else 0 }};
         let currentState = {{ lobby.state }};
         let hasCustomYamls = {{ "true" if has_custom else "false" }};
         let MAX_YAMLS_PER_PLAYER = {{ lobby.max_yamls_per_player }};
+        let TIMEOUT_MINUTES = {{ lobby.timeout_minutes }};
     </script>
     <script src="{{ url_for('static', filename='assets/lobby.js') }}"></script>
     {% endif %}

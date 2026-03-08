@@ -11,14 +11,14 @@ from WebHostLib import app, limiter
 from WebHostLib.generate import get_meta
 from WebHostLib.models import (
     Lobby, LobbyPlayer, LobbyMessage, LobbyYaml,
-    LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED,
+    LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED, LOBBY_LOCKED,
     UUID,
 )
 
 
 def _expire_lobby_if_needed(lobby: Lobby) -> None:
     """Check if a lobby has expired due to inactivity and close it if so."""
-    if lobby.state in (LOBBY_OPEN, LOBBY_GENERATING):
+    if lobby.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING):
         now = datetime.utcnow()
         if now - lobby.last_activity > timedelta(minutes=lobby.timeout_minutes):
             lobby.state = LOBBY_CLOSED
@@ -41,6 +41,22 @@ def lobby_list():
         _expire_lobby_if_needed(lobby)
         if lobby.state != old_state:
             any_expired = True
+
+    # Also check my lobbies for expiry
+    my_session_id = session.get("_id")
+    my_lobby_records = []
+    if my_session_id:
+        my_lobby_records = select(
+            p.lobby for p in LobbyPlayer
+            if p.session_id == my_session_id
+            and p.lobby.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING)
+        ).order_by(lambda l: desc(l.last_activity))[:]
+        for lobby in my_lobby_records:
+            old_state = lobby.state
+            _expire_lobby_if_needed(lobby)
+            if lobby.state != old_state:
+                any_expired = True
+
     if any_expired:
         commit()
 
@@ -62,10 +78,40 @@ def lobby_list():
             owner_names[lid] = name
 
     lobby_metas = {l.id: json.loads(l.meta) for l in active_lobbies}
+    lobby_expiries = {
+        l.id: (l.last_activity + timedelta(minutes=l.timeout_minutes)).isoformat() + "Z"
+        for l in active_lobbies
+    }
+
+    # Build "my lobbies" list (active lobbies the current session is a member of)
+    my_lobbies = [l for l in my_lobby_records if l.state != LOBBY_CLOSED]
+    my_lobby_ids = [l.id for l in my_lobbies]
+    my_player_counts = {}
+    my_yaml_counts = {}
+    my_owner_names = {}
+    if my_lobby_ids:
+        for lid, cnt in select((p.lobby.id, count()) for p in LobbyPlayer if p.lobby.id in my_lobby_ids):
+            my_player_counts[lid] = cnt
+        for lid, cnt in select((y.lobby.id, count()) for y in LobbyYaml if y.lobby.id in my_lobby_ids):
+            my_yaml_counts[lid] = cnt
+        for lid, name in select(
+            (p.lobby.id, p.player_name) for p in LobbyPlayer
+            if p.lobby.id in my_lobby_ids and p.session_id == p.lobby.owner
+        ):
+            my_owner_names[lid] = name
+    my_lobby_metas = {l.id: json.loads(l.meta) for l in my_lobbies}
+    my_lobby_expiries = {
+        l.id: (l.last_activity + timedelta(minutes=l.timeout_minutes)).isoformat() + "Z"
+        for l in my_lobbies
+    }
 
     return render_template("lobbyList.html", lobbies=active_lobbies,
                            player_counts=player_counts, yaml_counts=yaml_counts,
-                           owner_names=owner_names, lobby_metas=lobby_metas)
+                           owner_names=owner_names, lobby_metas=lobby_metas,
+                           lobby_expiries=lobby_expiries,
+                           my_lobbies=my_lobbies, my_player_counts=my_player_counts,
+                           my_yaml_counts=my_yaml_counts, my_owner_names=my_owner_names,
+                           my_lobby_metas=my_lobby_metas, my_lobby_expiries=my_lobby_expiries)
 
 
 @app.route('/lobby/create', methods=['GET', 'POST'])
@@ -86,7 +132,7 @@ def lobby_create():
             timeout_minutes = int(request.form.get('timeout_minutes', 30))
         except (ValueError, TypeError):
             timeout_minutes = 30
-        timeout_minutes = max(1, min(timeout_minutes, 2880))  # 1 min to 2 days
+        timeout_minutes = max(1, min(timeout_minutes, 40320))  # 1 min to 4 weeks
 
         try:
             max_yamls = int(request.form.get('max_yamls_per_player', 1))
@@ -105,7 +151,7 @@ def lobby_create():
 
         owned_active = count(
             l for l in Lobby
-            if l.owner == session["_id"] and l.state in (LOBBY_OPEN, LOBBY_GENERATING)
+            if l.owner == session["_id"] and l.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING)
         )
         if owned_active >= 3:
             flash('You can only host up to 3 active lobbies at a time. Close or finish an existing one first.')
@@ -166,7 +212,7 @@ def lobby_view(lobby: UUID):
 
     player = _get_player_in_lobby(lobby)
     is_owner = (lobby.owner == session["_id"])
-    needs_password = bool(lobby.password_hash) and not player
+    needs_password = bool(lobby.password_hash) and not player and lobby.state == LOBBY_OPEN
 
     # Pre-fetch last 200 messages to avoid loading entire set in template
     recent_messages = list(select(
@@ -227,7 +273,7 @@ def lobby_join(lobby: UUID):
 
     active_memberships = count(
         p for p in LobbyPlayer
-        if p.session_id == session["_id"] and p.lobby.state in (LOBBY_OPEN, LOBBY_GENERATING)
+        if p.session_id == session["_id"] and p.lobby.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING)
     )
     if active_memberships >= 5:
         flash('You can only be part of up to 5 active lobbies at a time.')

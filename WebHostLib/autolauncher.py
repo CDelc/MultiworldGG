@@ -184,7 +184,7 @@ def expire_lobbies():
     with db_session:
         now = datetime.utcnow()
         stale_lobbies = Lobby.select(
-            lambda l: l.state in (LOBBY_OPEN, LOBBY_GENERATING)
+            lambda l: l.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING)
         )[:]
         expired_count = 0
         for lobby in stale_lobbies:
@@ -374,6 +374,6 @@ class MultiworldInstance():
         self.process = None
 
 
-from .models import Room, Generation, STATE_QUEUED, STATE_STARTED, STATE_ERROR, db, Seed, Slot, Lobby, LobbyApworld, LOBBY_OPEN, LOBBY_GENERATING, LOBBY_CLOSED, LOBBY_DONE
+from .models import Room, Generation, STATE_QUEUED, STATE_STARTED, STATE_ERROR, db, Seed, Slot, Lobby, LobbyApworld, LOBBY_OPEN, LOBBY_GENERATING, LOBBY_CLOSED, LOBBY_DONE, LOBBY_LOCKED
 from .customserver import run_server_process, get_static_server_data
 from .generate import gen_game

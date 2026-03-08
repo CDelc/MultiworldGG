@@ -51,6 +51,7 @@
 .status-open { color: #28a745; font-weight: bold; }
 .status-generating { color: #ffc107; font-weight: bold; }
 .status-done { color: #17a2b8; font-weight: bold; }
+.status-locked { color: #fd7e14; font-weight: bold; }
 
 .no-lobbies {
     text-align: center !important;
@@ -113,7 +114,7 @@
 
 #lobby-container {
     width: 1300px;
-    min-height: 500px;
+    min-height: 480px;
     margin-bottom: 50px;
     padding: 20px;
 }
@@ -122,10 +123,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 15px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.03);
-    border-radius: 4px;
+    margin-bottom: 5px;
+    padding: 10px 0;
 }
 
 .lobby-info-row {
@@ -142,12 +141,13 @@
 .lobby-status-0 { color: #28a745; font-weight: bold; }
 .lobby-status-1 { color: #ffc107; font-weight: bold; }
 .lobby-status-2 { color: #17a2b8; font-weight: bold; }
+.lobby-status-3 { color: #fd7e14; font-weight: bold; }
 .lobby-status--1 { color: #dc3545; font-weight: bold; }
 
 #lobby-main {
     display: grid;
-    grid-template-columns: 600px 1fr;
-    column-gap: 20px;
+    grid-template-columns: 5.7fr 4fr;
+    column-gap: 15px;
     row-gap: 12px;
     align-items: start;
 }
@@ -158,6 +158,7 @@
 }
 
 #lobby-sidebar h3 {
+    margin-top: -2px;
     margin-bottom: 10px;
     color: #ffdd5a;
 }
@@ -250,7 +251,6 @@ a.yaml-game-name:hover {
 }
 
 .yaml-download-btn {
-    color: #b44ad9;
     font-size: 1rem;
     line-height: 1;
     text-decoration: none;
@@ -258,7 +258,7 @@ a.yaml-game-name:hover {
 }
 
 .yaml-download-btn:hover {
-    color: #d780ff;
+    color: #d780ff !important;
 }
 
 .yaml-delete-btn {
@@ -362,7 +362,7 @@ a.yaml-game-name:hover {
 
 #chat-messages {
     overflow-y: auto;
-    height: 500px;
+    height: 480px;
     padding: 10px;
     background: rgba(0.1, 0.1, 0.1, 0.4);
     border: 1px solid #ddd;
@@ -459,12 +459,12 @@ a.yaml-game-name:hover {
 .lobby-btn {
     -webkit-appearance: none;
     appearance: none;
-    padding: 8px 16px;
+    padding: 5px 11px;
     border-radius: 4px;
     border: 1px solid #ccc;
     background: #fff;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     box-sizing: border-box;
     line-height: 1.2;
 }
@@ -475,7 +475,7 @@ a.yaml-game-name:hover {
 
 .lobby-btn:active {
     background: #e0e0e0;
-    padding: 8px 16px;
+    padding: 5px 11px;
     margin: 0;
 }
 
@@ -528,6 +528,17 @@ a.lobby-btn-primary:hover {
     background: #a71d2a;
 }
 
+.lobby-btn-warning {
+    background: #fd7e14;
+    color: #000;
+    border-color: #fd7e14;
+}
+
+.lobby-btn-warning:hover {
+    background: #e06b00;
+    color: #000;
+}
+
 .lobby-btn-purple {
     background: #652895;
     color: #fff;
@@ -543,11 +554,6 @@ a.lobby-btn-primary:hover {
     padding-top: 15px;
     border-top: 1px solid #ddd;
     text-align: center;
-}
-
-#lobby-generate #close-btn {
-    display: block;
-    margin: 20px auto 0;
 }
 
 
@@ -921,7 +927,144 @@ a.lobby-btn-primary:hover {
     background-color: rgba(255, 193, 7, 0.1);
 }
 
-@media (max-width: 768px) {
+.yaml-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.yaml-view-btn {
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    color: #ea166c;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 2px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.yaml-view-btn:hover {
+    color: #d780ff;
+}
+
+.yaml-view-btn:active {
+    padding: 0 2px;
+    margin: 0;
+}
+
+#yaml-view-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.80);
+    z-index: 1100;
+    justify-content: center;
+    align-items: center;
+}
+
+#yaml-view-modal.open {
+    display: flex;
+}
+
+#yaml-view-modal-content {
+    max-width: 900px;
+    width: 92%;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-sizing: border-box;
+}
+
+#yaml-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+#yaml-view-filename {
+    font-family: monospace;
+    font-size: 0.95rem;
+    color: #ffdd5a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#yaml-view-close {
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    flex-shrink: 0;
+}
+
+#yaml-view-close:hover {
+    color: #fff;
+}
+
+#yaml-view-body {
+    font-family: monospace;
+    font-size: 0.85rem;
+    white-space: pre;
+    overflow-x: auto;
+    overflow-y: auto;
+    flex: 1;
+    color: #c9d1d9;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    margin: 0;
+    padding: 12px 16px;
+}
+
+#my-lobbies {
+    width: 960px;
+    min-height: 80px !important;
+    text-align: center;
+}
+
+#my-lobbies h2 {
+    margin-bottom: 10px;
+}
+
+#my-lobby-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    margin-top: 10px;
+}
+
+#my-lobby-table th,
+#my-lobby-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+#my-lobby-table th {
+    font-family: Inter-Medium, sans-serif;
+    color: #ffdd5a;
+}
+
+#my-lobby-table tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+@media (max-width: 935px) {
     #lobby-main {
         display: flex;
         flex-direction: column;
@@ -989,9 +1132,47 @@ a.lobby-btn-primary:hover {
     }
 
     #lobby-list,
-    #lobby-list-table {
+    #lobby-list-table,
+    #my-lobbies {
         width: 98%;
         box-sizing: border-box;
+    }
+
+    #my-lobby-table thead {
+        display: none;
+    }
+
+    #my-lobby-table,
+    #my-lobby-table tbody,
+    #my-lobby-table tr,
+    #my-lobby-table td {
+        display: block;
+        width: 100%;
+    }
+
+    #my-lobby-table tr {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.15);
+        box-sizing: border-box;
+    }
+
+    #my-lobby-table td {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 3px 0;
+        border-bottom: none;
+    }
+
+    #my-lobby-table td[data-label]::before {
+        content: attr(data-label);
+        color: #aaa;
+        font-size: 0.8rem;
+        min-width: 110px;
+        flex-shrink: 0;
     }
 
     .lobby-info-row {

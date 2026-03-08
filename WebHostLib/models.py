@@ -70,6 +70,7 @@ LOBBY_OPEN = 0
 LOBBY_GENERATING = 1
 LOBBY_DONE = 2
 LOBBY_CLOSED = -1
+LOBBY_LOCKED = 3
 
 
 class Lobby(db.Entity):
@@ -79,11 +80,11 @@ class Lobby(db.Entity):
     password_hash = Optional(str)
     creation_time = Required(datetime, default=lambda: datetime.utcnow(), index=True)
     last_activity = Required(datetime, default=lambda: datetime.utcnow(), index=True)
-    timeout_minutes = Required(int, default=30)  # max 2880 (2 days)
+    timeout_minutes = Required(int, default=30)  # max 40320 (4 weeks)
     max_yamls_per_player = Required(int, default=1)
     race = Required(bool, default=False)
     meta = Required(LongStr, default=lambda: "{}")  # generation settings (server_options, plando_options, etc.)
-    state = Required(int, default=0, index=True)  # LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED
+    state = Required(int, default=0, index=True)  # LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED, LOBBY_LOCKED
     max_players = Required(int, default=0) # 0 = unlimited
     allow_custom_apworlds = Required(bool, default=False)
     seed = Optional('Seed')

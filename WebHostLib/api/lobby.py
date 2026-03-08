@@ -17,7 +17,7 @@ from WebHostLib.api import api_endpoints
 from WebHostLib.check import get_yaml_data, roll_options
 from WebHostLib.models import (
     Lobby, LobbyPlayer, LobbyMessage, LobbyYaml, LobbyApworld, Room,
-    LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED,
+    LOBBY_OPEN, LOBBY_GENERATING, LOBBY_DONE, LOBBY_CLOSED, LOBBY_LOCKED,
     Generation, Seed, uuid4,
 )
 from WebHostLib import app, limiter
@@ -170,7 +170,7 @@ def _check_version_constraint(requires_json: str | None, server_version: Version
 
 
 def _expire_lobby_if_needed(lobby: Lobby) -> None:
-    if lobby.state in (LOBBY_OPEN, LOBBY_GENERATING):
+    if lobby.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING):
         if datetime.utcnow() - lobby.last_activity > timedelta(minutes=lobby.timeout_minutes):
             lobby.state = LOBBY_CLOSED
 
@@ -309,8 +309,10 @@ def lobby_status(lobby: UUID):
         "timeout_minutes": lobby.timeout_minutes,
         "allow_custom_apworlds": lobby.allow_custom_apworlds,
         "has_custom": has_custom,
+        "race": lobby.race,
         "server_opts": server_opts,
         "gen_opts": gen_opts,
+        "last_activity": lobby.last_activity.isoformat() + "Z",
         "apworlds": [
             {"yaml_id": a.yaml.id, "game_name": a.game_name,
              "filename": a.original_filename, "file_size": a.file_size,
@@ -373,6 +375,7 @@ def lobby_status(lobby: UUID):
                 )
                 commit()
                 result["state"] = LOBBY_OPEN
+                result["last_activity"] = lobby.last_activity.isoformat() + "Z"
             elif gen is None:
                 lobby.state = LOBBY_OPEN
                 lobby.generation_id = None
@@ -384,6 +387,7 @@ def lobby_status(lobby: UUID):
                 )
                 commit()
                 result["state"] = LOBBY_OPEN
+                result["last_activity"] = lobby.last_activity.isoformat() + "Z"
 
     return jsonify(result)
 
@@ -396,7 +400,7 @@ def lobby_upload_yaml(lobby: UUID):
         return jsonify({"error": "Lobby not found"}), 404
 
     _expire_lobby_if_needed(lobby)
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Lobby is not accepting uploads"}), 400
 
     player = _get_player_in_lobby(lobby)
@@ -612,6 +616,15 @@ def lobby_download_yaml(lobby: UUID, yaml_id: int):
     if isinstance(content, str):
         content = content.encode("utf-8")
 
+    view_only = request.args.get("view") == "1"
+    if view_only:
+        return send_file(
+            io.BytesIO(content),
+            download_name=yaml_record.filename,
+            as_attachment=False,
+            mimetype="text/plain; charset=utf-8",
+        )
+
     return send_file(
         io.BytesIO(content),
         download_name=yaml_record.filename,
@@ -626,7 +639,7 @@ def lobby_delete_yaml(lobby: UUID, yaml_id: int):
     if not lobby:
         return jsonify({"error": "Lobby not found"}), 404
 
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Cannot modify YAMLs in current lobby state"}), 400
 
     yaml_record = LobbyYaml.get(id=yaml_id)
@@ -733,7 +746,7 @@ def lobby_toggle_ready(lobby: UUID):
     if not lobby:
         return jsonify({"error": "Lobby not found"}), 404
 
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Lobby is not open"}), 400
 
     player = _get_player_in_lobby(lobby)
@@ -759,7 +772,7 @@ def lobby_generate(lobby: UUID):
     if lobby.owner != session["_id"]:
         return jsonify({"error": "Only the lobby owner can generate"}), 403
 
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Lobby is not in a state to generate"}), 400
 
     # Block generation when custom YAMLs are present, or when any YAML has an upgrade apworld
@@ -800,6 +813,7 @@ def lobby_generate(lobby: UUID):
         commit()
         return jsonify({"error": error_msg}), 400
 
+    pre_generate_state = lobby.state
     lobby.state = LOBBY_GENERATING
     LobbyMessage(
         lobby=lobby, player=None, sender_name="System",
@@ -821,7 +835,7 @@ def lobby_generate(lobby: UUID):
         lobby.generation_id = gen.id
         commit()
     except PicklingError as e:
-        lobby.state = LOBBY_OPEN
+        lobby.state = pre_generate_state
         lobby.generation_id = None
         LobbyMessage(
             lobby=lobby, player=None, sender_name="System",
@@ -842,7 +856,7 @@ def lobby_update_settings(lobby: UUID):
     if lobby.owner != session["_id"]:
         return jsonify({"error": "Only the lobby owner can update settings"}), 403
 
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Cannot change settings after generation has started"}), 400
 
     data = request.get_json()
@@ -891,7 +905,7 @@ def lobby_update_settings(lobby: UUID):
 
     if "timeout_minutes" in data:
         try:
-            lobby.timeout_minutes = max(1, min(int(data["timeout_minutes"]), 2880))
+            lobby.timeout_minutes = max(1, min(int(data["timeout_minutes"]), 40320))
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid timeout_minutes"}), 400
 
@@ -998,7 +1012,7 @@ def lobby_kick(lobby: UUID, player_id: int):
     if lobby.owner != session["_id"]:
         return jsonify({"error": "Only the lobby owner can kick players"}), 403
 
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Cannot kick players in current state"}), 400
 
     target = LobbyPlayer.get(id=player_id)
@@ -1041,11 +1055,42 @@ def lobby_close(lobby: UUID):
     lobby.state = LOBBY_CLOSED
     LobbyMessage(
         lobby=lobby, player=None, sender_name="System",
-        content="The lobby was closed by the host.",
+        content="The lobby was abandoned by the host.",
     )
     commit()
 
     return jsonify({"success": True})
+
+
+@api_endpoints.route('/lobby/<suuid:lobby>/lock', methods=['POST'])
+def lobby_lock(lobby: UUID):
+    lobby = Lobby.get(id=lobby)
+    if not lobby:
+        return jsonify({"error": "Lobby not found"}), 404
+
+    if lobby.owner != session["_id"]:
+        return jsonify({"error": "Only the lobby owner can lock/unlock the lobby"}), 403
+
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
+        return jsonify({"error": "Lobby cannot be locked in its current state"}), 400
+
+    if lobby.state == LOBBY_OPEN:
+        lobby.state = LOBBY_LOCKED
+        LobbyMessage(
+            lobby=lobby, player=None, sender_name="System",
+            content="The lobby has been locked by the host. New players can no longer join.",
+        )
+    else:
+        lobby.state = LOBBY_OPEN
+        LobbyMessage(
+            lobby=lobby, player=None, sender_name="System",
+            content="The lobby has been unlocked by the host.",
+        )
+
+    lobby.last_activity = datetime.utcnow()
+    commit()
+
+    return jsonify({"success": True, "state": lobby.state})
 
 
 @api_endpoints.route('/lobby/<suuid:lobby>/apworld/<int:yaml_id>', methods=['POST'])
@@ -1058,7 +1103,7 @@ def lobby_upload_apworld(lobby: UUID, yaml_id: int):
     if not lobby.allow_custom_apworlds:
         return jsonify({"error": "This lobby does not allow custom APWorlds"}), 400
 
-    if lobby.state != LOBBY_OPEN:
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
         return jsonify({"error": "Lobby is not accepting uploads"}), 400
 
     player = _get_player_in_lobby(lobby)
