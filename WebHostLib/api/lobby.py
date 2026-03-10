@@ -102,6 +102,42 @@ def _extract_game_info(content) -> tuple[str, str, str | None]:
     return '', '', None
 
 
+def _split_yaml_documents(filename: str, content: bytes) -> dict[str, bytes]:
+    """Split a multi-document YAML file into individual {filename: bytes} entries.
+
+    If the file contains only one document, returns {filename: content} unchanged.
+    For multi-document files (separated by '---' lines), returns one entry per
+    document named '{base}_1{ext}', '{base}_2{ext}', etc.
+    """
+    from Utils import parse_yamls
+    try:
+        doc_count = sum(1 for _ in parse_yamls(content))
+    except Exception:
+        return {filename: content}
+
+    if doc_count <= 1:
+        return {filename: content}
+
+    # Split the raw text on '---' document-separator lines to preserve formatting.
+    text = content.decode('utf-8-sig', errors='replace')
+    raw_parts = re.split(r'(?m)^---[ \t]*(?:\r?\n|$)', text)
+    doc_texts = [p.strip() for p in raw_parts if p.strip()]
+
+    # Sanity-check: if the regex split count doesn't match the parser's count,
+    # fall back to re-dumping the parsed documents (loses comments/formatting).
+    if len(doc_texts) != doc_count:
+        from Utils import parse_yamls as _py
+        doc_texts = [yaml.dump(d, allow_unicode=True) for d in _py(content) if d is not None]
+
+    base, ext = os.path.splitext(filename)
+    if not ext:
+        ext = '.yaml'
+    return {
+        f"{base}_{i}{ext}": doc.encode('utf-8')
+        for i, doc in enumerate(doc_texts, 1)
+    }
+
+
 def _version_mismatch_direction(requires_json: str, server_version: Version) -> str | None:
     """Return 'newer' if the YAML needs a newer world than the server has,
     'older' if it needs an older one, or None if the constraint is satisfied."""
@@ -431,6 +467,18 @@ def lobby_upload_yaml(lobby: UUID):
     options = get_yaml_data(files)
     if isinstance(options, (str, Markup)):
         return jsonify({"error": str(options)}), 400
+
+    expanded: dict[str, bytes] = {}
+    for filename, content in options.items():
+        expanded.update(_split_yaml_documents(filename, content))
+    if len(expanded) > len(options):
+        if len(expanded) > remaining:
+            return jsonify({
+                "error": f"Your combined YAML contains {len(expanded)} world(s), "
+                         f"but you can only upload {remaining} more YAML(s). "
+                         f"Please split the file or remove some entries."
+            }), 400
+    options = expanded
 
     from worlds.AutoWorld import AutoWorldRegister
     standard_options: dict[str, bytes] = {}

@@ -478,17 +478,16 @@
 
         let html = '<h2>Seed Ready!</h2>';
         if (IS_OWNER && data.seed_id) {
-            html += `<p><a href="/seed/${data.seed_id}">View Seed</a></p>`;
+            html += `<p><a href="/seed/${escapeHtml(data.seed_id)}">View Seed</a></p>`;
         }
         if (data.room_id) {
-            html += `<p><a href="/room/${data.room_id}" class="lobby-btn lobby-btn-primary">Go to Room</a></p>`;
+            html += `<p><a href="/room/${escapeHtml(data.room_id)}" class="lobby-btn lobby-btn-primary">Go to Room</a></p>`;
         }
         if (data.server_password) {
-            const pw = data.server_password.replace(/"/g, "&quot;");
             html += `<p class="server-password-row">Server Password:
                 <span class="server-password-reveal">
                     <span class="password-placeholder">hover to reveal</span>
-                    <span class="password-value">${pw}</span>
+                    <span class="password-value">${escapeHtml(data.server_password)}</span>
                 </span></p>`;
         }
         resultDiv.innerHTML = html;
@@ -618,12 +617,24 @@
         });
     }
 
+    const APWORLD_MAX_BYTES = 60 * 1024 * 1024; // must match server-side APWORLD_MAX_SIZE
+
     function uploadApworld(yamlId, file) {
+        if (file.size > APWORLD_MAX_BYTES) {
+            alert(`APWorld file is too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). The maximum allowed size is 60 MB.`);
+            return;
+        }
+
         const formData = new FormData();
         formData.append("file", file);
 
         fetch(`${API_BASE}/apworld/${yamlId}`, { method: "POST", body: formData })
-            .then(res => res.json())
+            .then(res => {
+                if (res.status === 413) {
+                    throw new Error("APWorld file is too large. The maximum allowed size is 60 MB.");
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.error) {
                     alert("APWorld upload error: " + data.error);
@@ -634,7 +645,7 @@
             })
             .catch(err => {
                 console.error("APWorld upload error:", err);
-                alert("APWorld upload failed. Please try again.");
+                alert(err.message || "APWorld upload failed. Please try again.");
             });
     }
 

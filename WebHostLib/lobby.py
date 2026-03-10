@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime, timedelta
 
 from flask import flash, redirect, render_template, request, session, url_for, abort
@@ -6,6 +7,16 @@ from pony.orm import commit, db_session, select, desc, count
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from Utils import __version__, utcnow, instance_name
+
+try:
+    from profanity_check import predict_prob as _profanity_prob
+    def _is_profane(text: str) -> bool:
+        score = _profanity_prob([text])[0]
+        return bool(score > 0.995)
+except Exception as e:
+    def _is_profane(text: str) -> bool:  # type: ignore[misc]
+        return False
+
 from WebHostLib import app, limiter
 from WebHostLib.generate import get_meta
 from WebHostLib.models import (
@@ -123,6 +134,9 @@ def lobby_create():
         if len(title) > 48:
             flash('Lobby title must be 48 characters or fewer.')
             return redirect(url_for('lobby_create'))
+        if _is_profane(title):
+            flash('Lobby title contains inappropriate language and cannot be used.')
+            return redirect(url_for('lobby_create'))
 
         password = request.form.get('password', '').strip()
         password_hash = generate_password_hash(password) if password else ""
@@ -156,6 +170,11 @@ def lobby_create():
             flash('You can only host up to 3 active lobbies at a time. Close or finish an existing one first.')
             return redirect(url_for('lobby_create'))
 
+        creator_name = request.form.get('player_name', '').strip() or 'Anonymous'
+        if _is_profane(creator_name):
+            flash('Player name contains inappropriate language and cannot be used.')
+            return redirect(url_for('lobby_create'))
+
         meta = get_meta(request.form, race)
 
         lobby = Lobby(
@@ -171,8 +190,6 @@ def lobby_create():
             state=LOBBY_OPEN,
         )
         commit()
-
-        creator_name = request.form.get('player_name', '').strip() or 'Host'
         player = LobbyPlayer(
             lobby=lobby,
             session_id=session["_id"],
@@ -296,6 +313,9 @@ def lobby_join(lobby: UUID):
         return redirect(url_for('lobby_view', lobby=lobby.id))
     if len(player_name) > 32:
         flash('Display name must be 32 characters or fewer.')
+        return redirect(url_for('lobby_view', lobby=lobby.id))
+    if _is_profane(player_name):
+        flash('Player name contains inappropriate language and cannot be used.')
         return redirect(url_for('lobby_view', lobby=lobby.id))
 
     existing_names = select(p.player_name for p in LobbyPlayer if p.lobby == lobby)[:]

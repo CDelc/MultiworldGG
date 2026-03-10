@@ -5,7 +5,6 @@ from BaseClasses import Tutorial
 from .Options import option_groups
 from . import Options
 
-
 class SM64HackWebWorld(WebWorld):
     display_name = "Super Mario 64 Romhacks"
     bug_report_page = "https://github.com/DNVIC/archipelago-sm64hacks/issues"

@@ -21,6 +21,8 @@ class SM64HackSettings(settings.Group):
         """Automatically download updated json files from GitHub when generating SM64Hack worlds"""
     auto_update: AutoUpdate | bool = True
 
+
+
 class SM64HackWorld(World):
     """
     The first Super Mario game to feature 3D gameplay, but heavily modded - with support for a lot of popular rom hacks.
@@ -42,7 +44,7 @@ class SM64HackWorld(World):
     location_name_to_id = {name: id for
                        id, name in enumerate(location_names(), base_id)}
     
-    required_client_version: Tuple[int, int, int] = (1, 0, 0)
+    required_client_version: Tuple[int, int, int] = (0, 6, 0)
 
     def __init__(self,multiworld, player: int):
         self.stars_created = 0
@@ -160,7 +162,10 @@ class SM64HackWorld(World):
         if itemtype < useful_percent * 100:
             return self.random.choice(useful)
         if itemtype < (useful_percent + trap_percent) * 100:
-            return self.random.choice(traps)
+            enabledtraps = list(traps)
+            if self.options.no_spin_trap:
+                enabledtraps.remove("Spin Trap")
+            return self.random.choice(enabledtraps)
         return self.random.choice(junk)
         
 
