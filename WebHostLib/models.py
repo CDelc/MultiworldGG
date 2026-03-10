@@ -2,6 +2,8 @@ from datetime import datetime
 from uuid import UUID, uuid4
 from pony.orm import Database, PrimaryKey, Required, Set, Optional, buffer, LongStr, db_session
 
+from Utils import utcnow
+
 db = Database()
 
 STATE_QUEUED = 0
@@ -20,8 +22,8 @@ class Slot(db.Entity):
 
 class Room(db.Entity):
     id = PrimaryKey(UUID, default=uuid4)
-    last_activity = Required(datetime, default=lambda: datetime.utcnow(), index=True)
-    creation_time = Required(datetime, default=lambda: datetime.utcnow(), index=True)  # index used by landing page
+    last_activity: datetime = Required(datetime, default=lambda: utcnow(), index=True)
+    creation_time: datetime = Required(datetime, default=lambda: utcnow(), index=True)  # index used by landing page
     owner = Required(UUID, index=True)
     commands = Set('Command')
     seed = Required('Seed', index=True)
@@ -39,7 +41,7 @@ class Seed(db.Entity):
     rooms = Set(Room)
     multidata = Required(bytes, lazy=True)
     owner = Required(UUID, index=True)
-    creation_time = Required(datetime, default=lambda: datetime.utcnow(), index=True)  # index used by landing page
+    creation_time: datetime = Required(datetime, default=lambda: utcnow(), index=True)  # index used by landing page
     slots = Set(Slot)
     spoiler = Optional(LongStr, lazy=True)
     meta = Required(LongStr, default=lambda: "{\"race\": false}")  # additional meta information/tags
@@ -78,8 +80,8 @@ class Lobby(db.Entity):
     title = Required(str)
     owner = Required(UUID, index=True)
     password_hash = Optional(str)
-    creation_time = Required(datetime, default=lambda: datetime.utcnow(), index=True)
-    last_activity = Required(datetime, default=lambda: datetime.utcnow(), index=True)
+    creation_time = Required(datetime, default=lambda: utcnow(), index=True)
+    last_activity = Required(datetime, default=lambda: utcnow(), index=True)
     timeout_minutes = Required(int, default=30)  # max 40320 (4 weeks)
     max_yamls_per_player = Required(int, default=1)
     race = Required(bool, default=False)
@@ -101,7 +103,7 @@ class LobbyPlayer(db.Entity):
     lobby = Required(Lobby, index=True)
     session_id = Required(UUID, index=True)
     player_name = Required(str)
-    joined_at = Required(datetime, default=lambda: datetime.utcnow())
+    joined_at = Required(datetime, default=lambda: utcnow())
     is_ready = Required(bool, default=False)
     yamls = Set('LobbyYaml')
     messages = Set('LobbyMessage')
@@ -117,7 +119,7 @@ class LobbyYaml(db.Entity):
     is_custom = Required(bool, default=False)  # game not in AutoWorldRegister
     requires_game_version = Optional(str, nullable=True)  # JSON-encoded version constraint from requires.game
     content = Required(bytes, lazy=True)
-    uploaded_at = Required(datetime, default=lambda: datetime.utcnow())
+    uploaded_at = Required(datetime, default=lambda: utcnow())
     apworld = Optional('LobbyApworld')
 
 
@@ -130,7 +132,7 @@ class LobbyApworld(db.Entity):
     storage_path = Required(str)
     file_size = Required(int, default=0)
     world_version = Optional(str, nullable=True) # extracted from archipelago.json in the apworld
-    uploaded_at = Required(datetime, default=lambda: datetime.utcnow())
+    uploaded_at = Required(datetime, default=lambda: utcnow())
 
 
 class LobbyMessage(db.Entity):
@@ -139,4 +141,4 @@ class LobbyMessage(db.Entity):
     player = Optional(LobbyPlayer)  # null = system message
     sender_name = Required(str)
     content = Required(str)
-    sent_at = Required(datetime, default=lambda: datetime.utcnow())
+    sent_at = Required(datetime, default=lambda: utcnow())

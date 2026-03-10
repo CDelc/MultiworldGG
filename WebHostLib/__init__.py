@@ -12,6 +12,7 @@ from pony.flask import Pony
 from werkzeug.routing import BaseConverter
 
 from Utils import title_sorted, get_file_safe_name,world_list_sorted
+from .cli import CLI
 
 UPLOAD_FOLDER = os.path.relpath('uploads')
 LOGS_FOLDER = os.path.relpath('logs')
@@ -74,13 +75,15 @@ app.config["MONITORING_ADMIN_TOKEN"] = None  # Admin token for monitoring API en
 
 cache = Cache()
 Compress(app)
+CLI(app)
+
+# Basic Rate Limiter for lobbies
 limiter = Limiter(
     key_func=lambda s=session: s.get("_id", "") or "",
     app=app,
     default_limits=[],
     storage_uri="memory://",
 )
-
 
 def to_python(value: str) -> uuid.UUID:
     return uuid.UUID(bytes=base64.urlsafe_b64decode(value + '=='))

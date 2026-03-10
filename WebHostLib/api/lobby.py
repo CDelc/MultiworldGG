@@ -12,7 +12,7 @@ from flask import request, session, jsonify, send_file
 from markupsafe import Markup
 from pony.orm import commit, count, select, flush
 
-from Utils import tuplize_version, Version
+from Utils import tuplize_version, Version, utcnow
 from WebHostLib.api import api_endpoints
 from WebHostLib.check import get_yaml_data, roll_options
 from WebHostLib.models import (
@@ -171,7 +171,7 @@ def _check_version_constraint(requires_json: str | None, server_version: Version
 
 def _expire_lobby_if_needed(lobby: Lobby) -> None:
     if lobby.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING):
-        if datetime.utcnow() - lobby.last_activity > timedelta(minutes=lobby.timeout_minutes):
+        if utcnow() - lobby.last_activity > timedelta(minutes=lobby.timeout_minutes):
             lobby.state = LOBBY_CLOSED
 
 
@@ -587,7 +587,7 @@ def lobby_upload_yaml(lobby: UUID):
         sender_name="System",
         content=f"{player.player_name} uploaded {len(uploaded)} YAML(s): {', '.join(yaml_summaries)}.",
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     result: dict = {"uploaded": uploaded}
@@ -666,7 +666,7 @@ def lobby_delete_yaml(lobby: UUID, yaml_id: int):
         sender_name="System",
         content=f"{owner_name}'s YAML '{filename}' was removed.",
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"success": True})
@@ -695,7 +695,7 @@ def lobby_delete_message(lobby: UUID, message_id: int):
     msg.player = None
     msg.sender_name = "System"
     msg.content = f"Message deleted by {owner_name}."
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"content": msg.content})
@@ -727,7 +727,7 @@ def lobby_chat(lobby: UUID):
         sender_name=player.player_name,
         content=content,
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({
@@ -757,7 +757,7 @@ def lobby_toggle_ready(lobby: UUID):
         return jsonify({"error": "Upload at least one YAML before marking ready"}), 400
 
     player.is_ready = not player.is_ready
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"is_ready": player.is_ready})
@@ -819,7 +819,7 @@ def lobby_generate(lobby: UUID):
         lobby=lobby, player=None, sender_name="System",
         content="Seed generation started...",
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     from pickle import PicklingError
@@ -951,7 +951,7 @@ def lobby_update_settings(lobby: UUID):
     meta["server_options"] = server_opts
     meta["generator_options"] = gen_opts
     lobby.meta = json.dumps(meta)
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
 
     LobbyMessage(
         lobby=lobby,
@@ -997,7 +997,7 @@ def lobby_leave(lobby: UUID):
         lobby=lobby, player=None, sender_name="System",
         content=f"{name} left the lobby.",
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"success": True})
@@ -1034,7 +1034,7 @@ def lobby_kick(lobby: UUID, player_id: int):
         lobby=lobby, player=None, sender_name="System",
         content=f"{name} was kicked from the lobby.",
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"success": True})
@@ -1087,7 +1087,7 @@ def lobby_lock(lobby: UUID):
             content="The lobby has been unlocked by the host.",
         )
 
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"success": True, "state": lobby.state})
@@ -1222,7 +1222,7 @@ def lobby_upload_apworld(lobby: UUID, yaml_id: int):
         file_size=len(apworld_data),
         world_version=world_version,
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return jsonify({"success": True, "file_size": len(apworld_data)}), 201
@@ -1354,7 +1354,7 @@ def lobby_upload_game(lobby: UUID):
     lobby.seed = seed
     lobby.room = room
     lobby.state = LOBBY_DONE
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     LobbyMessage(
         lobby=lobby, player=None, sender_name="System",
         content="Game uploaded! Room is ready.",

@@ -5,8 +5,7 @@ from flask import flash, redirect, render_template, request, session, url_for, a
 from pony.orm import commit, db_session, select, desc, count
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import Utils
-from Utils import __version__
+from Utils import __version__, utcnow, instance_name
 from WebHostLib import app, limiter
 from WebHostLib.generate import get_meta
 from WebHostLib.models import (
@@ -19,7 +18,7 @@ from WebHostLib.models import (
 def _expire_lobby_if_needed(lobby: Lobby) -> None:
     """Check if a lobby has expired due to inactivity and close it if so."""
     if lobby.state in (LOBBY_OPEN, LOBBY_LOCKED, LOBBY_GENERATING):
-        now = datetime.utcnow()
+        now = utcnow()
         if now - lobby.last_activity > timedelta(minutes=lobby.timeout_minutes):
             lobby.state = LOBBY_CLOSED
 
@@ -187,7 +186,7 @@ def lobby_create():
         )
         commit()
 
-        lobby.last_activity = datetime.utcnow()
+        lobby.last_activity = utcnow()
         commit()
 
         return redirect(url_for('lobby_view', lobby=lobby.id))
@@ -247,7 +246,7 @@ def lobby_view(lobby: UUID):
         server_opts=server_opts,
         gen_opts=gen_opts,
         owner_name=owner_name,
-        instance_name=Utils.instance_name or "Archipelago",
+        instance_name= instance_name or "Archipelago",
     )
 
 
@@ -315,7 +314,7 @@ def lobby_join(lobby: UUID):
         sender_name="System",
         content=f"{player_name} joined the lobby.",
     )
-    lobby.last_activity = datetime.utcnow()
+    lobby.last_activity = utcnow()
     commit()
 
     return redirect(url_for('lobby_view', lobby=lobby.id))
