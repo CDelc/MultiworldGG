@@ -1,25 +1,41 @@
 from copy import copy
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from .Errors import *
 from .MnemonicsTree import MNEMONICS
 from .Util import *
-from ..Util import hex_str
 
 
 class GameboyAddress:
     def __init__(self, bank: int, offset: int):
         self.bank = bank
         self.offset = offset - 0x4000 if 0x8000 > offset >= 0x4000 else offset
+        assert self.offset < 0x4000 or self.offset >= 0xffff, f"Offset out of range: {offset}"
 
-    def address_in_rom(self):
+    @staticmethod
+    def from_address(address: int) -> "GameboyAddress":
+        bank = address >> 8
+        offset = address % 0x4000
+        if bank > 0:
+            offset += 0x4000
+        return GameboyAddress(bank, offset)
+
+    def address_in_rom(self) -> int:
+        assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
         return (self.bank * 0x4000) + self.offset
 
-    def to_word(self):
+    def to_word(self) -> str:
+        assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
         mapped_offset = self.offset
         if self.bank > 0:
             mapped_offset += 0x4000
         return f"${hex_str(mapped_offset, 2)}"
+
+    def __str__(self) -> str:
+        mapped_offset = self.offset
+        if self.bank > 0 and mapped_offset != 0xffff:
+            mapped_offset += 0x4000
+        return f"{hex_str(self.bank, 1)}:{hex_str(mapped_offset, 2)}"
 
 
 class Z80Block:
@@ -50,7 +66,7 @@ class Z80Block:
         self.byte_array = []
         self.precompiled_size = 0
 
-    def set_base_offset(self, new_offset):
+    def set_base_offset(self, new_offset: int) -> None:
         old_offset = self.addr.offset
         self.addr.offset = new_offset
 
@@ -60,12 +76,13 @@ class Z80Block:
             shifted_labels[name] = GameboyAddress(addr.bank, shifted_offset)
         self.local_labels = shifted_labels
 
-    def requires_injection(self):
+    def requires_injection(self) -> bool:
         return self.addr.offset == 0xffff
 
 
 class Z80Assembler:
-    def __init__(self, bank_caves: List[int], defines: Dict[str, str], seasons_rom: bytes, ages_rom: Optional[bytes]):
+    def __init__(self, bank_caves: list[int | list[int | list[int]]], defines: Dict[str, str],
+                 vanilla_rom: bytes, other_rom: Optional[bytes] = None):
         self.defines = {}
         for key, value in defines.items():
             self.define(key, value)
@@ -75,30 +92,27 @@ class Z80Assembler:
         self.floating_chunks = {}
         self.global_labels = {}
         self.blocks = []
-        self.seasons_rom = seasons_rom
-        self.ages_rom = ages_rom
+        self.vanilla_rom = vanilla_rom
+        self.other_rom = other_rom
         self.active = True
 
-    def define(self, key: str, replacement_string: str, is_redefine: bool = False):
+    def define(self, key: str, replacement_string: str, is_redefine: bool = False) -> None:
         assert not is_redefine or key in self.defines, f"Attempting to re-define a value for key '{key}' but it didn't exist."
         assert is_redefine or key not in self.defines, f"Attempting to define a value for key '{key}' which is already defined."
         self.defines[key] = replacement_string
 
-    def define_byte(self, key: str, byte: int, is_redefine: bool = False):
+    def define_byte(self, key: str, byte: int, is_redefine: bool = False) -> None:
         while byte < 0:
             byte += 0x100
         while byte >= 0x100:
             byte -= 0x100
         self.define(key, f"${hex_str(byte)}", is_redefine)
 
-    def define_word(self, key: str, word: int):
-        while word < 0:
-            word += 0x10000
-        while word >= 0x10000:
-            word -= 0x10000
+    def define_word(self, key: str, word: int) -> None:
+        word %= 0x10000
         self.define(key, f"${hex_str(word, 2)}")
 
-    def add_floating_chunk(self, name: str, byte_array: List[int]):
+    def add_floating_chunk(self, name: str, byte_array: List[int]) -> None:
         """
         Add a named byte array to the collection of "floating chunks", which can then be inserted anywhere
         using the "/include" directive in assembly
@@ -107,12 +121,12 @@ class Z80Assembler:
             raise f"Attempting to re-define a floating chunk with name '{name}'."
         self.floating_chunks[name] = byte_array
 
-    def add_global_label(self, name: str, addr: GameboyAddress):
+    def add_global_label(self, name: str, addr: GameboyAddress) -> None:
         if name in self.global_labels:
             raise Exception(f"Attempting to re-define a global label with name '{name}'.")
         self.global_labels[name] = addr
 
-    def add_block(self, block: Z80Block):
+    def add_block(self, block: Z80Block) -> None:
         # Perform a first "precompilation" pass to determine block size once compiled and local labels' offsets.
         self._precompile_block(block)
 
@@ -143,7 +157,7 @@ class Z80Assembler:
                 raise Exception(f"Not enough space for block {block.label} in bank {hex_str(block.addr.bank)} "
                                 f"({hex(injection_offset + block.precompiled_size)})."
                                 f"Block size: {hex(block.precompiled_size)}; "
-                                f"Space left: {hex((sum([cave_range[1] - cave_range[0] + 1 for cave_range in self.bank_caves[block.addr.bank]]) if isinstance(self.bank_caves[block.addr.bank], list) else 0) + 0x4001 - injection_offset)}")
+                                f"Space left: {hex((sum([(0x4000 - cave_range if isinstance(cave_range, int) else cave_range[1] - cave_range[0] + 1) for cave_range in self.bank_caves[block.addr.bank]]) if isinstance(self.bank_caves[block.addr.bank], list) else 0) + 0x4001 - injection_offset)}")
             block.set_base_offset(injection_offset)
 
         if block.label:
@@ -154,7 +168,7 @@ class Z80Assembler:
 
         self.blocks.append(block)
 
-    def resolve_names(self, arg: str, current_addr: GameboyAddress, local_labels: Dict[str, GameboyAddress], opcode: str):
+    def resolve_names(self, arg: str, current_addr: GameboyAddress, local_labels: Dict[str, GameboyAddress], opcode: str) -> str:
         arg = arg.strip()
         if arg.startswith("(") and arg.endswith(")"):
             return f"({self.resolve_names(arg[1:-1], current_addr, local_labels, opcode)})"
@@ -191,33 +205,49 @@ class Z80Assembler:
 
         return output
 
-    def compile_all(self):
+    def compile_all(self) -> None:
         """
         Perform a full compilation of all previously added blocks.
         """
         for block in self.blocks:
             self._compile_block(block)
 
-    def _precompile_block(self, block: Z80Block):
+    def _precompile_block(self, block: Z80Block) -> None:
         block.byte_array = []
         current_offset = 0
         for line in block.content_lines:
             addr = GameboyAddress(block.addr.bank, block.addr.offset + current_offset)
-            current_offset += self._evaluate_line_size(line, addr, block)
+            try:
+                current_offset += self._evaluate_line_size(line, addr, block)
+            except Exception as e:
+                e.add_note(f"line: {line}")
+                block_name = block.label
+                if not block_name:
+                    block_name = "unnamed"
+                e.add_note(f"In block {block_name} ({block.addr})")
+                raise e
         assert self.active
         block.precompiled_size = current_offset
 
-    def _compile_block(self, block: Z80Block):
+    def _compile_block(self, block: Z80Block) -> None:
         block.byte_array = []
         for line in block.content_lines:
             addr = GameboyAddress(block.addr.bank, block.addr.offset + len(block.byte_array))
-            block.byte_array.extend(self._compile_line_to_bytes(line, addr, block))
+            try:
+                block.byte_array.extend(self._compile_line_to_bytes(line, addr, block))
+            except Exception as e:
+                e.add_note(f"Line: {line}")
+                block_name = block.label
+                if not block_name:
+                    block_name = "unnamed"
+                e.add_note(f"In block {block_name} ({block.addr})")
+                raise e
 
         if block.precompiled_size != len(block.byte_array):
             raise Exception(f"Block {block.label} size prediction was wrong: "
                             f"{block.precompiled_size} -> {len(block.byte_array)}")
 
-    def _evaluate_line_size(self, line: str, current_addr: GameboyAddress, block: Z80Block):
+    def _evaluate_line_size(self, line: str, current_addr: GameboyAddress, block: Z80Block) -> int:
         opcode = line.split(" ")[0]
 
         # If it ends with ':', it's a local label and needs to be registered as such
@@ -287,7 +317,7 @@ class Z80Assembler:
             # Single-byte opcode
             return 1 + extra_size
 
-    def _compile_line_to_bytes(self, line: str, current_addr: GameboyAddress, block: Z80Block):
+    def _compile_line_to_bytes(self, line: str, current_addr: GameboyAddress, block: Z80Block) -> list[int]:
         split = line.split(" ")
         opcode = split[0]
 
@@ -338,10 +368,10 @@ class Z80Assembler:
             if offset > 0x4000:
                 offset -= 0x4000
             address = 0x4000 * parse_hex_string_to_value(args[1]) + offset
-            if args[0] == "s":
-                return self.seasons_rom[address:address + parse_hex_string_to_value(args[3])]
+            if args[0] == "o":
+                return list(self.other_rom[address:address + parse_hex_string_to_value(args[3])])
             else:
-                return self.ages_rom[address:address + parse_hex_string_to_value(args[3])]
+                return list(self.vanilla_rom[address:address + parse_hex_string_to_value(args[3])])
 
         # ...then try matching a mnemonic
         extra_bytes = []

@@ -1532,6 +1532,7 @@ class UltrakillRules:
                     grab_item(state)
                     and skull(state, "1-1", "Red")
                     and skull(state, "1-1", "Blue")
+                    and revany2_fire2(state)
                 ),
 
             "Cleared 1-1":
@@ -2975,6 +2976,7 @@ class UltrakillRules:
                             or shoalt_any(state)
                             or rock_any(state)
                         )
+                        and arm2(state)
                         and skull(state, "8-3", "Blue")
                     )
                 ),
@@ -2992,6 +2994,7 @@ class UltrakillRules:
                             or shoalt_any(state)
                             or rock_any(state)
                         )
+                        and arm2(state)
                         and skull(state, "8-3", "Blue")
                     )
                 ),
@@ -3010,6 +3013,7 @@ class UltrakillRules:
                             or shoalt_any(state)
                             or rock_any(state)
                         )
+                        and arm2(state)
                         and skull(state, "8-3", "Blue")
                     )
                 ),
@@ -3026,6 +3030,7 @@ class UltrakillRules:
                         or shoalt_any(state)
                         or rock_any(state)
                     )
+                    and arm2(state)
                     and skull(state, "8-3", "Blue")
                 ),
 
@@ -3614,6 +3619,30 @@ class UltrakillRules:
                     or (
                         can_reach_level(state, "Enemy: Insurrectionist", "7-2")
                         and arm2(state)
+                    )
+                    or (
+                        can_reach_level(state, "Enemy: Insurrectionist", "8-1")
+                        and good_weapon(state)
+                        and grab_item(state)
+                        and skull(state, "8-1", "Blue")
+                        and skull(state, "8-1", "Red")
+                        and can_break_glass(state)
+                        and (
+                            arm2(state)
+                            or can_rocket_ride(state)
+                            or stamina(state, 3)
+                            or (
+                                stamina(state, 2)
+                                and walljumps(state, 1)
+                            )
+                            or shoany0_fire2(state)
+                            or shostd1_fire2(state)
+                            or rai2(state)
+                            or (
+                                rock_any(state)
+                                and stamina(state, 1)
+                            )
+                        )
                     )
                     or (
                         can_reach_level(state, "Enemy: Insurrectionist", "8-2")

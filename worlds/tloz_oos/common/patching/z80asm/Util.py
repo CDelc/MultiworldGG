@@ -1,8 +1,7 @@
 import collections
 import re
-from typing import List
 
-from ...patching.z80asm.Errors import ArgumentOverflowError
+from .Errors import ArgumentOverflowError
 
 
 def strip_line(line: str) -> str:
@@ -41,7 +40,7 @@ def parse_bin_string_to_value(string: str) -> int:
     return int(string[:0:-1], 2)
 
 
-def value_to_byte_array(value: int, expected_size: int):
+def value_to_byte_array(value: int, expected_size: int) -> list[int]:
     """
     Converts a value into a little endian byte array
     (e.g. "0x4Fa7DEadBEef" => [0xef, 0xbe, 0xad, 0xde, 0xa7, 0x4f])
@@ -51,6 +50,13 @@ def value_to_byte_array(value: int, expected_size: int):
         output.append(value & 0xFF)
         value >>= 8
     if len(output) > expected_size:
+        # Rebuild the initial value.
+        # It is slower but it's ok to spend a lot of time during errors if it saves time during normal behavior
+        initial_value = value
+        output.reverse()
+        for i in output:
+            initial_value <<= 8
+            initial_value += i
         raise ArgumentOverflowError(value, expected_size)
     while len(output) < expected_size:
         output.append(0x00)
@@ -76,7 +82,7 @@ def parse_hex_byte(string: str) -> int:
     return value_to_byte_array(value, 1)[0]
 
 
-def parse_hex_word(string: str):
+def parse_hex_word(string: str) -> list[int]:
     """
     Converts a word literal hexadecimal string into a little endian byte array
     (e.g. "$4Fa7" => [0xa7, 0x4f])
@@ -123,3 +129,15 @@ def parse_argument(arg: str, mnemonic_subtree: collections.abc.Mapping) -> tuple
         return f"({arg})", []
     else:
         return arg, []
+
+def hex_str(value: int, size: int = 1, min_length: int = 0) -> str:
+    if value < 0:
+        if size == 1:
+            value += 0x100
+        elif size == 2:
+            value += 0x10000
+        else:
+            raise Exception("Invalid size (should be 1 or 2)")
+    if min_length == 0:
+        min_length = size * 2
+    return hex(value)[2:].rjust(min_length, "0")

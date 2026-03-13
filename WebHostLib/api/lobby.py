@@ -215,6 +215,39 @@ def _get_player_in_lobby(lobby: Lobby) -> LobbyPlayer | None:
     return LobbyPlayer.get(lobby=lobby, session_id=session["_id"])
 
 
+@api_endpoints.route('/lobbies/eligible', methods=['GET'])
+def eligible_lobbies():
+    """Return lobbies where the current session user can upload more YAMLs."""
+    session_id = session.get("_id")
+    if not session_id:
+        return jsonify([])
+
+    memberships = select(p for p in LobbyPlayer if p.session_id == session_id)[:]
+    result = []
+    expired_any = False
+    for player in memberships:
+        lobby = player.lobby
+        old_state = lobby.state
+        _expire_lobby_if_needed(lobby)
+        if lobby.state != old_state:
+            expired_any = True
+        if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
+            continue
+        remaining = lobby.max_yamls_per_player - len(player.yamls)
+        if remaining > 0:
+            owner_player = LobbyPlayer.get(lobby=lobby, session_id=lobby.owner)
+            owner_name = owner_player.player_name if owner_player else "Unknown"
+            result.append({
+                "id": str(lobby.id),
+                "title": lobby.title,
+                "remaining": remaining,
+                "owner_name": owner_name,
+            })
+    if expired_any:
+        commit()
+    return jsonify(result)
+
+
 @api_endpoints.route('/lobby/<suuid:lobby>/ping', methods=['GET'])
 def lobby_ping(lobby: UUID):
     lobby = Lobby.get(id=lobby)

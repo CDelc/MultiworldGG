@@ -158,9 +158,9 @@ const saveSettings = () => {
     inputs: {},
     checkboxes: {},
   };
-  document.querySelectorAll("input, select").forEach((input) => {
-    if (input.type === "submit") {
-      // Ignore submit inputs
+  document.querySelectorAll("#options-form input, #options-form select").forEach((input) => {
+    if (input.type === "submit" || input.type === "button") {
+      // ignore and do not save
     } else if (input.type === "checkbox") {
       options.checkboxes[input.id] = input.checked;
     } else {
@@ -170,7 +170,10 @@ const saveSettings = () => {
   const game = document
     .getElementById("player-options")
     .getAttribute("data-game");
-  localStorage.setItem(game, JSON.stringify(options));
+  try {
+    localStorage.setItem(game, JSON.stringify(options));
+  } catch {
+  }
 };
 
 // Load all options from localStorage
@@ -416,3 +419,115 @@ const hideUserMessage = () => {
   userMessage.removeEventListener("click", hideUserMessage);
   userMessage.style.display = "none";
 };
+
+// Lobby integration: check for eligible lobbies and inject "Add to Lobby" button
+const initLobbyIntegration = async () => {
+  let lobbies;
+  try {
+    const resp = await fetch("/api/lobbies/eligible");
+    lobbies = await resp.json();
+  } catch {
+    return;
+  }
+  if (!lobbies || lobbies.length === 0) return;
+
+  const buttonRow = document.getElementById("player-options-button-row");
+  if (!buttonRow) return;
+
+  let selectedLobby = lobbies[0];
+
+  const buildTooltip = (lobby) => `Lobby: ${lobby.title} by ${lobby.owner_name}`;
+
+  // Wrap button in a span for CSS tooltip (::after doesn't work on <input>)
+  const btnWrapper = document.createElement("span");
+  btnWrapper.className = "tooltip-bottom";
+  btnWrapper.setAttribute("data-tooltip", buildTooltip(selectedLobby));
+
+  const btn = document.createElement("input");
+  btn.type = "button";
+  btn.name = "intent-add-to-lobby";
+  btn.value = lobbies.length > 1 ? "Add to Active Lobby \u25BE" : "Add to Active Lobby";
+  btnWrapper.appendChild(btn);
+  buttonRow.appendChild(btnWrapper);
+
+  // Popup menu for multiple lobbies
+  let menu = null;
+  if (lobbies.length > 1) {
+    menu = document.createElement("div");
+    menu.className = "lobby-picker-menu";
+    lobbies.forEach((lobby) => {
+      const item = document.createElement("div");
+      item.className = "lobby-picker-item";
+      item.textContent = `${lobby.title} (by ${lobby.owner_name})`;
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectedLobby = lobby;
+        btnWrapper.setAttribute("data-tooltip", buildTooltip(lobby));
+        menu.classList.remove("visible");
+        submitToLobby();
+      });
+      menu.appendChild(item);
+    });
+    btnWrapper.appendChild(menu);
+
+    // Close menu on outside click
+    document.addEventListener("click", (e) => {
+      if (menu.classList.contains("visible") && !btnWrapper.contains(e.target)) {
+        menu.classList.remove("visible");
+      }
+    });
+  }
+
+  const submitToLobby = async () => {
+    const playerName = document.getElementById("player-name");
+    if (!playerName.value.trim()) {
+      window.scrollTo(0, 0);
+      showUserMessage("You must enter a player name!");
+      return;
+    }
+
+    saveSettings();
+
+    const form = document.getElementById("options-form");
+    const formData = new FormData(form);
+    formData.append("lobby-id", selectedLobby.id);
+
+    btn.disabled = true;
+    btn.value = "Uploading...";
+
+    try {
+      const game = document.getElementById("player-options").getAttribute("data-game");
+      const resp = await fetch(`/games/${encodeURIComponent(game)}/add-to-lobby`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        window.location.href = data.lobby_url;
+      } else {
+        window.scrollTo(0, 0);
+        showUserMessage(data.error || "Failed to add to lobby");
+        btn.disabled = false;
+        btn.value = lobbies.length > 1 ? "Add to Active Lobby \u25BE" : "Add to Active Lobby";
+      }
+    } catch {
+      window.scrollTo(0, 0);
+      showUserMessage("Network error. Please try again.");
+      btn.disabled = false;
+      btn.value = lobbies.length > 1 ? "Add to Active Lobby \u25BE" : "Add to Active Lobby";
+    }
+  };
+
+  btn.addEventListener("click", () => {
+    if (lobbies.length === 1) {
+      submitToLobby();
+    } else {
+      menu.classList.toggle("visible");
+    }
+  });
+};
+
+window.addEventListener("load", () => {
+  initLobbyIntegration();
+});

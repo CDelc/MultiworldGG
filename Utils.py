@@ -164,6 +164,14 @@ def is_frozen() -> bool:
     return typing.cast(bool, getattr(sys, 'frozen', False))
 
 
+def is_webhost_mode() -> bool:
+    """Detect whether this import is happening in WebHost/dedicated web runtime."""
+    if "WebHost" in sys.modules:
+        return True
+    argv0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
+    return "webhost.py" in argv0 or "gunicorn" in argv0
+
+
 def local_path(*path: str) -> str:
     """
     Returns path to a file in the local MultiworldGG installation or source.

@@ -87,8 +87,8 @@ class CrossCodeWorld(World):
     }
 
     item_name_groups = {
-        name: { entry.item.name for entry in entries }
-        for name, entries in world_data.item_pools_template.items()
+        name: {data.name for data in entry}
+        for name, entry in world_data.item_groups.items()
     }
 
     location_name_groups = {
@@ -102,6 +102,8 @@ class CrossCodeWorld(World):
     region_dict: dict[str, Region]
     logic_mode: str
     region_pack: RegionsData
+
+    rhombus_hub_unlock: bool
 
     pre_fill_specific_dungeons_names: dict[str, set[str]]
     pre_fill_any_dungeon_names: set[str]
@@ -123,13 +125,13 @@ class CrossCodeWorld(World):
     pools: Pools
 
     _filler_pool_names: list[str] = [
-        "fillerCommonCons",
-        "fillerCommonDrop",
-        "fillerRareCons",
-        "fillerRareDrop",
-        "fillerEpicCons",
-        "fillerEpicDrop",
-        "fillerLegendary",
+        "Common Consumables",
+        "Common Drops",
+        "Rare Consumables",
+        "Rare Drops",
+        "Epic Consumables",
+        "Epic Drops",
+        "Legendary Consumables",
     ]
 
     _filler_pool_weights: list[int]
@@ -262,6 +264,9 @@ class CrossCodeWorld(World):
         cons = self.options.consumable_weight.value
         drop = self.options.drop_weight.value
 
+        if not drop and not cons:
+            raise OptionError("One of either consumable_weight or drop_weight must be non-zero.")
+
         # cumulative weights save work.
         self._filler_pool_weights = list(itertools.accumulate([
             common * cons,
@@ -286,6 +291,14 @@ class CrossCodeWorld(World):
                 "chest key placement in own dungeons or original dungeons"
             )
 
+        if (
+            self.options.goal.value == self.options.goal.option_observatory and
+            not self.options.quest_rando.value
+        ):
+            raise OptionError(
+                "Observatory goal requires quest randomization to be enabled"
+            )
+
         self.fill_pools()
 
         self.variables = defaultdict(list)
@@ -297,6 +310,8 @@ class CrossCodeWorld(World):
         self.enabled_chain_names = set()
 
         green_leaf_shade_name = "Green Leaf Shade"
+
+        self.rhombus_hub_unlock = bool(self.options.rhombus_hub_unlock.value)
 
         area_unlocks = self.options.progressive_area_unlocks.value
         if area_unlocks & ProgressiveAreaUnlocks.COMBINE_POOLS:
@@ -313,7 +328,7 @@ class CrossCodeWorld(World):
             self.enabled_chain_names |= self._equip_chain_names
 
         self.required_items = Counter()
-        self.required_items.update(self.pools.item_pools["required"])
+        self.required_items.update(self.pools.item_pools["Required"])
 
         # self._equip_chain_names is a set, so sort for deterministic results.
         for name in sorted(self._equip_chain_names):
@@ -334,7 +349,16 @@ class CrossCodeWorld(World):
         if self.options.vw_meteor_passage.value:
             self.variables["vwPassage"].append("meteor")
 
+        if self.options.closed_gaia.value in [1, 2]:
+            self.variables["closedGaia"].append("on")
+        if self.options.closed_gaia.value == 1:
+            self.variables["closedGaia"].append("minimal")
+        if self.options.closed_gaia.value == 2:
+            self.variables["closedGaia"].append("full")
+
         self.variables["canGrind"].append("noShadeWarp")
+
+        self.variables["rhombusHubUnlock"].append("on" if self.rhombus_hub_unlock else "off")
 
         if self.options.start_with_green_leaf_shade.value:
             self.multiworld.push_precollected(self.create_item(green_leaf_shade_name))
@@ -348,7 +372,7 @@ class CrossCodeWorld(World):
             self.multiworld.push_precollected(self.create_item("Disc of Flora"))
 
         if self.options.start_with_pet.value:
-            chosen_pet = self.pools.pull_items_from_pool("pets", self.random)[0]
+            chosen_pet = self.pools.pull_items_from_pool("Pets", self.random)[0]
             self.multiworld.push_precollected(self.create_item(chosen_pet.name))
 
         if self.options.chest_lock_randomization.value:
@@ -393,6 +417,7 @@ class CrossCodeWorld(World):
             "shop_unlock_by_id": self.world_data.shop_unlock_by_id,
             "shop_unlock_by_shop": self.world_data.shop_unlock_by_shop,
             "shop_unlock_by_shop_and_id": self.world_data.shop_unlock_by_shop_and_id,
+            "region_botanics_amounts": self.world_data.region_botanics_amounts[self.logic_mode],
         }
 
         # Universal Tracker support
@@ -509,11 +534,22 @@ class CrossCodeWorld(World):
         if self.options.shop_rando:
             self.create_shops()
 
-        goal_region = self.region_dict[self.region_pack.goal_region]
-        goal = Location(self.player, "The Creator", parent=goal_region)
-        goal.place_locked_item(Item("Victory", ItemClassification.progression, None, self.player))
+        goal_name = self.options.goal.current_key
+        goal = self.region_pack.goals[goal_name]
+        goal_region = self.region_dict[goal.region]
+        goal_location = Location(self.player, "Victory", parent=goal_region)
+        goal_location.place_locked_item(Item("Victory", ItemClassification.progression, None, self.player))
+        add_rule(
+            goal_location,
+            condition_satisfied(
+                self.player,
+                goal.condition if goal.condition is not None else [],
+                None,
+                self.logic_dict
+            )
+        )
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
-        goal_region.locations.append(goal)
+        goal_region.locations.append(goal_location)
 
     def create_items(self):
         exclude = self.multiworld.precollected_items[self.player][:]
@@ -678,14 +714,7 @@ class CrossCodeWorld(World):
         # Prevent minimal accessibility from locking non-required keys, and other dungeon items, behind themselves when
         # the goal is reachable without them.
         if self.options.accessibility == "minimal":
-            if all_state.has("Victory", self.player):
-                # Remove the event that the completion_condition checks for, so that the completion condition will
-                # return False.
-                all_state.remove_item("Victory", self.player)
-            else:
-                # Tell the all_state that it has already collected the item from the location the "Victory" event is
-                # placed at, so that it won't collect the "Victory" event when sweeping.
-                all_state.advancements.add(self.get_location("The Creator"))
+            all_state.remove_item("Victory", self.player)
 
         all_state.sweep_for_advancements()
 
@@ -735,8 +764,11 @@ class CrossCodeWorld(World):
             "mode": self.logic_mode,
             "dataVersion": self.world_data.data_version,
             "options": {
+                "goal": self.options.goal.current_key,
                 "vtShadeLock": self.options.vt_shade_lock.value,
+                "rhombusHubUnlock": bool(self.options.rhombus_hub_unlock.value),
                 "meteorPassage": bool(self.options.vw_meteor_passage.value),
+                "closedGaia": self.options.closed_gaia.value,
                 "vtSkip": bool(self.options.vt_skip.value),
                 "keyrings": [self.world_data.single_items_dict[name].item_id for name in self.logic_dict["keyrings"]],
                 "questRando": bool(self.options.quest_rando.value),

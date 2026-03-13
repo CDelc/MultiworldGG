@@ -1,8 +1,11 @@
+import typing
+
+import Utils
+
 from .PrimeUtils import setup_lib_path
 
-setup_lib_path()  # NOTE: This MUST be called before importing any other metroidprime modules (other than PrimeUtils)
-# Setup local dependencies if running in an apworldimport typing
-import typing
+if not Utils.is_frozen() and not Utils.is_webhost_mode():
+    setup_lib_path()  # NOTE: This MUST be called before importing any other metroidprime modules (other than PrimeUtils)
 from collections import defaultdict
 from .ItemPool import generate_item_pool
 import os
@@ -41,6 +44,7 @@ from .Regions import create_regions
 from .Locations import every_location
 from .ItemPool import generate_item_pool, generate_base_start_inventory
 from .PrimeOptions import (
+    ArtifactHints,
     BlastShieldRandomization,
     DoorColorRandomization,
     MetroidPrimeOptions,
@@ -122,7 +126,6 @@ class MetroidPrimeWorld(World):
     """
 
     game = "Metroid Prime"
-    author: str = "Electro15"
     web = MetroidPrimeWeb()
     required_client_version = (0, 5, 0)
     options_dataclass = MetroidPrimeOptions
@@ -306,7 +309,7 @@ class MetroidPrimeWorld(World):
         )
 
     def post_fill(self) -> None:
-        if self.options.artifact_hints:
+        if self.options.artifact_hints.value == ArtifactHints.option_enable_precollected:
             start_hints: typing.Set[str] = self.options.start_hints.value
             for i in artifact_table:
                 start_hints.add(i)
@@ -379,6 +382,9 @@ class MetroidPrimeWorld(World):
             slot_data["starting_room_name"] = self.starting_room_name
         if self.starting_beam:
             slot_data["starting_beam"] = self.starting_beam
+        if self.options.artifact_hints.value == ArtifactHints.option_enable_scanned:
+            locations = self.multiworld.find_items_in_locations(set(artifact_table.keys()), self.player)
+            slot_data["artifact_locations"] = { location.item.name: (location.address, location.player) for location in locations if location.item }
 
         return slot_data
 

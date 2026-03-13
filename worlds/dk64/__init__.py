@@ -27,17 +27,6 @@ except ImportError:
 if baseclasses_loaded:
     import Utils
 
-    def is_webhost_mode() -> bool:
-        """Detect whether this import is happening in WebHost/dedicated web runtime."""
-        argv0 = os.path.basename(sys.argv[0]).lower() if sys.argv else ""
-        # "WebHost" will already be in sys.modules when gunicorn imports WebHost:get_app()
-        if "WebHost" in sys.modules:
-            return True
-        # Direct invocation: python WebHost.py or python -m gunicorn
-        if "webhost.py" in argv0 or "gunicorn" in argv0:
-            return True
-        return False
-
     def display_error_box(title: str, text: str) -> bool | None:
         """Display an error message box."""
         from tkinter import Tk, messagebox
@@ -91,7 +80,7 @@ if baseclasses_loaded:
         if temp_dir not in sys.path:
             sys.path.insert(0, temp_dir)
 
-    if not Utils.is_frozen() and not is_webhost_mode():
+    if not Utils.is_frozen() and not Utils.is_webhost_mode():
         platform_type = sys.platform
         python_version = f"{sys.version_info.major}{sys.version_info.minor}"
         baseclasses_path = os.path.dirname(os.path.dirname(BaseClasses.__file__))
