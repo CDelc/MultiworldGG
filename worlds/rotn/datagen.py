@@ -46,7 +46,11 @@ def extractModDataToJson() -> List[dict[str, Dict]]:
                         if not mod_data_content or isinstance(mod_data_content, dict):
                             continue
 
-                        all_mod_data.append(json.loads(mod_data_content))
+                        parsed = json.loads(mod_data_content)
+                        if isinstance(parsed, dict):
+                            all_mod_data.append(parsed)
+                        else:
+                            logger.warning(f"Failed to extract mod data from {item.name}: expected dict, got {type(parsed).__name__}")
 
             except Exception as e:
                 logger.warning(f"Failed to extract mod data from {item.name}: {e}")
@@ -58,6 +62,10 @@ def getPlayerSpecificIds(mod_data, remap: dict[int, dict[str, list]]) -> (dict, 
         data_dict = json.loads(mod_data)
     except Exception as e:
         logger.warning(f"Failed to extract player specific IDs: {e}")
+        return {}, [], {}
+
+    if not isinstance(data_dict, dict):
+        logger.warning(f"Failed to extract player specific IDs: expected dict, got {type(data_dict).__name__}")
         return {}, [], {}
     
     flat_songs = {data["song_id"]: name for name, data in data_dict.items()}

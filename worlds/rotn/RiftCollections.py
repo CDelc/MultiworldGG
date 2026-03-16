@@ -55,7 +55,7 @@ class RotNCollections:
         "Got Danged": SongData(83, "TrackName_DLC_Apricot02", "MeatBoy", 5, 12, 20, 30),
         "Bootus Bleez": SongData(84, "TrackName_DLC_Apricot03", "MeatBoy", 6, 10, 19, 29),
         #Celeste
-        "Resurrections (dannyBstyle Remix)": SongData(85, "TrackName_DLC_Banana01", "Free Promo", 6, 10, 17, 27),
+        "Resurrections (dannyBstyle Remix)": SongData(85, "TrackName_DLC_Banana01", "Free DLC", 6, 10, 17, 27),
         "Scattered and Lost": SongData(86, "Scattered and Lost", "Celeste", 4, 8, 16, 25),
         "Reach for the Summit": SongData(87, "Reach for the Summit", "Celeste", 7, 11, 18, 30),
         "Confronting Myself": SongData(88, "Confronting Myself", "Celeste", 6, 9, 17, 26),
@@ -70,20 +70,20 @@ class RotNCollections:
         "Unexpectancy, Pt. 3": SongData(95, "Unexpectancy, Pt. 3", "Pizza Tower", 8, 16, 21, 29),
         "World Wide Noise": SongData(96, "World Wide Noise", "Pizza Tower", 5, 10, 19, 28),
         #Miku
-        "Too Real": SongData(97, "Too Real", "Free Promo", 4, 9, 16, 25),
+        "Too Real": SongData(97, "Too Real", "Free DLC", 4, 9, 16, 25),
         "M@GICAL☆CURE! LOVE ♥ SHOT!": SongData(98, "M@GICAL☆CURE! LOVE ♥ SHOT!", "Hatsune Miku", 5, 11, 18, 26),
         "Intergalactic Bound": SongData(99, "Intergalactic Bound", "Hatsune Miku", 3, 8, 15, 23),
         "Just 1dB Louder": SongData(100, "Just 1dB Louder", "Hatsune Miku", 4, 11, 18, 26),
         "MikuFiesta": SongData(101, "MikuFiesta", "Hatsune Miku", 3, 9, 16, 24),
         "Radiant Revival": SongData(102, "Radiant Revival", "Hatsune Miku", 4, 7, 16, 23),
         #Hololive
-        "REFLECT": SongData(103, "REFLECT", "Free Promo", 7, 12, 17, 23),
+        "REFLECT": SongData(103, "REFLECT", "Free DLC", 7, 12, 17, 23),
         "BIBBIDIBA": SongData(104, "BIBBIDIBA", "Hololive", 4, 9, 14, 22),
         "Play Dice!": SongData(105, "Play Dice!", "Hololive", 8, 13, 19, 25),
         "Ahoy!! 我ら宝鐘海賊団☆": SongData(106, "Ahoy!! 我ら宝鐘海賊団☆", "Hololive", 7, 14, 20, 30),
         "Carbonated Love": SongData(107, "Carbonated Love", "Hololive", 5, 10, 15, 23),
         #Everhood
-        "Powers Of Destruction": SongData(108, "Powers of Destruction", "Free Promo", 7, 11, 14, 20),
+        "Powers Of Destruction": SongData(108, "Powers of Destruction", "Free DLC", 7, 11, 14, 20),
         "The Final Battle": SongData(109, "The Final Battle", "Everhood", 6, 10, 16, 22),
         "Feisty Flowers": SongData(110, "Feisty Flowers", "Everhood", 5, 10, 19, 29),
         "Revenge": SongData(111, "Revenge", "Everhood", 5, 12, 20, 29),
@@ -95,24 +95,32 @@ class RotNCollections:
         "PLAY": SongData(116, "PLAY", "Monstercat", 6, 11, 16, 26),
         "Waiting For You (feat. Joanna Jones)": SongData(117, "Waiting for you (feat. Joanna Jones)", "Monstercat", 5, 11, 16, 22),
         #Shovel Knight
-        "Main Theme": SongData(118, "Main Theme", "Free Promo", 4, 9, 17, 24),
+        "Main Theme": SongData(118, "Main Theme", "Free DLC", 4, 9, 17, 24),
         "La Danse Macabre (Lich Yard)": SongData(119, "La Danse Macabre (Lich Yard)", "Shovel Knight", 5, 7, 20, 27),
         "Strike the Earth! (Plains of Passage)": SongData(120, "Strike the Earth! (Plains of Passage)", "Shovel Knight", 2, 8, 16, 27),
         "In the Halls of the Usurper (Pridemoor Keep)": SongData(121, "In the Halls of the Usurper (Pridemoor Keep)", "Shovel Knight", 5, 9, 17, 22),
         "High Above the Land (The Flying Machine)": SongData(122, "High Above the Land (The Flying Machine)", "Shovel Knight", 4, 7, 16, 21),
         "An Underlying Problem (The Lost City)": SongData(123, "An Underlying Problem (The Lost City)", "Shovel Knight", 4, 11, 18, 23),
         #Friday Night Funkin'
-        "Dad Battle": SongData(124, "Dad Battle", "Free Promo", 4, 10, 16, 21),
+        "Dad Battle": SongData(124, "Dad Battle", "Free DLC", 4, 10, 16, 21),
         "Blammed": SongData(125, "Blammed", "Friday Night Funkin'", 7, 12, 18, 25),
         "Stress": SongData(126, "Stress", "Friday Night Funkin'", 7, 15, 21, 28),
         "Darnell": SongData(127, "Darnell", "Friday Night Funkin'", 6, 10, 19, 27),
         "Ugh": SongData(128, "Ugh", "Friday Night Funkin'", 5, 12, 17, 24),
         "Senpai": SongData(129, "Senpai", "Friday Night Funkin'", 2, 10, 16, 24),
         #Unbeatable
-        "WORN OUT TAPES [tally-ho version]": SongData(130, "WORN OUT TAPES [tally-ho version]", "Free Promo", 5, 12, 16, 25),
+        "WORN OUT TAPES [tally-ho version]": SongData(130, "WORN OUT TAPES [tally-ho version]", "Free DLC", 5, 12, 16, 25),
         #Rift Anniversary
-        "Portabellohead": SongData(131, "Portabellohead", "Free Promo", 3, 8, 13, 18, False),
-        "March of the Profane": SongData(132, "March of the Profane", "Free Promo", 5, 12, 17, 24, False),
+        "Portabellohead": SongData(131, "Portabellohead", "Anniversary", 3, 8, 13, 18, False),
+        "March of the Profane": SongData(132, "March of the Profane", "Anniversary", 5, 12, 17, 24, False),
+        #Spin Rhythm
+        "The Magician": SongData(133, "The Magician", "Free DLC", 4, 12, 17, 25, False),
+        #VA-11 HALL-A
+        "Digital Drive": SongData(134, "Digital Drive", "VA-11 HALL-A", 3, 6, 18, 24, False),
+        "Every Day is Night": SongData(135, "Every Day is Night", "VA-11 HALL-A", 3, 8, 14, 22, False),
+        "Drive Me Wild": SongData(136, "Drive Me Wild", "VA-11 HALL-A", 5, 11, 15, 20, False),
+        "YLIAD": SongData(137, "YLIAD", "Free DLC", 4, 8, 14, 20, False),
+        "Welcome to VA-11 HALL-A": SongData(138, "Welcome to VA-11 HALL-A", "VA-11 HALL-A", 2, 8, 13, 21, False),
     }
 
     EXTRA_DATA: Dict[str, ExtraSongData] = {
@@ -134,7 +142,7 @@ class RotNCollections:
         "Base",
         "MeatBoy",
         "Anniversary",
-        "Free Promo",
+        "Free DLC",
         "Minigame",
         "Boss",
         "Workshop",
@@ -142,6 +150,7 @@ class RotNCollections:
     ]
 
     DLC: List[str] = [
+        "All",
         "Celeste",
         "Pizza Tower",
         "Hatsune Miku",
@@ -150,6 +159,7 @@ class RotNCollections:
         "Monstercat",
         "Shovel Knight",
         "Friday Night Funkin'",
+        "VA-11 HALL-A",
 
         "Resurrections (dannyBstyle Remix)",
         "Scattered and Lost",
@@ -196,6 +206,11 @@ class RotNCollections:
         "Darnell",
         "Ugh",
         "Senpai",
+
+        "Digital Drive",
+        "Every Day is Night",
+        "Drive Me Wild",
+        "Welcome to VA-11 HALL-A",
     ]
 
     song_locations: Dict[str, int] = {}
@@ -236,14 +251,14 @@ class RotNCollections:
             for slot_index, data_dict in enumerate(mod_data):
                 for song_name, dict_data in data_dict.items():
                     data = SongData(int(dict_data["code"]), dict_data["song_id"], dict_data["DLC"], int(dict_data["diff_easy"]) if dict_data["diff_easy"] else None, int(dict_data["diff_medium"]) if dict_data["diff_medium"] else  None, 
-                                    int(dict_data["diff_hard"]) if dict_data["diff_hard"] else  None, int(dict_data["diff_impossible"]) if dict_data["diff_impossible"] else  None)
+                                    int(dict_data["diff_hard"]) if dict_data["diff_hard"] else  None, int(dict_data["diff_impossible"]) if dict_data["diff_impossible"] else  None, "Custom")
                     if not isinstance(song_name, str) or not isinstance(data, SongData):
                         logging.warning(f"Skipping {song_name}")
                         continue
 
                     if data.DLC == "Local":
                         new_code = data.code + 5000 + (1000 * slot_index)
-                        data = SongData(new_code, data.song_id, data.DLC, data.diff_easy, data.diff_medium, data.diff_hard, data.diff_impossible)
+                        data = SongData(new_code, data.song_id, data.DLC, data.diff_easy, data.diff_medium, data.diff_hard, data.diff_impossible, "Custom")
                         self.mod_remaps[data.song_id] = {}
                         self.mod_remaps[data.song_id][song_name] = [new_code, new_code + 1]
 
@@ -359,6 +374,9 @@ class RotNCollections:
         return filtered_list
     
     def songMatchesDlcFilter(self, song: SongData, dlc_songs: Set[str]) -> bool:
+        if "All" in dlc_songs:
+            return True
+
         if song.DLC in self.FREE_PACKS:
             return True
 
@@ -381,14 +399,16 @@ class RotNCollections:
             "Base Songs": {name for name, data, in self.song_items.items() if data.DLC == "Base"},
             "Meat Boy": {name for name, data, in self.song_items.items() if data.DLC == "MeatBoy"},
             "Anniversary": {name for name, data, in self.song_items.items() if data.DLC == "Anniversary"},
-            "Free Promo": {name for name, data, in self.song_items.items() if data.DLC == "Free Promo"},
-            "Celeste": {name for name, data, in self.song_items.items() if data.DLC == "Celeste"},
+            "Free DLC": {name for name, data, in self.song_items.items() if data.DLC == "Free DLC" or data.DLC == "MeatBoy" or data.DLC == "Anniversary"},
+            "Celeste": {name for name, data, in self.song_items.items() if data.DLC == "Celeste" or "Resurrections (dannyBstyle Remix)" in name},
             "Pizza Tower": {name for name, data, in self.song_items.items() if data.DLC == "Pizza Tower"},
-            "Hatsune Miku": {name for name, data, in self.song_items.items() if data.DLC == "Hatsune Miku"},
-            "Hololive": {name for name, data, in self.song_items.items() if data.DLC == "Hololive"},
-            "Everhood": {name for name, data, in self.song_items.items() if data.DLC == "Everhood"},
+            "Hatsune Miku": {name for name, data, in self.song_items.items() if data.DLC == "Hatsune Miku" or "Too Real" in name},
+            "Hololive": {name for name, data, in self.song_items.items() if data.DLC == "Hololive" or "REFLECT" in name},
+            "Everhood": {name for name, data, in self.song_items.items() if data.DLC == "Everhood" or "Powers Of Destruction" in name},
             "Monstercat": {name for name, data, in self.song_items.items() if data.DLC == "Monstercat"},
-            "Friday Night Funkin'": {name for name, data, in self.song_items.items() if data.DLC == "Friday Night Funkin'"}
+            "Shovel Knight": {name for name, data, in self.song_items.items() if data.DLC == "Shovel Knight" or "Main Theme" in name},
+            "Friday Night Funkin'": {name for name, data, in self.song_items.items() if data.DLC == "Friday Night Funkin'" or "Dad Battle" in name},
+            "VA-11 HALL-A": {name for name, data, in self.song_items.items() if data.DLC == "VA-11 HALL-A" or "YLIAD" in name},
         }
 
         return groups

@@ -1,11 +1,4 @@
 import typing
-
-import Utils
-
-from .PrimeUtils import setup_lib_path
-
-if not Utils.is_frozen() and not Utils.is_webhost_mode():
-    setup_lib_path()  # NOTE: This MUST be called before importing any other metroidprime modules (other than PrimeUtils)
 from collections import defaultdict
 from .ItemPool import generate_item_pool
 import os
@@ -362,6 +355,7 @@ class MetroidPrimeWorld(World):
             "artifact_hints",
             "staggered_suit_damage",
             "start_hints",
+            "plando_items",
         ]
         non_cosmetic_options = [
             o

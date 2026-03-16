@@ -52,12 +52,15 @@ class RotNWorld(World):
     player_mod_remmap = {}
     victory_song_name: str = ""
     victory_song_type: int = 0
-    starting_songs: List[str] = []
-    included_songs: List[str] = []
-    final_song_ids: set[int] = set()
     location_count: int
 
     ut_can_gen_without_yaml = True
+
+    def __init__(self, multiworld, player):
+        super().__init__(multiworld, player)
+        self.starting_songs: List[str] = []
+        self.included_songs: List[str] = []
+        self.final_song_ids: set[int] = set()
 
     def generate_early(self):
         logger = logging.getLogger("RotN")

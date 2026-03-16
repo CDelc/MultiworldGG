@@ -48,6 +48,7 @@ class SRB2World(World):
     web = SRB2Web()
 
     item_name_groups = {
+        "Act":acts_item_data_table,
         "Zone":zones_item_data_table,
         "Character":character_item_data_table,
         "Match Zone":mpmatch_item_table,
@@ -116,7 +117,7 @@ class SRB2World(World):
 
     def generate_early(self):
 
-        max_locations = 181+17#TODO up this once i have enough locations
+        max_locations = 181#TODO up this once i have enough locations
         if self.options.time_emblems:
             max_locations += 27
         if self.options.ring_emblems:
@@ -166,11 +167,16 @@ class SRB2World(World):
         return item
 
     def create_items(self):
+            disable_objects = False
+            if self.options.object_locking:
+                if self.options.superring_sanity and self.options.superring_sanity:
+                    disable_objects = False
+
             # 1Up Mushrooms
             #actsanity valid starts w/ object rando
             #gfz1, thz1hard, dsz2? cez1 erz2
             if not self.options.actsanity:
-                if not self.options.object_locking:
+                if not self.options.object_locking and disable_objects == False:
                     Valid_starts = ["Greenflower Zone", "Techno Hill Zone", "Deep Sea Zone", "Castle Eggman Zone",
                             "Arid Canyon Zone", "Red Volcano Zone", "Egg Rock Zone"]
                 else:
@@ -178,12 +184,12 @@ class SRB2World(World):
                             "Arid Canyon Zone", "Egg Rock Zone"]#zone boss means these always have a sphere 1
 
             else:
-                if not self.options.object_locking:
+                if not self.options.object_locking and disable_objects == False:
                     Valid_starts = ["Greenflower Zone (Act 1)", "Greenflower Zone (Act 2)", "Techno Hill Zone (Act 1)", "Techno Hill Zone (Act 2)", "Deep Sea Zone (Act 1)","Deep Sea Zone (Act 2)",
                                 "Castle Eggman Zone (Act 1)","Castle Eggman Zone (Act 2)","Arid Canyon Zone (Act 1)", "Arid Canyon Zone (Act 2)","Red Volcano Zone (Act 1)", "Egg Rock Zone (Act 1)","Egg Rock Zone (Act 2)",
                                 "Frozen Hillside Zone","Pipe Towers Zone","Forest Fortress Zone"]
                 else:
-                    Valid_starts = ["Greenflower Zone (Act 1)", "Deep Sea Zone (Act 2)",
+                    Valid_starts = ["Greenflower Zone (Act 1)","Techno Hill Zone (Act 1)", "Deep Sea Zone (Act 2)",
                                     "Castle Eggman Zone (Act 1)", "Egg Rock Zone (Act 2)"]#append forest fortress if starting character can get through spin walls
 
             rand_idx = random.randrange(len(Valid_starts))
@@ -195,14 +201,13 @@ class SRB2World(World):
 
             slots_to_fill = self.number_of_locations
 
-            if self.options.object_locking:
+            if self.options.object_locking and disable_objects == False:
                 for object_name in objects_item_table:
                     self.multiworld.itempool += [self.create_item(object_name)]
                     slots_to_fill -= 1
             else:
                 for object_name in objects_item_table:
                     self.multiworld.push_precollected(self.create_item(object_name))
-
 
 
             if self.options.actsanity:
@@ -244,6 +249,12 @@ class SRB2World(World):
                 slots_to_fill -=1
             if self.options.nights_maps:
                 for spstage in special_item_data_table.keys():
+                    if self.options.actsanity:
+                        if spstage == "Alpine Paradise Zone":
+                            self.multiworld.itempool += [self.create_item("Alpine Paradise Zone (Act 1)")]
+                            self.multiworld.itempool += [self.create_item("Alpine Paradise Zone (Act 2)")]
+                            slots_to_fill -= 2
+                            continue
                     self.multiworld.itempool += [self.create_item(spstage)]
                     slots_to_fill -=1
                 for shield in nights_item_table.keys():
@@ -336,7 +347,8 @@ class SRB2World(World):
             "DeathLink": self.options.death_link.value,
             "CompletionType": self.options.completion_type.value,
             "BlackCoreEmblems": self.options.bcz_emblem_percent.value,
-            "EnableMatchMaps": self.options.match_maps.value
+            "EnableMatchMaps": self.options.match_maps.value,
+            "ActSanity":self.options.actsanity.value
         }
 
     def generate_output(self, output_directory: str):

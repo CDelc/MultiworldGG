@@ -1,5 +1,7 @@
 # Peggle Nights
 
+[Read on the Archipelago Wiki](https://archipelago.miraheze.org/wiki/Peggle_Nights)
+
 ## Where is the options page?
 
 The player options page for this game is located [here](../player-options). It contains all the options

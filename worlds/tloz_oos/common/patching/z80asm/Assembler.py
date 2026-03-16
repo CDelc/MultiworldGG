@@ -24,6 +24,13 @@ class GameboyAddress:
         assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
         return (self.bank * 0x4000) + self.offset
 
+    def to_word_int(self) -> int:
+        assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
+        mapped_offset = self.offset
+        if self.bank > 0:
+            mapped_offset += 0x4000
+        return mapped_offset
+
     def to_word(self) -> str:
         assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
         mapped_offset = self.offset
@@ -36,6 +43,26 @@ class GameboyAddress:
         if self.bank > 0 and mapped_offset != 0xffff:
             mapped_offset += 0x4000
         return f"{hex_str(self.bank, 1)}:{hex_str(mapped_offset, 2)}"
+
+    def __add__(self, other: int) -> "GameboyAddress":
+        assert isinstance(other, int), f"Expected int but got {type(other)} being added to a GameboyAddress"
+        assert self.offset != 0xffff, "Tried to add to the address of a floating chunk"
+        new_offset = self.offset + other
+        new_bank = self.bank + new_offset // 0x4000
+        new_offset = new_offset % 0x4000
+        return GameboyAddress(new_bank, new_offset)
+
+    def __le__(self, other: "GameboyAddress") -> bool:
+        assert isinstance(other, GameboyAddress), f"Expected GameboyAddress but got {type(other)} for <= comparition"
+        assert self.offset != 0xffff, "Tried to compare to the address of a floating chunk"
+        assert other.offset != 0xffff, "Tried to compare to the address of a floating chunk"
+        return self.bank < other.bank or (self.bank == other.bank and self.offset <= other.offset)
+
+    def __lt__(self, other: "GameboyAddress") -> bool:
+        assert isinstance(other, GameboyAddress), f"Expected GameboyAddress but got {type(other)} for <= comparition"
+        assert self.offset != 0xffff, "Tried to compare to the address of a floating chunk"
+        assert other.offset != 0xffff, "Tried to compare to the address of a floating chunk"
+        return self.bank < other.bank or (self.bank == other.bank and self.offset < other.offset)
 
 
 class Z80Block:
