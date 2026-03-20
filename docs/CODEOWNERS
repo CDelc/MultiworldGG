@@ -36,8 +36,6 @@
 # NewSoupVi is acting maintainer, but world belongs to core with the exception of the music
 /worlds/apquest/ @NewSoupVi
 
-# Sudoku (APSudoku)
-/worlds/apsudoku/ @EmilyV99
 
 # Archipela-Go!
 /worlds/apgo/ @agilbert1412 @aki665
