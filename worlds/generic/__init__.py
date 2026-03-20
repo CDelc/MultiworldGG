@@ -29,7 +29,7 @@ class GenericWeb(WebWorld):
     other_games = Tutorial('Other Games and Tools',
                            'A guide to additional games and tools that can be used with MultiworldGG.',
                            'English', 'other_en.md', 'other/en', ['Berserker', 'TreZ'])
-    tutorials = [setup, mac, commands, advanced_settings, triggers, plando, other_games]
+    tutorials = [setup, commands, advanced_settings, triggers, plando, other_games]
 
 
 class GenericWorld(World):

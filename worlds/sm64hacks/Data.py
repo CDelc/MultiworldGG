@@ -261,8 +261,9 @@ class Data:
 
 
     def import_json(self, file_name):
-        custom_json_dir = Utils.local_path("data", "sm64hacks", "custom_jsons")
-        downloaded_json_dir = Utils.local_path("data", "sm64hacks", "downloaded_jsons")
+        json_dir = os.path.join(Utils.user_path(), "sm64hack_jsons")
+        custom_json_dir = os.path.join(json_dir, "custom_jsons")
+        downloaded_json_dir = os.path.join(json_dir, "downloaded_jsons")
 
         json_file = list(Path(custom_json_dir).rglob(file_name)) #custom takes priority over downloaded
         if json_file == []:

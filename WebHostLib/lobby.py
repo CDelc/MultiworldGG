@@ -39,6 +39,11 @@ def _get_player_in_lobby(lobby: Lobby) -> LobbyPlayer | None:
     return LobbyPlayer.get(lobby=lobby, session_id=session["_id"])
 
 
+def _is_lobby_viewer(lobby_id) -> bool:
+    """Return True if the current session has viewer auth for this lobby."""
+    return bool(session.get(f"lobby_{lobby_id}_viewer"))
+
+
 @app.route('/lobbies')
 def lobby_list():
     lobbies = select(
@@ -96,6 +101,8 @@ def lobby_list():
     # Build "my lobbies" list (active lobbies the current session is a member of)
     my_lobbies = [l for l in my_lobby_records if l.state != LOBBY_CLOSED]
     my_lobby_ids = [l.id for l in my_lobbies]
+    my_lobby_id_set = set(my_lobby_ids)
+    active_lobbies = [l for l in active_lobbies if l.id not in my_lobby_id_set]
     my_player_counts = {}
     my_yaml_counts = {}
     my_owner_names = {}
@@ -144,8 +151,8 @@ def lobby_create():
         try:
             timeout_minutes = int(request.form.get('timeout_minutes', 30))
         except (ValueError, TypeError):
-            timeout_minutes = 30
-        timeout_minutes = max(1, min(timeout_minutes, 40320))  # 1 min to 4 weeks
+            timeout_minutes = 60
+        timeout_minutes = max(15, min(timeout_minutes, 40320))  # 1 min to 4 weeks
 
         try:
             max_yamls = int(request.form.get('max_yamls_per_player', 1))
@@ -228,7 +235,9 @@ def lobby_view(lobby: UUID):
 
     player = _get_player_in_lobby(lobby)
     is_owner = (lobby.owner == session["_id"])
-    needs_password = bool(lobby.password_hash) and not player and lobby.state == LOBBY_OPEN
+    is_viewer = _is_lobby_viewer(lobby.id) and not player
+    show_view_form = not player and not is_viewer and request.args.get('view') == '1'
+    needs_password = bool(lobby.password_hash) and not player and lobby.state in (LOBBY_OPEN, LOBBY_LOCKED)
 
     # Pre-fetch last 200 messages to avoid loading entire set in template
     recent_messages = list(select(
@@ -254,6 +263,8 @@ def lobby_view(lobby: UUID):
         lobby=lobby,
         player=player,
         is_owner=is_owner,
+        is_viewer=is_viewer,
+        show_view_form=show_view_form,
         needs_password=needs_password,
         recent_messages=recent_messages,
         yaml_count=yaml_count,
@@ -265,6 +276,39 @@ def lobby_view(lobby: UUID):
         owner_name=owner_name,
         instance_name= instance_name or "Archipelago",
     )
+
+
+@app.route('/lobby/<suuid:lobby>/view', methods=['POST'])
+@limiter.limit("5 per minute")
+def lobby_view_auth(lobby: UUID):
+    lobby = Lobby.get(id=lobby)
+    if not lobby:
+        abort(404)
+
+    old_state = lobby.state
+    _expire_lobby_if_needed(lobby)
+    if lobby.state != old_state:
+        commit()
+
+    if lobby.state == LOBBY_CLOSED:
+        flash('This lobby has expired.')
+        return redirect(url_for('lobby_list'))
+
+    if lobby.state not in (LOBBY_OPEN, LOBBY_LOCKED):
+        flash('This lobby cannot be viewed in its current state.')
+        return redirect(url_for('lobby_view', lobby=lobby.id))
+
+    if _get_player_in_lobby(lobby):
+        return redirect(url_for('lobby_view', lobby=lobby.id))
+
+    if lobby.password_hash:
+        password = request.form.get('password', '')
+        if not check_password_hash(lobby.password_hash, password):
+            flash('Incorrect lobby password.')
+            return redirect(url_for('lobby_view', lobby=lobby.id, view='1'))
+
+    session[f"lobby_{lobby.id}_viewer"] = True
+    return redirect(url_for('lobby_view', lobby=lobby.id))
 
 
 @app.route('/lobby/<suuid:lobby>/join', methods=['POST'])
@@ -301,7 +345,7 @@ def lobby_join(lobby: UUID):
             flash('This lobby is full.')
             return redirect(url_for('lobby_view', lobby=lobby.id))
 
-    if lobby.password_hash:
+    if lobby.password_hash and not _is_lobby_viewer(lobby.id):
         password = request.form.get('password', '')
         if not check_password_hash(lobby.password_hash, password):
             flash('Incorrect lobby password.')
@@ -337,4 +381,5 @@ def lobby_join(lobby: UUID):
     lobby.last_activity = utcnow()
     commit()
 
+    session.pop(f"lobby_{lobby.id}_viewer", None)
     return redirect(url_for('lobby_view', lobby=lobby.id))

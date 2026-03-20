@@ -29,7 +29,7 @@ class Room(db.Entity):
     seed = Required('Seed', index=True)
     multisave = Optional(buffer, lazy=True)
     show_spoiler = Required(int, default=0)  # 0 -> never, 1 -> after completion, -> 2 always
-    timeout = Required(int, default=lambda: 2 * 60 * 60)  # seconds since last activity to shutdown
+    timeout = Required(int, default=lambda: 4 * 60 * 60)  # seconds since last activity to shutdown
     tracker = Optional(UUID, index=True)
     # Port special value -1 means the server errored out. Another attempt can be made with a page refresh
     last_port = Optional(int, default=lambda: 0)
@@ -82,7 +82,7 @@ class Lobby(db.Entity):
     password_hash = Optional(str)
     creation_time = Required(datetime, default=lambda: utcnow(), index=True)
     last_activity = Required(datetime, default=lambda: utcnow(), index=True)
-    timeout_minutes = Required(int, default=30)  # max 40320 (4 weeks)
+    timeout_minutes = Required(int, default=60)  # max 40320 (4 weeks)
     max_yamls_per_player = Required(int, default=1)
     race = Required(bool, default=False)
     meta = Required(LongStr, default=lambda: "{}")  # generation settings (server_options, plando_options, etc.)

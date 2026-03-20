@@ -8,7 +8,7 @@ You should only download and use files from sources you trust; sources listed he
 
 Currently, Discord is the primary hub for MultiworldGG; whether it be finding people to play with, developing new game implementations, or finding new playable games.
 The [unofficial AP Discord](https://discord.multiworld.gg) is used as the main communication platform for MultiworldGG.
-The `#apworld-index` channels in that server contains a list of playable games which should be easily downloadable and playable with an MWGG or AP installation.
+The `#apworld-updates` channel in that server contains a list of playable games which should be easily downloadable and playable with a MWGG or AP installation.
 The [Archipelago Official Discord](https://discord.gg/8Z65BR2) also is a really important resource, note however that due to stricter server rules, the mention of MultiworldGG in that server is currently blocked.
 
 ## Wiki
@@ -25,11 +25,11 @@ Hint Games can be found from sources such as the Discord and the [Hint Game Cate
 
 ### Options Creator
 
-The Options Creator is included in the Archipelago installation, and is accessible from the Archipelago Launcher. Using this simple GUI tool, you can easily create randomization options for any installed `.apworld` - perfect when using custom worlds you've installed that don't have options pages on the website.
+The Options Creator is included in the MultiworldGG installation, and is accessible from the MultiworldGG Launcher. Using this simple GUI tool, you can easily create randomization options for any installed `.apworld` - perfect when using custom worlds you've installed that don't have options pages on the website.
 
 ### PopTracker
 
-[PopTracker](https://poptracker.github.io) is a popular tool in Randomizer communities, which many games support via custom PopTracker Packs. Many Archipelago packs include the ability to directly connect to your slot for auto-tracking capabilities. (Check each game's setup guide or Discord channel to see if it has PopTracker compatibility!)
+[PopTracker](https://poptracker.github.io) is a popular tool in Randomizer communities, which many games support via custom PopTracker Packs. Many AP/MWGG packs include the ability to directly connect to your slot for auto-tracking capabilities. (Check each game's setup guide or Discord channel to see if it has PopTracker compatibility!)
 
 ### Universal Tracker
 

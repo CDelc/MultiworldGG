@@ -13,7 +13,7 @@ logger = logging.getLogger("SM64Hacks")
 
 def _get_json_files_from_github():
     """Fetch list of JSON files from GitHub repository, with caching."""
-    cache_path = os.path.join(Utils.local_path("data", "sm64hacks", "json_list_cache.json"))
+    cache_path = os.path.join(Utils.user_path(), "sm64hack_jsons", "json_list_cache.json")
     cache_duration = 86400
     
     if os.path.exists(cache_path):

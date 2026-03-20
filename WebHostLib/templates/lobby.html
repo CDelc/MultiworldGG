@@ -16,7 +16,8 @@
 
             {% if lobby.state == -1 %}
                 <p class="lobby-expired">This lobby has expired.</p>
-            {% elif not player and lobby.state == 0 %}
+            {% elif not player and not is_viewer and lobby.state == 0 and not show_view_form %}
+                {# Non-member joining an open lobby #}
                 <div class="lobby-preview grass-island">
                     <p class="lobby-preview-meta">
                         Host: <strong>{{ owner_name }}</strong> &mdash;
@@ -61,20 +62,46 @@
                     {% endif %}
                     <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
                 </div>
-            {% elif not player and lobby.state == 3 %}
-                {# Non-joined visitor viewing a LOCKED lobby #}
+            {% elif not player and not is_viewer and lobby.state in (0, 3) and show_view_form %}
+                {# Non-member viewing an open or locked lobby via ?view=1 #}
                 <div class="lobby-preview grass-island">
                     <p class="lobby-preview-meta">
                         Host: <strong>{{ owner_name }}</strong> &mdash;
                         Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %} &mdash;
                         Max YAMLs: {{ lobby.max_yamls_per_player }} &mdash;
+                        Timeout: {{ fmt_timeout(lobby.timeout_minutes) }} &mdash;
                         {% if lobby.race %}Race Mode &mdash; {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
                     </p>
+                    <p class="lobby-preview-meta">
+                        Release: {{ server_opts.get('release_mode', 'auto') }} &mdash;
+                        Collect: {{ server_opts.get('collect_mode', 'auto') }} &mdash;
+                        Remaining: {{ server_opts.get('remaining_mode', 'goal') }} &mdash;
+                        {% set hm = server_opts.get('hint_mode', 'default') %}
+                        Hints: {% if hm == 'default' %}full{% elif hm == 'own' %}hide own{% elif hm == 'all' %}hide all{% else %}{{ hm }}{% endif %}
+                        @ {% set hc = server_opts.get('hint_cost', 10) %}{% if hc > 100 %}off{% else %}{{ hc }}%{% endif %} &mdash;
+                        Item Cheat: {{ 'on' if server_opts.get('item_cheat', True) else 'off' }}
+                    </p>
                 </div>
-                <p class="lobby-expired">This lobby is locked and no longer accepting new players.</p>
-                <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
-            {% elif not player %}
-                {# Non-joined visitor viewing a non-open lobby #}
+                <div id="lobby-view-form">
+                    <h2>View Lobby</h2>
+                    <p class="lobby-join-explainer">
+                        You can take a look at this lobby without participating. Chat messages will be hidden.
+                        {% if lobby.state == 3 %} This lobby is locked &mdash; new participants are not being accepted.{% endif %}
+                        {% if needs_password %} This lobby is password-protected.{% endif %}
+                    </p>
+                    <form method="post" action="{{ url_for('lobby_view_auth', lobby=lobby.id) }}">
+                        {% if needs_password %}
+                            <div class="join-field">
+                                <label for="view_password">Password:</label>
+                                <input type="password" id="view_password" name="password" required placeholder="Lobby password">
+                            </div>
+                        {% endif %}
+                        <button type="submit" class="lobby-btn lobby-btn-primary">View Lobby</button>
+                    </form>
+                    <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
+                </div>
+            {% elif not player and not is_viewer %}
+                {# Non-joined visitor viewing a non-viewable lobby (generating/done) #}
                 <div class="lobby-preview grass-island">
                     <p class="lobby-preview-meta">
                         Host: <strong>{{ owner_name }}</strong> &mdash;
@@ -89,6 +116,64 @@
                     {% endif %}
                 </p>
                 <a href="{{ url_for('lobby_list') }}" class="lobby-back-link">&larr; Back to lobby list</a>
+            {% elif is_viewer %}
+                {# Spectator / viewer UI #}
+                <div id="lobby-info">
+                    <div class="lobby-info-row">
+                        <span id="lobby-meta-main" class="lobby-meta">
+                            Max YAMLs: {{ lobby.max_yamls_per_player }} |
+                            Timeout: {{ fmt_timeout(lobby.timeout_minutes) }} |
+                            {% if lobby.race %}Race Mode | {% endif %}{{ 'Custom APWorlds: enabled' if lobby.allow_custom_apworlds else 'Custom APWorlds: disabled' }}
+                        </span>
+                        <span class="lobby-info-right">
+                            <span id="lobby-status" class="lobby-status-{{ lobby.state }}">
+                                {% if lobby.state == 0 %}Open
+                                {% elif lobby.state == 1 %}Generating...
+                                {% elif lobby.state == 2 %}Seed created, Lobby locked
+                                {% elif lobby.state == 3 %}Locked
+                                {% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="lobby-info-row">
+                        <span id="lobby-meta-opts" class="lobby-meta">
+                            Release: {{ server_opts.get('release_mode', '?') }} |
+                            Collect: {{ server_opts.get('collect_mode', '?') }} |
+                            Remaining: {{ server_opts.get('remaining_mode', '?') }} |
+                            Hints: {% set hm = server_opts.get('hint_mode', 'default') %}{% if hm == 'default' %}full{% elif hm == 'own' %}hide own{% elif hm == 'all' %}hide all{% else %}{{ hm }}{% endif %} @ {% set hc = server_opts.get('hint_cost', 5) %}{% if hc > 100 %}off{% else %}{{ hc }}%{% endif %} |
+                            Item Cheat: {% if server_opts.get('item_cheat') %}on{% else %}off{% endif %} |
+                            Spoiler: {% set sp = gen_opts.get('spoiler', 0) %}{% if sp == 0 %}off{% elif sp == 1 %}on{% elif sp == 2 %}+playthrough{% elif sp == 3 %}full{% endif %}
+                        </span>
+                    </div>
+                    <div class="lobby-info-row">
+                        <span id="lobby-meta-expiry" class="lobby-meta"><span id="lobby-expiry"></span></span>
+                        <span id="generate-info" class="lobby-meta">Players: {{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %}</span>
+                    </div>
+                </div>
+                <div id="lobby-viewer-notice" class="lobby-viewer-notice">
+                    <span>You are viewing this lobby without participating.</span>
+                </div>
+                <div id="lobby-viewer-join" style="display:none">
+                    <form method="post" action="{{ url_for('lobby_join', lobby=lobby.id) }}">
+                        <div class="join-field">
+                            <label for="player_name">Display Name:</label>
+                            <input type="text" id="player_name" name="player_name" required maxlength="32" placeholder="Your name">
+                        </div>
+                        <button type="submit" class="lobby-btn lobby-btn-primary">Join Lobby</button>
+                    </form>
+                </div>
+                <div id="lobby-main">
+                    <div id="lobby-sidebar">
+                        <h3>Players <span id="player-count-badge" class="player-count-badge">({{ player_count }}{% if lobby.max_players > 0 %}/{{ lobby.max_players }}{% endif %})</span></h3>
+                        <ul id="lobby-players">
+                            <li class="lobby-player-loading">Loading players&hellip;</li>
+                        </ul>
+                    </div>
+                    <div id="lobby-chat">
+                        <h3 class="lobby-section-title">Activity</h3>
+                        <div id="chat-messages"></div>
+                    </div>
+                </div>
             {% else %}
                 {# Main lobby interface #}
                 <div id="lobby-info">
@@ -396,7 +481,7 @@
     </div>
     {% include 'islandFooter.html' %}
 
-    {% if player %}
+    {% if player or is_viewer %}
     <div id="yaml-view-modal">
         <div id="yaml-view-modal-content" class="grass-island">
             <div id="yaml-view-header">
@@ -408,11 +493,12 @@
     </div>
     {% endif %}
 
-    {% if player %}
+    {% if player or is_viewer %}
     <script>
         const LOBBY_ID = "{{ lobby.id | suuid }}";
         const API_BASE = "/api/lobby/" + LOBBY_ID;
         const IS_OWNER = {{ "true" if is_owner else "false" }};
+        const IS_VIEWER = {{ "true" if is_viewer else "false" }};
         const MY_PLAYER_ID = {{ player.id if player else "null" }};
         const LOBBY_STATE_OPEN = 0;
         const LOBBY_STATE_GENERATING = 1;

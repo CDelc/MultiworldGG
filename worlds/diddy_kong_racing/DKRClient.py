@@ -43,7 +43,7 @@ logger.info(network_data_package["games"].keys())
 dkr_loc_name_to_id: dict[str, int] = network_data_package["games"]["Diddy Kong Racing"]["location_name_to_id"]
 dkr_itm_name_to_id: dict[str, int] = network_data_package["games"]["Diddy Kong Racing"]["item_name_to_id"]
 
-version_number: str = "v1.1.3"
+version_number: str = "v1.1.4"
 apworld_version: str = "DKR" + version_number
 
 
@@ -390,7 +390,7 @@ async def parse_payload(payload: dict, ctx: DiddyKongRacingContext) -> None:
             # For Universal Tracker deferred entrances
             await ctx.send_msgs([{
                 "cmd": "Set",
-                "key": f"Diddy_Kong_Racing_{ctx.slot}_" + str(payload_current_map),
+                "key": f"Diddy_Kong_Racing_{ctx.team}_{ctx.slot}_" + str(payload_current_map),
                 "default": False,
                 "want_reply": False,
                 "operations": [{

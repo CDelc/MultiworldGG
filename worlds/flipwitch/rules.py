@@ -57,7 +57,7 @@ class FlipwitchRules:
 
             # Witchy Woods
             # The additional rule for the first layer should be removed later, when we find a way to let Beatrice give you experience without railroading you in-game
-            WitchyWoodsEntrance.beatrice_hut_to_sex_layer_1: lambda state: state.has(QuestItem.fairy_bubble, self.player) and (self.startedFemale or state.has(Upgrade.bewitched_bubble, self.player)),
+            WitchyWoodsEntrance.beatrice_hut_to_sex_layer_1: lambda state: state.has(QuestItem.fairy_bubble, self.player) and state.has(Upgrade.bewitched_bubble, self.player),
             WitchyWoodsEntrance.sex_layer_1_to_sex_layer_2: lambda state: self.can_present_gender(state, "Female"),
             WitchyWoodsEntrance.sex_layer_2_to_sex_layer_3: lambda state: state.has(Upgrade.bewitched_bubble, self.player),
             WitchyWoodsEntrance.double_jump_tutorial_to_attack_tutorial: lambda state: self.can_roll(state) or
@@ -128,14 +128,18 @@ class FlipwitchRules:
             GhostCastleEntrance.large_hall_top_to_shrub_room: lambda state: state.has(Key.rose_garden, self.player) and (self.can_double_jump(state) or self.can_roll(state)),
             GhostCastleEntrance.shrub_room_to_large_hall_top: lambda state: state.has(Key.rose_garden, self.player),
             GhostCastleEntrance.shrub_room_to_ladder_room: lambda state: self.can_double_jump(state),
-            GhostCastleEntrance.ladder_room_to_upper_halls: lambda state: state.has(Upgrade.bewitched_bubble, self.player) or self.can_roll(state) or
+            GhostCastleEntrance.ladder_room_to_upper_halls: lambda state: state.has(Upgrade.bewitched_bubble, self.player) or (self.can_roll(state) and self.can_double_jump(state)) or
                                                                           self.can_triple_jump(state) or state.has(Upgrade.demon_wings, self.player),
-            GhostCastleEntrance.upper_halls_to_ladder_room:  lambda state: state.has(Upgrade.bewitched_bubble, self.player) or self.can_roll(state) or
-                                                                          self.can_triple_jump(state) or state.has(Upgrade.demon_wings, self.player),
-            GhostCastleEntrance.fashion_room_to_upper_halls: lambda state: state.has(Upgrade.bewitched_bubble, self.player) or self.can_roll(state) or
-                                                                          self.can_triple_jump(state) or state.has(Upgrade.demon_wings, self.player),
+            GhostCastleEntrance.fashion_room_to_upper_halls: lambda state: self.can_double_jump(state) and
+                                                                           (state.has(Upgrade.bewitched_bubble, self.player) or
+                                                                            (not self.startedFemale and (self.can_triple_jump(state) or self.can_roll(state) or
+                                                                                                         state.has(Upgrade.demon_wings, self.player)))
+                                                                            or (state.has(Upgrade.demon_wings, self.player))),
             GhostCastleEntrance.tall_tower_to_large_key_room: lambda state: self.can_ghost_dodge(state),
             GhostCastleEntrance.large_key_room_to_tall_tower: lambda state: self.can_ghost_dodge(state),
+            GhostCastleEntrance.large_key_room_to_upper_halls: lambda state: (state.has(Upgrade.bewitched_bubble, self.player) and
+                                                                              self.can_double_jump(state)) or (self.can_triple_jump(state) or
+                                                                                                               state.has(Upgrade.demon_wings, self.player)),
             GhostCastleEntrance.tall_tower_to_tutorial_room: lambda state: self.can_ghost_dodge(state),
             GhostCastleEntrance.ghost_castle_door_top_to_cellar_hall: lambda state: state.has(Key.secret_garden, self.player),
             GhostCastleEntrance.cellar_hall_to_ghost_castle_door_top: lambda state: state.has(Key.secret_garden, self.player) and self.can_triple_jump(state),
@@ -399,9 +403,9 @@ class FlipwitchRules:
             Potsanity.gc_large_gardens_4: lambda state: self.can_double_jump(state),
 
             # Ghost Castle Events
-            QuestEventLocation.cat_girls_1: lambda state: state.has(QuestItem.clothes, self.player),
+            QuestEventLocation.cat_girls_1: lambda state: state.has(QuestItem.clothes, self.player) and self.can_present_gender(state, "Male"),
 
-            SexEventsLocation.cat_girls_1: lambda state: state.has(QuestItem.clothes, self.player),
+            SexEventsLocation.cat_girls_1: lambda state: state.has(QuestItem.clothes, self.player) and self.can_present_gender(state, "Male"),
 
             # Jigoku
 
@@ -478,7 +482,8 @@ class FlipwitchRules:
             FungalForest.flip_magic: lambda state: self.can_double_jump(state) and (state.has(Upgrade.bewitched_bubble, self.player) or
                                                                               (self.can_present_gender(state, "Female") and
                                                                                (self.can_roll(state) and (self.can_triple_jump(state) or
-                                                                                                          state.has(Upgrade.demon_wings, self.player)))) or
+                                                                                                          state.has(Upgrade.demon_wings, self.player)))
+                                                                               or self.can_double_jump(state) and state.has(Upgrade.demon_wings, self.player)) or
                                                                               (self.can_present_gender(state, "Male") and
                                                                                (self.can_roll(state) or self.can_triple_jump(state) or
                                                                                 state.has(Upgrade.demon_wings, self.player)))),

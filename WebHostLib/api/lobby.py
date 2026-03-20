@@ -839,6 +839,17 @@ def lobby_toggle_ready(lobby: UUID):
 
     player.is_ready = not player.is_ready
     lobby.last_activity = utcnow()
+
+    all_players = select(p for p in LobbyPlayer if p.lobby == lobby)[:]
+    ready_count = sum(1 for p in all_players if p.is_ready)
+    total_count = len(all_players)
+    status = "ready" if player.is_ready else "not ready"
+    LobbyMessage(
+        lobby=lobby,
+        player=None,
+        sender_name="System",
+        content=f"{player.player_name} is {status} ({ready_count}/{total_count})",
+    )
     commit()
 
     return jsonify({"is_ready": player.is_ready})

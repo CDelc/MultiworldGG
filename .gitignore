@@ -236,7 +236,7 @@ Minecraft Forge server/*
 jdk*/*
 
 # SM64Hacks
-data/sm64hacks/**/*
+sm64hack_jsons
 
 # lobby uploads
 uploads

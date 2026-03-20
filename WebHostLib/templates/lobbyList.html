@@ -153,6 +153,13 @@
                                 </td>
                                 <td class="lobby-join-td">
                                     <a href="{{ url_for('lobby_view', lobby=lobby.id) }}">Join</a>
+                                    {% if lobby.password_hash %}
+                                        <a href="{{ url_for('lobby_view', lobby=lobby.id) }}?view=1" class="lobby-view-link">View</a>
+                                    {% else %}
+                                        <form method="post" action="{{ url_for('lobby_view_auth', lobby=lobby.id) }}" style="display:inline">
+                                            <button type="submit" class="lobby-view-link lobby-view-btn">View</button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

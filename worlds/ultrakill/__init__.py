@@ -4,7 +4,7 @@ from BaseClasses import Region, Location, Item, Tutorial, ItemClassification
 from Options import OptionError
 from worlds.AutoWorld import World, WebWorld
 from .Items import ItemType, base_id, item_list, fire2_weapons, item_groups
-from .Locations import LocationType, location_list, start_weapon_locations, location_groups
+from .Locations import LocationType, UKEnemyLocation, location_list, start_weapon_locations, location_groups
 from .Regions import Regions, SecretRegion
 from .Rules import UltrakillRules
 from .Options import UltrakillOptions
@@ -150,15 +150,17 @@ class UltrakillWorld(World):
         self.start_location = self.random.choice(start_weapon_locations[self.start_level.short_name])
 
         level_leads_to_secret: List[int] = [ 2, 6, 12, 17, 20, 28 ]
-        if self.options.goal_requirement.value == self.options.goal_requirement.range_end \
-            and self.options.goal_level.value in level_leads_to_secret:
-                print(f"[ULTRAKILL - '{self.player_name}'] "
-                      f"Goal requirement cannot be {self.options.goal_requirement.range_end} because goal level "
-                      f"{self.goal_level.short_name} leads to an inaccessible secret mission. Lowering goal "
-                      f"requirement to {self.options.goal_requirement.range_end-1}.")
-                self.options.goal_requirement.value = self.options.goal_requirement.range_end-1
-
         included_levels: int = self.options.goal_requirement.range_end - len(self.options.skipped_levels.value)
+
+        if self.options.goal_requirement.value >= included_levels \
+            and self.options.goal_level.value in level_leads_to_secret \
+            and self.options.secret_mission_unlock_type == "secret_exits":
+                print(f"[ULTRAKILL - '{self.player_name}'] "
+                      f"Goal requirement cannot be {self.options.goal_requirement.value} because goal level "
+                      f"{self.goal_level.short_name} leads to an inaccessible secret mission. Lowering goal "
+                      f"requirement to {included_levels - 1}.")
+                self.options.goal_requirement.value = included_levels - 1
+
         if self.options.goal_requirement.value > included_levels:
             raise OptionError(f"[ULTRAKILL - '{self.player_name}'] "
                             f"Goal requirement ({self.options.goal_requirement.value}) "
@@ -421,23 +423,31 @@ class UltrakillWorld(World):
         for r in Regions.all_regions:
             multiworld.regions += [Region(r.full_name, player, multiworld)]
             if isinstance(r, SecretRegion):
-                multiworld.get_region(r.parent_level.full_name, player).add_exits({r.full_name})
+                if self.options.secret_mission_unlock_type == "secret_exits":
+                    multiworld.get_region(r.parent_level.full_name, player).add_exits({r.full_name})
+                else:
+                    menu.add_exits({r.full_name})
             else:
                 menu.add_exits({r.full_name})
 
         multiworld.regions.append(menu)
 
+        skipped = self.options.skipped_levels.value
         for index, loc in enumerate(location_list):
             if loc.type in self.skipped_location_types:
                 continue
             self.game_id_to_long[loc.game_id] = (base_id + index)
-            
+
             region: Region = self.get_region(loc.region.full_name)
             location: UltrakillLocation = UltrakillLocation(player, loc.name, (base_id + index), region)
             region.locations.append(location)
 
-            if self.options.auto_exclude_skipped_locations and loc.region.short_name in self.options.skipped_levels.value:
-                self.options.exclude_locations.value.add(loc.name)
+            if loc.region.short_name in skipped:
+                if self.options.auto_exclude_skipped_locations or isinstance(loc, UKEnemyLocation):
+                    self.options.exclude_locations.value.add(loc.name)
+            elif isinstance(loc, UKEnemyLocation):
+                if loc.applicable_levels.issubset(skipped):
+                    self.options.exclude_locations.value.add(loc.name)
 
         # create events for level completion
         for r in [r for r in Regions.all_regions if not (r.short_name == "shop" or r.short_name == "museum")]:

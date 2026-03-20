@@ -296,7 +296,7 @@ flipwitch_regions = [
     RegionData(SpiritCityRegion.shady_bunny_cafe),
     RegionData(SpiritCityRegion.goblin_office),
     RegionData(SpiritCityRegion.cherry_apartment),
-    RegionData(SpiritCityRegion.shady_crystal_house),
+    RegionData(SpiritCityRegion.shady_crystal_house, [ConnectionData(SpiritCityEntrance.shady_crystal_house_to_shady_alley, SpiritCityRegion.shady_alley)]),
     RegionData(SpiritCityRegion.momobot_server_room),
     RegionData(SpiritCityRegion.banana_room),
     RegionData(SpiritCityRegion.cult_hall_lobby,

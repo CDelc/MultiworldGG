@@ -16,8 +16,10 @@
     const downloadPackageBtn = document.getElementById("download-package-btn");
     const uploadGameZone = document.getElementById("upload-game-zone");
     const gameFileInput = document.getElementById("game-file-input");
+    const isViewer = typeof IS_VIEWER !== "undefined" && IS_VIEWER;
+
     let pollTimer = null;
-    let pollInterval = 3000;
+    let pollInterval = isViewer ? 15000 : 3000;
     let idleCycles = 0;
     let currentPlayerCount = 0;
     let maxYamlsHeld = 0;
@@ -27,10 +29,14 @@
     let lastTotalCount = 0;
     const renderedMessageIds = new Set();
 
-    // Returns { fast, slow, idleThreshold } based on lobby size.
+    // Returns { fast, slow, idleThreshold } based on lobby size / viewer mode.
+    // Viewer:       15s → 60s after 4 idle cycles
     // Small lobby  (<20 players): 3s → 10s after ~15s idle
     // Large lobby (>=20 players): 10s → 30s after ~60s idle
     function getPollTiers() {
+        if (isViewer) {
+            return { fast: 15000, slow: 60000, idleThreshold: 4 };
+        }
         if (currentPlayerCount >= 20) {
             return { fast: 10000, slow: 30000, idleThreshold: 6 };
         }
@@ -82,6 +88,15 @@
                 lastReadyCount = data.ready_count || 0;
                 lastTotalCount = data.player_count || 0;
                 pollErrorCount = 0;
+
+                if (isViewer) {
+                    const viewerJoin = document.getElementById("lobby-viewer-join");
+                    if (viewerJoin) {
+                        const canJoin = data.state === LOBBY_STATE_OPEN &&
+                            (data.max_players === 0 || data.player_count < data.max_players);
+                        viewerJoin.style.display = canJoin ? "" : "none";
+                    }
+                }
             })
             .catch(err => {
                 pollErrorCount++;
@@ -150,7 +165,7 @@
             if (IS_OWNER && !p.is_owner && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
                 html += `<button class="kick-btn" data-player-id="${p.id}" title="Kick player">Kick</button>`;
             }
-            if (p.id === MY_PLAYER_ID && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
+            if (!isViewer && p.id === MY_PLAYER_ID && (currentState === LOBBY_STATE_OPEN || currentState === LOBBY_STATE_LOCKED)) {
                 const readyClass = p.is_ready ? " ready-btn-on" : "";
                 const readyLabel = p.is_ready ? "Ready ✓" : "Mark Ready";
                 const hasYamls = p.yamls && p.yamls.length > 0;
@@ -296,6 +311,7 @@
         messages.forEach(msg => {
             if (msg.id > lastMessageId) lastMessageId = msg.id;
             if (renderedMessageIds.has(msg.id)) return;
+            if (isViewer && !msg.system) return;
             renderedMessageIds.add(msg.id);
             insertMessageInOrder(buildMessageDiv(msg), msg.id);
         });

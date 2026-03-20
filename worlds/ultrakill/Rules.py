@@ -1528,12 +1528,7 @@ class UltrakillRules:
                 ),
 
             "1-1: Secret Exit":
-                lambda state: (
-                    grab_item(state)
-                    and skull(state, "1-1", "Red")
-                    and skull(state, "1-1", "Blue")
-                    and revany2_fire2(state)
-                ),
+                revany2_fire2,
 
             "Cleared 1-1":
                 lambda state: (
@@ -3713,7 +3708,7 @@ class UltrakillRules:
 
             "Boss: Mirror Reaper":
                 lambda state: (
-                    can_reach_level(state, "Enemy: Mirror Reaper", "8-2")
+                    can_reach_level(state, "Boss: Mirror Reaper", "8-2")
                     and grab_item(state)
                     and skull(state, "8-2", "Blue")
                     and jump_general(state, 3)
@@ -5065,7 +5060,10 @@ class UltrakillRules:
                 try:
                     level = Regions.get_from_short_name(level_name)
                     if isinstance(level, SecretRegion):
-                        add_rule(self.world.get_entrance(f"{level.parent_level.full_name} -> {level.full_name}"), rule, combine)
+                        if self.world.options.secret_mission_unlock_type == "secret_exits":
+                            add_rule(self.world.get_entrance(f"{level.parent_level.full_name} -> {level.full_name}"), rule, combine)
+                        else:
+                            add_rule(self.world.get_entrance(f"Menu -> {level.full_name}"), rule, combine)
                     else:
                         add_rule(self.world.get_entrance(f"Menu -> {level.full_name}"), rule, combine)
                 except KeyError as e:

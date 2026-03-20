@@ -464,13 +464,13 @@ class OptionsCreator(ThemedApp):
         if not issubclass(option, OptionCounter):
             def apply_changes(button):
                 self.options[name].clear()
-                for list_item in dialog.scrollbox.layout.children:
+                for list_item in reversed(dialog.scrollbox.layout.children):
                     self.options[name].append(getattr(list_item.text, "text"))
                 dialog.dismiss()
         else:
             def apply_changes(button):
                 self.options[name].clear()
-                for list_item in dialog.scrollbox.layout.children:
+                for list_item in reversed(dialog.scrollbox.layout.children):
                     self.options[name][getattr(list_item.text, "text")] = int(getattr(list_item.value, "text"))
                 dialog.dismiss()
 
@@ -484,6 +484,9 @@ class OptionsCreator(ThemedApp):
         if issubclass(option, OptionCounter):
             for value in sorted(self.options[name]):
                 dialog.add_set_item(value, self.options[name].get(value, None))
+        elif issubclass(option, OptionList):
+            for value in self.options[name]:
+                dialog.add_set_item(value)
         else:
             for value in sorted(self.options[name]):
                 dialog.add_set_item(value)
@@ -500,6 +503,8 @@ class OptionsCreator(ThemedApp):
             # We use list syntax even for sets, set behavior is enforced through GUI
             if issubclass(option, OptionCounter):
                 self.options[name] = deepcopy(option.default)
+            elif issubclass(option, OptionList):
+                self.options[name] = list(option.default)
             else:
                 self.options[name] = sorted(option.default)
 

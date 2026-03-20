@@ -284,6 +284,10 @@ class SM64HackClient(BizHawkClient):
             case "Jump":
                 addresses.update(jump_addresses)
                 special_addresses.update(jump_special_addresses)
+                if self.eeprom.startswith("STAR REVENGE 7"):
+                    special_addresses.update(jump_sr7_special_addresses)
+                else:
+                    special_addresses.update(jump_nonsr7_special_addresses)
                 if(self.slope_fix):
                     special_addresses.update(slope_fix)
                 else:
@@ -667,10 +671,16 @@ class SM64HackClient(BizHawkClient):
                         for key, value in no_slope_fix.items():
                             base_move_patches.append((key, bytes.fromhex(value[0]), "RDRAM"))
 
+                    print(read[12].decode("ascii"), read[12].decode("ascii").startswith("STAR REVENGE 7"))
                     if not read[12].decode("ascii").startswith("STAR REVENGE 7"):
                         for move in badge_special_addresses:
                             for key, value in move.items():
                                 base_move_patches.append((key, bytes.fromhex(value[0]), "RDRAM"))
+                        for key, value in jump_nonsr7_special_addresses.items():
+                            base_move_patches.append((key, bytes.fromhex(value[0]), "RDRAM"))
+                    else:
+                        for key, value in jump_sr7_special_addresses.items():
+                            base_move_patches.append((key, bytes.fromhex(value[0]), "RDRAM"))
                     writes.extend(base_move_patches)
                     
 

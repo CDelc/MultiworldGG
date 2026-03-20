@@ -599,6 +599,7 @@ class WitchyWoodsEntrance:
 
 
 class SpiritCityEntrance:
+    shady_crystal_house_to_shady_alley = "SpC: Shady Alley Crystal Room to Shady Alley"
     city_entrance_to_spirit_city_bridge = "SpC: Spirit City Path to Witchy Woods"
     city_entrance_to_shopping_district = "SpC: City Entrance to Shopping District"
     city_entrance_to_cc_entrance = "SpC: Spirit City Path to Chaos Castle"
