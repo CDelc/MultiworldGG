@@ -15,6 +15,7 @@ from .locations import MkddLocation, MkddLocationData
 from .options import MkddOptions
 from .regions import MkddRegionData
 from .rules import MkddRules
+from .settings import MkddSettings
 
 class MkddWebWorld(WebWorld):
     theme = "ocean"
@@ -39,8 +40,10 @@ class MkddWorld(World):
 
     options_dataclass = MkddOptions
     options: MkddOptions
+    settings: MkddSettings
 
     item_name_to_id = items.name_to_id
+    item_name_groups = items.groups
     location_name_to_id = locations.name_to_id
     location_name_groups = locations.groups
 
@@ -76,6 +79,8 @@ class MkddWorld(World):
             self.options.logic_difficulty = slot_data["logic_difficulty"]
             # Staff ghosts were on by default before this option was introduced.
             self.options.time_trials = slot_data.get("time_trials", options.TimeTrials.option_include_staff_ghosts)
+            self.options.item_boxes_as_locations = slot_data["item_boxes_as_locations"]
+
 
     def create_regions(self) -> None:
         # Course shuffle (entrance rando). If using Universal Tracker, get shuffled tracks from slot data.
@@ -120,6 +125,8 @@ class MkddWorld(World):
                 if self.options.time_trials != options.TimeTrials.option_include_staff_ghosts and locations.TAG_TT_GHOST in location_data.tags:
                     continue
                 if not self.options.grand_prix_trophies and locations.TAG_CUP_TROPHY in location_data.tags:
+                    continue
+                if self.options.item_boxes_as_locations == 0 and locations.TAG_ITEM_BOX in location_data.tags:
                     continue
                 if id > 0 and location_data.region == region_name:
                     region.add_locations({location_data.name: id})
@@ -304,6 +311,7 @@ class MkddWorld(World):
             "lap_counts": lap_counts,
             "character_item_total_weights": self.character_item_total_weights,
             "global_items_total_weights": self.global_items_total_weights,
+            "item_boxes_as_locations": int(self.options.item_boxes_as_locations),
         }
     
     # Rerun Universal Tracker with received options.

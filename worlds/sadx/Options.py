@@ -131,6 +131,11 @@ class StartingLocationOption(Choice):
     default = 0
 
 
+class EggCarrierStartsTransformed(DefaultOnToggle):
+    """If enabled, the Egg Carrier will start transformed allowing easier access to some levels."""
+    display_name = "Egg Carrier starts transformed"
+
+
 class EntranceRandomizer(Choice):
     """
     Randomizes the entrances to action stages, bosses, sublevels and Chao Gardens.
@@ -431,7 +436,7 @@ class MissionBlackList(OptionSet):
     Mission 53 (Triple Jump in the Snowboard section of Ice Cap).
     Mission 54 (Flags in the Snowboard section of Ice Cap).
     Mission 58 (Flags in the rolling bounce section of Lost World).
-    Also, you can blacklist all the missions by using the character names. i.e. {'Big', 'Sonic'}
+    Also, you can blacklist all the missions by using the character names. i.e. ['Big', 'Sonic']
     """
     display_name = "Mission Blacklist"
     default = {'49', '53', '54', '58'}
@@ -523,7 +528,7 @@ class CapsuleSanity(Toggle):
 class CapsuleSanityList(OptionSet):
     """
     Determines which capsules are included in capsule-sanity.
-    You can sue Character name and capsule type as values.
+    You can use Character name plus capsule type as values.
     X-Life, X-Shield, X-PowerUp, and X-Ring with X being the character name (i.e. 'Sonic-PowerUp')
     """
     display_name = "CapsuleSanityList"
@@ -697,6 +702,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     logic_level: LogicLevel
     starting_character: StartingCharacterOption
     starting_location: StartingLocationOption
+    egg_carrier_starts_transformed: EggCarrierStartsTransformed
     entrance_randomizer: EntranceRandomizer
     gating_mode: GatingMode
 
@@ -788,6 +794,7 @@ sadx_option_groups = [
         GoalRequiresChaoRaces,
         StartingCharacterOption,
         StartingLocationOption,
+        EggCarrierStartsTransformed,
         EntranceRandomizer,
         SendDeathLinkChance,
         ReceiveDeathLinkChance,

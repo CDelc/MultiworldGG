@@ -1,8 +1,6 @@
-from typing import Any
-
 from BaseClasses import ItemClassification
 
-ITEMS_DATA: dict[str, dict[str, Any]] = {
+ITEMS_DATA = {
     #   "No Item": {
     #   'classification': ItemClassification.filler,
     #   "",

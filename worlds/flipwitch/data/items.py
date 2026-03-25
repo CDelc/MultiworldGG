@@ -43,7 +43,7 @@ base_items = [
     create_item(ITEM_CODE_START + base_start_id + 8, Upgrade.health, ItemClassification.useful),
     create_item(ITEM_CODE_START + base_start_id + 9, Upgrade.mana, ItemClassification.useful),
     create_item(ITEM_CODE_START + base_start_id + 10, Upgrade.wand, ItemClassification.useful),
-    create_item(ITEM_CODE_START + base_start_id + 11, Upgrade.peachy_peach, ItemClassification.useful),
+    create_item(ITEM_CODE_START + base_start_id + 11, Upgrade.peachy_peach, ItemClassification.progression),
     create_item(ITEM_CODE_START + base_start_id + 12, Upgrade.bewitched_bubble, ItemClassification.progression | ItemClassification.useful),
     # create_item(ITEM_CODE_START + base_start_id + 13, Upgrade.goblin_crystal, ItemClassification.useful),
     create_item(ITEM_CODE_START + base_start_id + 14, Upgrade.demon_wings, ItemClassification.progression | ItemClassification.useful),

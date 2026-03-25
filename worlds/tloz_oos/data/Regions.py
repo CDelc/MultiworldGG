@@ -379,7 +379,6 @@ REGIONS = [
     "frypolar room",
     "frypolar room wild mystery",
     "frypolar owl",
-    "beat frypolar",
     "d8 darknut chest",
     "d8 ice puzzle room",
     "d8 pols voice chest",

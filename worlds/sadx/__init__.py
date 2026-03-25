@@ -16,7 +16,7 @@ from .Regions import create_sadx_regions, get_location_ids_for_area
 from .Rules import create_sadx_rules, LocationDistribution
 from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea
 
-sadx_version = 120
+sadx_version = 121
 
 
 class SonicAdventureDXWeb(WebWorld):
@@ -43,7 +43,7 @@ class SonicAdventureDXWorld(World):
     starter_setup: StarterSetup = StarterSetup()
     area_map = None
     explicit_indirect_conditions = False
-    created_regions: Dict[typing.Tuple[Character, Area], Region] = {}
+    created_regions: Dict[typing.Tuple[Character, Area, bool], Region] = {}
     item_distribution: ItemDistribution = ItemDistribution()
     location_distribution: LocationDistribution = LocationDistribution()
     item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
@@ -97,6 +97,7 @@ class SonicAdventureDXWorld(World):
                 self.options.boss_percentage.value = passthrough["BossPercentage"]
                 self.options.goal_requires_chao_races.value = passthrough["GoalRequiresChaoRaces"]
                 self.options.logic_level.value = passthrough["LogicLevel"]
+                self.options.egg_carrier_starts_transformed.value = passthrough["EggCarrierStartsTransformed"]
                 self.options.entrance_randomizer.value = passthrough["EntranceRandomizer"]
                 self.options.gating_mode.value = passthrough["GatingMode"]
 
@@ -139,13 +140,11 @@ class SonicAdventureDXWorld(World):
 
                 self.options.enemy_sanity.value = passthrough["EnemySanity"]
                 self.options.enemy_sanity_list = EnemySanityCategory.to_object_list(passthrough["EnemySanityList"])
-                self.options.enemy_sanity_list.value = passthrough["EnemySanityList"]
                 self.options.missable_enemies.value = passthrough["MissableEnemies"]
 
                 self.options.capsule_sanity.value = passthrough["CapsuleSanity"]
                 self.options.capsule_sanity_list = CapsuleSanityCategory.to_object_list(
                     passthrough["CapsuleSanityList"])
-                self.options.capsule_sanity_list.value = passthrough["CapsuleSanityList"]
                 self.options.missable_capsules.value = passthrough["MissableCapsules"]
                 self.options.pinball_capsules.value = passthrough["PinballCapsules"]
 
@@ -220,6 +219,7 @@ class SonicAdventureDXWorld(World):
             "BossPercentage": self.options.boss_percentage.value,
             "GoalRequiresChaoRaces": self.options.goal_requires_chao_races.value,
             "LogicLevel": self.options.logic_level.value,
+            "EggCarrierStartsTransformed": self.options.egg_carrier_starts_transformed.value,
             "GatingMode": self.options.gating_mode.value,
             "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
             "LevelForPerfectChaos": self.location_distribution.levels_for_perfect_chaos,

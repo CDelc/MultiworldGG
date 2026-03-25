@@ -1,13 +1,12 @@
 import json
 from pathlib import Path
 
-from typing import Any
+from typing_extensions import Any
 
 import Utils
-from ...common.patching.RomData import RomData
-from ...common.patching.Util import simple_hex
-from ...common.patching.data_manager.text import get_text_data
-from ...common.patching.text import normalize_text
+from ...patching.RomData import RomData
+from ...patching.text import normalize_text
+from ...patching.text.decoding import parse_text_dict, parse_all_texts
 
 
 def load_modded_seasons_text_data() -> None | tuple[dict[str, str], dict[str, str]]:
@@ -33,6 +32,31 @@ def load_modded_seasons_text_data() -> None | tuple[dict[str, str], dict[str, st
     return json.load(open(dict_file, encoding="utf-8")), texts
 
 
+def load_vanilla_ages_text_data() -> None | dict[str, str]:
+    text_dir = Path(Utils.cache_path("oos_ooa/text"))
+    vanilla_text_file = text_dir.joinpath(f"ages_texts_vanilla.json")
+    if not vanilla_text_file.is_file():
+        return None
+    return json.load(open(vanilla_text_file, encoding="utf-8"))
+
+
+def save_vanilla_text_data(dictionary: dict[str, str],
+                           texts: dict[str, str],
+                           seasons: bool = True) -> None:
+    text_dir = Path(Utils.cache_path("oos_ooa/text"))
+    text_dir.mkdir(parents=True, exist_ok=True)
+
+    game_name = "seasons" if seasons else "ages"
+    dict_file = text_dir.joinpath(f"{game_name}_dict.json")
+    text_file = text_dir.joinpath(f"{game_name}_texts_vanilla.json")
+
+    with dict_file.open("w", encoding="utf-8") as f:
+        json.dump(dictionary, f, ensure_ascii=False)
+
+    with text_file.open("w", encoding="utf-8") as f:
+        json.dump(texts, f, ensure_ascii=False)
+
+
 def save_seasons_edited_text_data(texts: dict[str, str]) -> None:
     from ...World import OracleOfSeasonsWorld
     texts["version"] = OracleOfSeasonsWorld.version()
@@ -47,8 +71,6 @@ def save_seasons_edited_text_data(texts: dict[str, str]) -> None:
 
 
 def apply_text_edits(texts: dict[str, str]) -> None:
-    texts_to_blank = []
-
     # New items
     # Replace ring box 1
     texts["TX_0034"] = ("You got 🟥Ember\n"
@@ -111,15 +133,15 @@ def apply_text_edits(texts: dict[str, str]) -> None:
 
     # Cross items
     # Obtain text
-    texts_to_blank.append("TX_003b")  # Strange flute
-    texts_to_blank.append("TX_0051")  # Warrior child heart
-    texts_to_blank.append("TX_0053")  # Warrior child heart refill
-    texts_to_blank.append("TX_0054")  # Unappraised ring
+    texts["TX_003b"] = ""  # Strange flute
+    texts["TX_0051"] = ""  # Warrior child heart
+    texts["TX_0053"] = ""  # Warrior child heart refill
+    texts["TX_0054"] = ""  # Unappraised ring
     # Inventory text
-    texts_to_blank.append("TX_091d")  # Replaces ring box 1
-    texts_to_blank.append("TX_091e")  # Replaces ring box 2
-    texts_to_blank.append("TX_0917")  # Replaces unappraised ring
-    texts_to_blank.append("TX_092e")  # Replaces strange flute
+    texts["TX_091d"] = ""  # Replaces ring box 1
+    texts["TX_091e"] = ""  # Replaces ring box 2
+    texts["TX_0917"] = ""  # Replaces unappraised ring
+    texts["TX_092e"] = ""  # Replaces strange flute
     # Note: 3 other seemingly unused seeds follow
 
     # Map stuff, replaces the group 05 since it's all linked game dialogues
@@ -207,33 +229,9 @@ def apply_text_edits(texts: dict[str, str]) -> None:
                         "can do it\n"
                         "everywhere")
 
-    # Remove ring fortune
-    texts["TX_301f"] = normalize_text("Ring fortunes are disabled in randomizer.")
-    texts_to_blank.append("TX_3024")
-    texts_to_blank.append("TX_302e")
-    texts_to_blank.append("TX_300f")
-    texts_to_blank.append("TX_3031")
-    texts_to_blank.append("TX_302a")
-    texts_to_blank.append("TX_3020")
-    texts_to_blank.append("TX_3025")
-    texts_to_blank.append("TX_303d")
-    texts_to_blank.append("TX_3026")
-    texts_to_blank.append("TX_3023")
-    # There is probably more, and the red snake could also be attacked
-
-    # Maku tree talking texts are too big to be left there (unused)
-    texts_to_blank.append("TX_1704")
-    for i in range(0x1706, 0x1716):
-        texts_to_blank.append(f"TX_{simple_hex(i, 4)}")
-    for i in range(0x1719, 0x173a):
-        texts_to_blank.append(f"TX_{simple_hex(i, 4)}")
-
-    for text in texts_to_blank:
-        texts[text] = ""
-
 
 def apply_ages_edits(seasons_texts: dict[str, str], ages_rom: RomData) -> None:
-    _, ages_texts = get_text_data(ages_rom, False, False)
+    ages_texts = get_ages_text_data(ages_rom)
     # Cross items
     # Obtain text
     seasons_texts["TX_0053"] = ages_texts["TX_0073"]  # Cane
@@ -248,12 +246,25 @@ def apply_ages_edits(seasons_texts: dict[str, str], ages_rom: RomData) -> None:
     save_seasons_edited_text_data(seasons_texts)
 
 
-def get_modded_seasons_text_data(rom_data: RomData) -> tuple[dict[str, str], dict[str, str]]:
+def get_seasons_text_data(rom_data: RomData) -> tuple[dict[str, str], dict[str, str]]:
     result = load_modded_seasons_text_data()
     if result is not None:
         return result
 
-    dictionary, texts = get_text_data(rom_data, True, True)
+    dictionary = parse_text_dict(rom_data, True)
+    texts = parse_all_texts(rom_data, dictionary, True)
+    save_vanilla_text_data(dictionary, texts, True)
     apply_text_edits(texts)
     save_seasons_edited_text_data(texts)
     return dictionary, texts
+
+
+def get_ages_text_data(rom_data: RomData) -> tuple[dict[str, str], dict[str, str]]:
+    result = load_vanilla_ages_text_data()
+    if result is not None:
+        return result
+
+    dictionary = parse_text_dict(rom_data, False)
+    texts = parse_all_texts(rom_data, dictionary, False)
+    save_vanilla_text_data(dictionary, texts, False)
+    return texts

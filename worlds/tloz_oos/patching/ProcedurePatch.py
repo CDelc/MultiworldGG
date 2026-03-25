@@ -5,11 +5,10 @@ import yaml
 
 from worlds.Files import APProcedurePatch, APTokenMixin, APPatchExtension
 from .Functions import *
-from .data_manager.text import apply_ages_edits, get_modded_seasons_text_data
-from .room_edits import apply_room_edits
-from ..common.patching.rooms.decoding import decompress_rooms
-from ..common.patching.text.encoding import write_text_data
-from ..common.patching.z80asm.Assembler import Z80Assembler, Z80Block, GameboyAddress
+from .RomData import RomData
+from .data_manager.text import get_seasons_text_data, apply_ages_edits
+from .text.encoding import write_text_data
+from .z80asm.Assembler import Z80Assembler, Z80Block
 
 
 class OoSPatchExtensions(APPatchExtension):
@@ -46,7 +45,7 @@ class OoSPatchExtensions(APPatchExtension):
         random.seed(patch_data["seed"] + caller.player)
 
         assembler = Z80Assembler(CAVE_DATA, DEFINES, rom, ages_rom)
-        dictionary, texts = get_modded_seasons_text_data(rom_data)
+        dictionary, texts = get_seasons_text_data(rom_data)
         if patch_data["options"]["cross_items"]:
             if texts["TX_0053"] == "":  # Check if cane text exists
                 # If not, add the Ages texts
@@ -65,19 +64,18 @@ class OoSPatchExtensions(APPatchExtension):
             dungeon_exits["d11"] = GameboyAddress(0x04, 0x7b35).address_in_rom()
 
         # Define assembly constants & floating chunks
-        item_data = define_foreign_item_data(assembler, texts, patch_data)
-        define_location_constants(assembler, patch_data, item_data)
+        define_location_constants(assembler, patch_data)
         define_option_constants(assembler, patch_data)
         define_season_constants(assembler, patch_data)
         make_text_data(assembler, texts, patch_data)
-        define_compass_rooms_table(assembler, patch_data, item_data)
-        define_collect_properties_table(assembler, patch_data, item_data)
+        define_compass_rooms_table(assembler, patch_data)
+        define_collect_properties_table(assembler, patch_data)
         define_additional_tile_replacements(assembler, patch_data)
         define_samasa_combination(assembler, patch_data)
         define_dungeon_items_text_constants(texts, patch_data)
         define_essence_sparkle_constants(assembler, patch_data, dungeon_entrances)
         define_lost_woods_sequences(assembler, texts, patch_data)
-        define_tree_sprites(assembler, patch_data, item_data)
+        define_tree_sprites(assembler, patch_data)
         set_file_select_text(assembler, caller.player_name)
         set_player_start_inventory(assembler, patch_data)
         if not hasattr(get_settings().tloz_oos_options, "beat_tutorial"):
@@ -86,7 +84,6 @@ class OoSPatchExtensions(APPatchExtension):
         # Parse assembler files, compile them and write the result in the ROM
         print("Compiling ASM files...")
         write_text_data(rom_data, dictionary, texts, True)
-        apply_room_edits(rom_data, patch_data)
         for file_path in get_asm_files(patch_data):
             data_loaded = yaml.safe_load(pkgutil.get_data(__name__, file_path))
             for metalabel, contents in data_loaded.items():
@@ -99,8 +96,8 @@ class OoSPatchExtensions(APPatchExtension):
             dungeon_entrances["d11"]["addr"] = assembler.global_labels["warpSourceDesert"].address_in_rom() + 2
 
         # Perform direct edits on the ROM
-        alter_treasure_types(rom_data, item_data)
-        write_chest_contents(rom_data, patch_data, item_data)
+        alter_treasure_types(rom_data)
+        write_chest_contents(rom_data, patch_data)
         set_old_men_rupee_values(rom_data, patch_data)
         set_dungeon_warps(rom_data, patch_data, dungeon_entrances, dungeon_exits)
         set_portal_warps(rom_data, patch_data)

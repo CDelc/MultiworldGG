@@ -1,8 +1,7 @@
 from collections.abc import Collection
 from typing import Optional
 
-from .z80asm.Assembler import GameboyAddress
-from .z80asm.Util import hex_str
+from ..patching.Util import hex_str
 
 
 class RomData:
@@ -52,7 +51,7 @@ class RomData:
             result -= int(b)
         self.write_byte(0x14D, result & 0xFF)
 
-    def update_checksum(self, address: int):
+    def update_checksum(self, address):
         """
         Updates the 16-bit checksum for ROM data located in the rom header.
         This is calculated by summing the non-global-checksum bytes in the rom.
@@ -77,16 +76,16 @@ class RomData:
         else:
             raise ValueError(f"Invalid ROM size: {hex(len(self.file))}")
 
-    def get_chest_addr(self, group_and_room: int, bank: int, table_addr: int) -> int:
+
+    def get_chest_addr(self, group_and_room: int):
         """
         Return the address where to edit item ID and sub-ID to modify the contents
         of the chest contained in given room of given group
-        The required bank and address parameters point to chestDataGroupTable
         """
-        base_addr = GameboyAddress(bank, table_addr).address_in_rom()
+        base_addr = 0x54f6c
         room = group_and_room & 0xFF
         group = group_and_room >> 8
-        current_addr = GameboyAddress(bank, self.read_word(base_addr + (group * 2))).address_in_rom()
+        current_addr = 0x50000 + self.read_word(base_addr + (group * 2))
         while self.read_byte(current_addr) != 0xff:
             chest_room = self.read_byte(current_addr + 1)
             if chest_room == room:

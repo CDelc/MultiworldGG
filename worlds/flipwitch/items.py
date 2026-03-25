@@ -65,8 +65,7 @@ def create_base_items(item_factory: FlipwitchItemFactory, options: FlipwitchOpti
             if options.stat_shuffle == options.stat_shuffle.option_false:
                 continue
             upgrade_name = item.name
-            items.extend([item_factory(stat, ItemClassification.progression | ItemClassification.useful) for stat in [upgrade_name]*8])
-            items.extend([item_factory(stat) for stat in [upgrade_name]*2])
+            items.extend([item_factory(stat) for stat in [upgrade_name]*10])
         elif item.name == Upgrade.mana:
             if options.stat_shuffle == options.stat_shuffle.option_false:
                 continue

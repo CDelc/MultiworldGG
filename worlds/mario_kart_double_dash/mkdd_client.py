@@ -1,20 +1,22 @@
 import asyncio
+import os
 import random
 import time
 import traceback
+import struct
 from typing import TYPE_CHECKING, Any, Optional
 
 import dolphin_memory_engine as dolphin
 
 import Utils
-apname = Utils.instance_name if Utils.instance_name else "Archipelago"
-
 from CommonClient import get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus, NetworkItem
 
 from . import game_data, items, locations, patches, mem_addresses, ar_codes, version, options
 from .locations import MkddLocationData
 from .items import ItemType, MkddItemData
+from .settings import MkddSettings
+from settings import get_settings
 
 tracker_loaded = False
 try:
@@ -36,6 +38,14 @@ CONNECTION_LOST_STATUS = (
 )
 CONNECTION_CONNECTED_STATUS = "Dolphin connected successfully."
 CONNECTION_INITIAL_STATUS = "Dolphin connection has not been initiated."
+
+DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE = "DME_DOLPHIN_PROCESS_NAME"
+
+settings : MkddSettings = get_settings().mario_kart_double_dash_options
+if settings.dolphin_process_name:
+    os.environ[DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE] = settings.dolphin_process_name
+elif DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE in os.environ:
+    del os.environ[DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE]
 
 class MkddCommandProcessor(ClientCommandProcessor):
     """
@@ -75,6 +85,12 @@ class MkddCommandProcessor(ClientCommandProcessor):
                 if len(items) > 0:
                    logger.info(f"{character.name}: {", ".join([item.name for item in items])}")
 
+    def _cmd_dolphin_process_name(self, dolphin_process_name: str) -> None:
+        """Specify the name of the Dolphin process to connect to. "" for system default."""
+        settings.dolphin_process_name = dolphin_process_name
+        get_settings().save()
+        logger.info(f"Dolphin process name set to {dolphin_process_name or "default"}. You must open a new client for this to take effect.")
+
 
 class MkddContext(CommonContext):
     """
@@ -85,7 +101,7 @@ class MkddContext(CommonContext):
 
     command_processor = MkddCommandProcessor
     game: str = version.get_game_name()
-    compatible_version: str = "v0.2"
+    compatible_version: str = "v0.3"
     items_handling: int = 0b111
 
     def __init__(self, server_address: Optional[str], password: Optional[str]) -> None:
@@ -211,9 +227,9 @@ class MkddContext(CommonContext):
             self.trophy_goal = slot_data.get("trophy_requirement")
             if self.ui:
                 self.ui.update_trophies(self.trophies, self.trophy_goal)
-                self.ui.update_characters(self.unlocked_characters)
-                self.ui.update_cc(self.unlocked_vehicle_class)
-                self.ui.update_cups(self.unlocked_cups)
+                self.ui.update_characters([])
+                self.ui.update_cc(0)
+                self.ui.update_cups([])
                 
             self.cups_courses = slot_data["cups_courses"]
             self.all_cup_tour_length = slot_data.get("all_cup_tour_length", 8)
@@ -274,7 +290,7 @@ class MkddContext(CommonContext):
             ut_title = f" | Universal Tracker {UT_VERSION}"
         class MKDDManager(base_class):
             logging_pairs = [("Client", "Archipelago")]
-            base_title = f"MKDD Client {version.get_version()}{ut_title} | {apname}"
+            base_title = f"MKDD AP Client {version.get_version()}{ut_title} | Archipelago"
             
 
             def build(self):
@@ -371,6 +387,7 @@ def apply_patch(ctx: MkddContext):
     _apply_dict_patch(patches.patch)
     _apply_ar_code(ar_codes.lap_modifier)
     _apply_ar_code(ar_codes.gp_course_selection)
+    _apply_ar_code(ar_codes.fireball_limit)
     logger.info("Patch Applied.")
 
 
@@ -509,6 +526,7 @@ async def check_locations(ctx: MkddContext) -> None:
     mode: int = dolphin.read_word(ctx.memory_addresses.mode_w)
     cup: str = game_data.CUPS[dolphin.read_word(ctx.memory_addresses.cup_w)]
     menu_course: int = dolphin.read_word(ctx.memory_addresses.menu_course_w)
+    human_players: int = dolphin.read_byte(ctx.memory_addresses.human_players_b)
     vehicle_class: int = dolphin.read_word(ctx.memory_addresses.vehicle_class_w)
     current_lap: int = dolphin.read_word(ctx.memory_addresses.current_lap_wx)
     # Get placement and modify it to be 0-based for less confusion (rankings are also 0-based).
@@ -518,17 +536,49 @@ async def check_locations(ctx: MkddContext) -> None:
     total_points: int = dolphin.read_word(ctx.memory_addresses.total_points_wx)
     game_ticks: int = dolphin.read_word(ctx.memory_addresses.game_ticks_w)
     race_timer: int = dolphin.read_word(ctx.memory_addresses.race_timer_w)
-    # Remove 181 frame headstart and convert to seconds.
+    # Remove 182 frame headstart and convert to seconds.
     # Close enough (to 1/10th of a second), altough probably exact formula should be investigated.
-    race_timer_s: float = (race_timer - 181) / 60
+    # Rounded in favor of the player.
+    race_timer_s: float = (race_timer - 182) / 60
 
     # Some ways to check what state is the game in. In game in particular has to have one frame
     # leeway in case we read finishing state after the last frame advance has happened.
-    new_in_game: bool = race_timer - ctx.last_race_timer > 0 # From countdown to finish.
+    new_in_game: bool = race_timer - ctx.last_race_timer > 0 and human_players > 0 # From countdown to finish.
     in_game: bool = new_in_game or ctx.last_in_game
     ctx.last_in_game = new_in_game
     course_loaded: bool = game_ticks > ctx.course_changed_time + 60 # Don't give checks in menus etc.
     ctx.last_race_timer = race_timer
+
+    # Gets the current courses and its special box targets to verify the value of each boxes next to its targeted address.
+    # When one of the boxes is hit the value of 32 in hex will be in the address next to the targeted address and the check will be activated.
+    course_name = ctx.current_course.name
+    special_box_groups = ctx.memory_addresses.item_box_target_pointer.get(course_name, [])
+
+    if in_game and special_box_groups:
+        unchecked_item_box_locations = []
+
+        for (index, signatures) in enumerate(special_box_groups):
+            location_name = locations.get_loc_name_item_box(course_name, index)
+            if locations.name_to_id.get(location_name) not in ctx.locations_checked:
+                unchecked_item_box_locations.append((signatures, location_name))
+
+        if unchecked_item_box_locations:
+            scan_start = 0x81000000
+            scan_end = 0x810F0000
+
+            data = dolphin.read_bytes(scan_start, scan_end - scan_start)
+
+            if data and len(data) > 8:
+                for offset in range(0, len(data) - 8, 4):
+                    found_signature = struct.unpack(">I", data[offset: offset + 4])[0]
+
+                    for (target_signatures, location_name) in unchecked_item_box_locations[:]:
+                        if found_signature in target_signatures:
+                            box_status_value = struct.unpack(">I", data[offset + 4: offset + 8])[0]
+
+                            if box_status_value == 0x20:
+                                new_location_names.add(location_name)
+                                unchecked_item_box_locations.remove((target_signatures, location_name))
 
     # Course finishing related locations.
     # For Time Trials check against default lap counts.
@@ -633,6 +683,14 @@ def update_game(ctx: MkddContext) -> None:
 
     menu_pointer = dolphin.read_word(ctx.memory_addresses.menu_pointer)
     if menu_pointer != 0:
+        target_icons = ctx.memory_addresses.menu_pointer_to_char_icons.get(menu_pointer)
+
+        for (char_id, address) in enumerate(target_icons):
+            if char_id in ctx.unlocked_characters:
+                dolphin.write_word(address, 0x0100FFFF)
+            else:
+                dolphin.write_word(address, 0x0000FFFF)
+
         driver = dolphin.read_word(menu_pointer + ctx.memory_addresses.menu_driver_w_offset)
         rider = dolphin.read_word(menu_pointer + ctx.memory_addresses.menu_rider_w_offset)
         # Save active selections for printing info.
@@ -1069,6 +1127,7 @@ async def dolphin_sync_task(ctx: MkddContext) -> None:
     """
     logger.info("Starting Dolphin connector. Use /dolphin for status information.")
     while not ctx.exit_event.is_set():
+        dolphin_name = os.getenv(DME_DOLPHIN_PROCESS_NAME_ENV_VARIABLE) or "Dolphin"
         try:
             if dolphin.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
                 if ctx.slot is not None:
@@ -1086,14 +1145,14 @@ async def dolphin_sync_task(ctx: MkddContext) -> None:
                     if ctx.awaiting_rom:
                         await ctx.server_auth()
                 if dolphin.read_bytes(0x80000000, 6) != b"GM4E01":
-                    logger.info("Connection to Dolphin lost, reconnecting...")
+                    logger.info(f"Connection to {dolphin_name} lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                 await asyncio.sleep(0.1)
             else:
                 if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
-                    logger.info("Connection to Dolphin lost, reconnecting...")
+                    logger.info(f"Connection to {dolphin_name} lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
-                logger.info("Attempting to connect to Dolphin...")
+                logger.info(f"Attempting to connect to {dolphin_name}...")
                 dolphin.hook()
                 if dolphin.is_hooked():
                     if dolphin.read_bytes(0x80000000, 6) != b"GM4E01":
@@ -1109,14 +1168,14 @@ async def dolphin_sync_task(ctx: MkddContext) -> None:
                         await give_items(ctx)
                         ctx.locations_checked = set()
                 else:
-                    logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
+                    logger.info(f"Connection to {dolphin_name} failed, attempting again in 5 seconds...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
                     await ctx.disconnect()
                     await asyncio.sleep(5)
                     continue
         except Exception:
             dolphin.un_hook()
-            logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
+            logger.info(f"Connection to {dolphin_name} failed, attempting again in 5 seconds...")
             logger.error(traceback.format_exc())
             ctx.dolphin_status = CONNECTION_LOST_STATUS
             await ctx.disconnect()
